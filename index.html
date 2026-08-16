@@ -48,8 +48,6 @@
   .ref-rect-list{display:flex;flex-direction:column;gap:6px;}
   .ref-rect{display:flex;align-items:center;gap:12px;background:var(--bg-panel-raised);border-radius:10px;padding:8px 12px;border:none;width:100%;text-align:left;color:var(--text);}
   .ref-rect.disabled{opacity:0.7;}
-  .ref-rect.bad{background:rgba(255,90,95,0.14);border:1px solid var(--bad);}
-  .ref-rect .swatch.bad-x{display:flex;align-items:center;justify-content:center;font-size:1.1rem;background:rgba(255,90,95,0.2) !important;}
   .ref-rect .swatch{width:44px;height:34px;border-radius:6px;border:1px solid rgba(255,255,255,0.25);flex:none;}
   .ref-rect .val{font-family:'IBM Plex Mono',monospace;font-size:0.92rem;flex:1;}
   .ref-rect .edit-ic{color:var(--text-dim);font-size:0.9rem;}
@@ -169,7 +167,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v1.5</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v1.4</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -202,7 +200,7 @@
       </button>
     </section>
 
-    <!-- ================= NUANCIER (v1.5) ================= -->
+    <!-- ================= NUANCIER (v1.4) ================= -->
     <section class="view" id="view-nuancier">
       <div class="sticky-banner" id="nuancierBanner"><span class="sp" id="nuancierBannerParam"></span><span class="sv" id="nuancierBannerValue"></span></div>
 
@@ -296,7 +294,7 @@
           <table class="matches"><thead><tr><th>Pastille</th><th>Valeur</th><th>ΔE</th></tr></thead><tbody id="matchesBody"></tbody></table>
           <button class="primary" id="btnValidateResult" style="margin-top:16px;">✅ Valider cette mesure</button>
           <p class="saved-note" id="savedNote"></p>
-          <p class="disclaimer">Comparer une photo de téléphone à des couleurs scannées a une limite physique (appareils différents) — même bien ciblé et bien éclairé. Pour la précision maximale, utilise <button class="ghost" id="btnGotoRecalibrate" style="padding:0;font-size:inherit;">📷 Recalibrer avec le nuancier dans cette photo</button> : ça compare deux zones de la même photo, sans ce décalage.</p>
+          <p class="disclaimer" id="resultDisclaimer"></p>
         </div>
       </section>
     </section>
@@ -846,7 +844,7 @@
     document.getElementById('timerStop').addEventListener('click', ()=>stopTimer(false));
   })();
 
-  // ================= NUANCIER v1.5 =================
+  // ================= NUANCIER v1.4 =================
   let dataCanvas=document.createElement('canvas');
   let dataCtx=dataCanvas.getContext('2d',{willReadFrequently:true});
   const viewCanvas=document.getElementById('viewCanvas');
@@ -966,8 +964,8 @@
       const t = n===1?0:i/(n-1);
       const x=Math.round(firstSwatchPos.x + (lastSwatchPos.x-firstSwatchPos.x)*t);
       const y=Math.round(firstSwatchPos.y + (lastSwatchPos.y-firstSwatchPos.y)*t);
-      const s=sampleColorRobust(x,y,6);
-      refPoints[preset[i]] = {rgb:s.rgb, x, y, contaminated:s.contaminated};
+      const s=robustSampleAt(x,y,6);
+      refPoints[preset[i]] = {rgb:s.rgb, x, y, homogeneity:s.homogeneity};
     }
     renderVerifyStrip();
   }
@@ -977,41 +975,39 @@
     const keys=Object.keys(refPoints).map(Number).sort((a,b)=>a-b);
     if(keys.length===0){ verifyCard.style.display='none'; return; }
     verifyCard.style.display='block';
+
+    const bad = keys.filter(val => refPoints[val].homogeneity!==undefined && refPoints[val].homogeneity<0.6);
+    let warnEl = document.getElementById('calibWarning');
+    if(!warnEl){
+      warnEl = document.createElement('div');
+      warnEl.id='calibWarning';
+      warnEl.style.cssText='background:rgba(255,90,95,0.14);border:1px solid var(--bad);border-radius:10px;padding:12px;margin-bottom:12px;font-size:0.85rem;color:var(--bad);line-height:1.5;';
+      verifyCard.insertBefore(warnEl, refRectList);
+    }
+    if(bad.length){
+      const labels = bad.map(v=>`${v}${p.unit?(' '+p.unit):''}`).join(', ');
+      warnEl.style.display='block';
+      warnEl.innerHTML = `❌ Zone non exploitable : <strong>${labels}</strong> — probablement cachée par le tube, un reflet ou du texte. Reprends la photo avec le tube décalé, ou corrige-la avec ✏️ ci-dessous.`;
+    } else {
+      warnEl.style.display='none';
+    }
+
     refRectList.innerHTML='';
-    const badKeys=[];
     keys.forEach(val=>{
       const obj=refPoints[val];
+      const isBad = bad.includes(val);
       const rect=document.createElement('button');
       const canRecalibrate = calibMode==='photo' && obj.x!==undefined;
-      const isBad = !!obj.contaminated;
-      if(isBad) badKeys.push(val);
-      rect.className='ref-rect' + (canRecalibrate ? '' : ' disabled') + (isBad ? ' bad' : '');
+      rect.className='ref-rect' + (canRecalibrate ? '' : ' disabled');
       rect.type='button';
-      if(isBad){
-        rect.innerHTML = `<span class="swatch bad-x">❌</span><span class="val">${val}${p.unit?(' '+p.unit):''} — illisible</span>${canRecalibrate?'<span class="edit-ic">✏️</span>':''}`;
-      } else {
-        rect.innerHTML = `<span class="swatch" style="background:${rgbCss(obj.rgb)}"></span><span class="val">${val}${p.unit?(' '+p.unit):''}</span>${canRecalibrate?'<span class="edit-ic">✏️</span>':''}`;
-      }
+      if(isBad) rect.style.border='2px solid var(--bad)';
+      rect.innerHTML = `<span class="swatch" style="background:${rgbCss(obj.rgb)}"></span><span class="val">${val}${p.unit?(' '+p.unit):''}${isBad?' ⚠️':''}</span>${canRecalibrate?'<span class="edit-ic">✏️</span>':''}`;
       if(canRecalibrate){
         rect.addEventListener('click', ()=>armAim({chip:val}, `Pastille ${val}${p.unit?(' '+p.unit):''}`));
       }
       refRectList.appendChild(rect);
     });
-    let warnEl=document.getElementById('verifyWarning');
-    if(!warnEl){
-      warnEl=document.createElement('p');
-      warnEl.id='verifyWarning';
-      warnEl.style.cssText='color:var(--bad);font-size:0.85rem;margin:0 0 10px;font-weight:600;';
-      verifyCard.insertBefore(warnEl, refRectList);
-    }
-    if(badKeys.length>0){
-      warnEl.style.display='block';
-      warnEl.textContent = `❌ ${badKeys.length>1?'Pastilles':'Pastille'} illisible${badKeys.length>1?'s':''} (${badKeys.join(', ')}) — probablement cachée par le tube ou un reflet. Corrige-la (✏️) ou reprends la photo avant de continuer.`;
-    } else {
-      warnEl.style.display='none';
-    }
     renderMarkers();
-    updateComputeBtn();
   }
 
   function addCustomChip(){
@@ -1154,30 +1150,32 @@
   document.getElementById('btnAimCancel').addEventListener('click', disarmAim);
   document.getElementById('targetRedo').addEventListener('click', ()=>{ pendingTarget=null; targetConfirm.classList.remove('show'); });
 
-  // Échantillonnage robuste : médiane (pas moyenne) pour ignorer les pixels contaminés
-  // (bord du tube, reflet...) tant qu'ils restent minoritaires — méthode standard en
-  // détection de nuanciers colorimétriques (ColorChecker). Détecte aussi si la zone
-  // est trop hétérogène pour être fiable (mélange pastille + autre chose).
-  function sampleColorRobust(x,y,radius){
+  function averageColorAt(x,y,radius){
+    return robustSampleAt(x,y,radius).rgb;
+  }
+  // Médiane par canal + score d'homogénéité (méthode utilisée pour la détection de
+  // chartes colorimétriques : robuste à une contamination partielle de la zone —
+  // bord du tube, reflet, texte — tant qu'elle reste minoritaire dans le patch).
+  function robustSampleAt(x,y,radius){
     radius=radius||6;
     const w=dataCanvas.width,h=dataCanvas.height;
     const x0=clamp(x-radius,0,w-1),y0=clamp(y-radius,0,h-1),x1=clamp(x+radius,0,w-1),y1=clamp(y+radius,0,h-1);
     const data=dataCtx.getImageData(x0,y0,x1-x0+1,y1-y0+1).data;
-    const rs=[],gs=[],bs=[];
-    for(let i=0;i<data.length;i+=4){ rs.push(data[i]); gs.push(data[i+1]); bs.push(data[i+2]); }
-    const sr=[...rs].sort((a,b)=>a-b), sg=[...gs].sort((a,b)=>a-b), sb=[...bs].sort((a,b)=>a-b);
-    const mid=Math.floor(sr.length/2);
-    const median=[sr[mid],sg[mid],sb[mid]];
-    let outliers=0;
-    for(let i=0;i<rs.length;i++){
-      const d=Math.sqrt((rs[i]-median[0])**2+(gs[i]-median[1])**2+(bs[i]-median[2])**2);
-      if(d>40) outliers++;
-    }
-    const contaminated = (outliers/rs.length) > 0.35;
-    return {rgb:median, contaminated};
+    const pixels=[];
+    for(let i=0;i<data.length;i+=4) pixels.push([data[i],data[i+1],data[i+2]]);
+    const rs=pixels.map(p=>p[0]).sort((a,b)=>a-b);
+    const gs=pixels.map(p=>p[1]).sort((a,b)=>a-b);
+    const bs=pixels.map(p=>p[2]).sort((a,b)=>a-b);
+    const mid=Math.floor(pixels.length/2);
+    const median=[rs[mid],gs[mid],bs[mid]];
+    const TOL=22;
+    let close=0;
+    pixels.forEach(p=>{
+      if(Math.abs(p[0]-median[0])<=TOL && Math.abs(p[1]-median[1])<=TOL && Math.abs(p[2]-median[2])<=TOL) close++;
+    });
+    const homogeneity = close/pixels.length; // 1 = zone parfaitement uniforme, <0.6 = probablement contaminée
+    return {rgb:median, homogeneity};
   }
-  function averageColorAt(x,y,radius){ return sampleColorRobust(x,y,radius).rgb; }
-
   function getCanvasCoords(clientX,clientY){
     const rect=viewCanvas.getBoundingClientRect();
     const sx=viewCanvas.width/rect.width, sy=viewCanvas.height/rect.height;
@@ -1211,9 +1209,15 @@
     if(!aimTarget || e.pointerId!==activePointerId) return;
     activePointerId=null;
     const [x,y]=getCanvasCoords(e.clientX,e.clientY);
-    const s=sampleColorRobust(x,y,6);
-    pendingTarget={x,y,rgb:s.rgb,contaminated:s.contaminated};
+    const s=robustSampleAt(x,y,6);
+    pendingTarget={x,y,rgb:s.rgb,homogeneity:s.homogeneity};
     targetSwatch.style.background=rgbCss(s.rgb);
+    if(s.homogeneity<0.6){
+      targetSwatch.style.boxShadow='0 0 0 3px var(--bad)';
+      targetLabel.textContent += ' — ⚠️ zone non uniforme';
+    } else {
+      targetSwatch.style.boxShadow='none';
+    }
     targetConfirm.classList.add('show');
   });
   viewCanvas.addEventListener('touchstart', e=>{ if(aimTarget) e.preventDefault(); }, {passive:false});
@@ -1231,7 +1235,7 @@
     } else if(aimTarget==='sample'){
       samplePointRaw=pendingTarget.rgb;
     } else if(aimTarget && aimTarget.chip!==undefined){
-      refPoints[aimTarget.chip]={rgb:pendingTarget.rgb, x:pendingTarget.x, y:pendingTarget.y, contaminated:pendingTarget.contaminated};
+      refPoints[aimTarget.chip]={rgb:pendingTarget.rgb, x:pendingTarget.x, y:pendingTarget.y, homogeneity:pendingTarget.homogeneity};
       renderVerifyStrip();
     }
     disarmAim();
@@ -1242,9 +1246,8 @@
 
   function updateComputeBtn(){
     const n = Object.keys(refPoints).length;
-    const hasContamination = Object.values(refPoints).some(o=>o.contaminated);
     if(calibMode==='fallback') btnCompute.disabled = !(n>=2 && whitePoint && samplePointRaw);
-    else btnCompute.disabled = !(n>=2 && samplePointRaw) || hasContamination;
+    else btnCompute.disabled = !(n>=2 && samplePointRaw);
   }
 
   // -------- canvas markers (visual only, on-photo) --------
@@ -1278,10 +1281,12 @@
     else{ const w1=1/(best.de+0.001), w2=1/(second.de+0.001); resultValue=(best.value*w1+second.value*w2)/(w1+w2); }
     resultValue=Math.round(resultValue*100)/100;
 
-    // Fiabilité : en mode 'photo' (nuancier + échantillon dans la même photo, même appareil,
-    // même éclairage), un seuil ΔE absolu est de nouveau pertinent — pas de décalage d'appareil
-    // à compenser. En mode 'fallback' (profil/scanner + photo séparée), l'appareil diffère,
-    // donc on juge plutôt la distinction relative avec la pastille voisine.
+    // Fiabilité : en calibration "même photo" (mode principal), l'appareil et l'éclairage
+    // sont identiques entre pastilles et échantillon — un seuil ΔE absolu est donc pertinent
+    // et cohérent (une calibration correcte donne un ΔE bas, une calibration cassée un ΔE haut).
+    // En mode secours (profil/scanner = autre appareil, autre instant), l'écart absolu est
+    // structurellement gonflé par le changement d'appareil ; on juge alors la séparation
+    // relative entre la pastille gagnante et sa voisine plutôt que la valeur absolue.
     let confLabel, confColor;
     if(calibMode==='fallback'){
       if(!second){ confLabel='Une seule pastille de référence'; confColor='var(--amber)'; }
@@ -1290,13 +1295,13 @@
         if(best.de < 1.5){ confLabel='Correspondance quasi parfaite'; confColor='var(--good)'; }
         else if(gapRatio > 1.6){ confLabel='Nette — bien distincte des pastilles voisines'; confColor='var(--good)'; }
         else if(gapRatio > 1.2){ confLabel='Correcte — assez distincte des voisines'; confColor='var(--amber)'; }
-        else{ confLabel='Ambiguë — proche de plusieurs pastilles voisines, vérifie visuellement'; confColor='var(--bad)'; }
+        else{ confLabel='Ambiguë — proche de plusieurs pastilles voisines'; confColor='var(--bad)'; }
       }
     } else {
-      if(best.de < 3){ confLabel='Correspondance excellente'; confColor='var(--good)'; }
-      else if(best.de < 7){ confLabel='Bonne correspondance'; confColor='var(--good)'; }
-      else if(best.de < 14){ confLabel='Correspondance approximative'; confColor='var(--amber)'; }
-      else{ confLabel='Peu fiable — vise plus précisément ou reprends la photo'; confColor='var(--bad)'; }
+      if(best.de<3){ confLabel='Correspondance excellente'; confColor='var(--good)'; }
+      else if(best.de<7){ confLabel='Bonne correspondance'; confColor='var(--good)'; }
+      else if(best.de<14){ confLabel='Correspondance approximative'; confColor='var(--amber)'; }
+      else{ confLabel='Peu fiable — vérifie les pastilles ci-dessus (zone grisée ?)'; confColor='var(--bad)'; }
     }
 
     const status = refParam==='autre' ? null : statusOf(refParam, resultValue);
@@ -1322,6 +1327,9 @@
       tbody.appendChild(tr);
     });
     document.getElementById('savedNote').textContent='';
+    document.getElementById('resultDisclaimer').textContent = calibMode==='fallback'
+      ? "Comparaison avec des couleurs enregistrées ailleurs (profil/scanner) — moins précis qu'une calibration sur cette photo, car appareil et éclairage diffèrent."
+      : "Résultat basé sur une comparaison colorimétrique entre pastilles et échantillon pris sur la même photo. Tu peux corriger la valeur ci-dessus avant de valider.";
     nuancierBannerValue.textContent = value+' '+p.unit;
     resultPanel.style.display='block';
     resultPanel.scrollIntoView({behavior:'smooth', block:'start'});
