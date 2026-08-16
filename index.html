@@ -59,7 +59,7 @@
 
   .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px;}
   .dash-card{background:var(--bg-panel);border:1px solid var(--line);border-radius:12px;padding:12px;}
-  .dash-card .lbl{font-size:0.68rem;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:4px;}
+  .dash-card .lbl{font-size:0.68rem;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:4px;display:flex;align-items:center;gap:5px;}
   .dash-card .val{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:1.25rem;}
   .dash-card .val .unit{font-size:0.65rem;color:var(--text-dim);font-weight:500;margin-left:2px;}
   .dash-card .meta{display:flex;align-items:center;justify-content:space-between;margin-top:6px;gap:4px;}
@@ -70,6 +70,18 @@
   .status-pill.warn{color:var(--amber);background:rgba(242,166,90,0.16);}
   .status-pill.bad{color:var(--bad);background:rgba(255,90,95,0.16);}
   .status-pill.none{color:var(--text-dim);background:rgba(110,147,190,0.12);}
+
+  .gauge-bar{position:relative;height:14px;border-radius:20px;margin:14px 0 16px;}
+  .gauge-marker{position:absolute;top:-4px;bottom:-4px;width:3px;background:#fff;border-radius:2px;box-shadow:0 0 6px rgba(255,255,255,0.8);transform:translateX(-50%);}
+  .gauge-cols{display:flex;gap:8px;}
+  .gauge-col{flex:1;background:var(--bg-panel-raised);border-radius:10px;padding:10px 6px;text-align:center;}
+  .gauge-col .gc-label{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.03em;margin-bottom:4px;}
+  .gauge-col .gc-val{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:0.98rem;}
+  .gauge-col .gc-val.amber{color:var(--amber);}
+  .gauge-col .gc-val.good{color:var(--aqua);}
+  .gauge-col .gc-val.optimal{color:var(--good);}
+  .gauge-col .gc-unit{display:block;font-size:0.65rem;font-weight:500;color:var(--text-dim);}
+  .param-dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none;}
   .empty-state{text-align:center;padding:34px 10px;color:var(--text-dim);}
   .empty-state .big{font-size:2rem;margin-bottom:10px;}
   .empty-state p{font-size:0.88rem;line-height:1.5;margin:0 0 16px;}
@@ -175,7 +187,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v1.9</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v2.0</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -208,7 +220,7 @@
       </button>
     </section>
 
-    <!-- ================= NUANCIER (v1.9) ================= -->
+    <!-- ================= NUANCIER (v2.0) ================= -->
     <section class="view" id="view-nuancier">
       <div class="sticky-banner" id="nuancierBanner"><span class="sp" id="nuancierBannerParam"></span><span class="sv" id="nuancierBannerValue"></span></div>
 
@@ -276,7 +288,7 @@
             <div class="param" id="readoutParam"></div>
 
           </div>
-          <div style="text-align:center;margin-bottom:10px;"><span class="status-pill" id="readoutStatus"></span></div>
+          <div id="readoutGauge"></div>
           <div class="confidence" id="confidenceText"></div>
           <div class="compare-row">
             <div class="compare-item"><div class="swatch" id="cmpSample"></div><div class="lbl">ÉCHANTILLON</div></div>
@@ -309,7 +321,7 @@
       <div class="card" id="titrationResultPanel" style="display:none;">
         <p class="step-label done"><span class="dot"></span>Résultat</p>
         <div class="readout"><div class="value" style="font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:2.4rem;color:var(--aqua);"><span id="titrationResultValue">—</span><span class="u" id="titrationResultUnit"></span></div></div>
-        <div style="text-align:center;"><span class="status-pill" id="titrationResultStatus"></span></div>
+        <div id="titrationGauge"></div>
         <p class="saved-note" id="titrationSavedNote" style="margin-top:10px;"></p>
         <button class="secondary" style="width:100%;margin-top:12px;" onclick="showView('dashboard')">Voir le tableau de bord</button>
       </div>
@@ -450,26 +462,26 @@
 
   // ================= parameter registry =================
   const PARAMS = {
-    ph:   {label:'pH',                     unit:'',    group:'chart',     decimals:2, ideal:[8.1,8.4],    acceptable:[7.8,8.6],
+    ph:   {label:'pH',                     unit:'',    group:'chart',     decimals:2, ideal:[8.1,8.4],    acceptable:[7.8,8.6], optimal:8.25, color:'#DD5099',
            presetValues:[7.4,7.8,8.0,8.4],
            swatches:{7.4:[223,113,110],7.8:[218,84,142],8.0:[217,80,157],8.4:[194,85,151]}},
-    nh3:  {label:'Ammoniac (NH3/NH4⁺)',    unit:'ppm', group:'chart',     decimals:2, ideal:[0,0],        acceptable:[0,0.25],
+    nh3:  {label:'Ammoniac (NH3/NH4⁺)',    unit:'ppm', group:'chart',     decimals:2, ideal:[0,0],        acceptable:[0,0.25], optimal:0, color:'#6FB93A',
            presetValues:[0,0.25,0.5,1,2,4,8],
            swatches:{0:[235,229,26],0.25:[169,205,37],0.5:[124,193,51],1:[78,181,58],2:[36,171,84],4:[20,155,109],8:[14,145,105]}},
-    no2:  {label:'Nitrite (NO2⁻)',         unit:'ppm', group:'chart',     decimals:2, ideal:[0,0],        acceptable:[0,0.25],
+    no2:  {label:'Nitrite (NO2⁻)',         unit:'ppm', group:'chart',     decimals:2, ideal:[0,0],        acceptable:[0,0.25], optimal:0, color:'#9B5FB5',
            presetValues:[0,0.25,0.5,1,2,5],
            swatches:{0:[250,250,252],0.25:[247,241,243],0.5:[239,222,223],1:[223,182,199],2:[178,125,166],5:[177,101,155]}},
-    no3:  {label:'Nitrate (NO3⁻)',         unit:'ppm', group:'chart',     decimals:1, ideal:[2,10],       acceptable:[0,20],
+    no3:  {label:'Nitrate (NO3⁻)',         unit:'ppm', group:'chart',     decimals:1, ideal:[2,10],       acceptable:[0,20], optimal:5, color:'#C2529A',
            presetValues:[0,5,10,20,40,80,160],
            swatches:{0:[252,252,254],5:[252,250,251],10:[243,232,232],20:[233,212,219],40:[218,165,188],80:[186,131,173],160:[172,75,146]}},
-    po4:  {label:'Phosphate (PO4³⁻)',      unit:'ppm', group:'chart',     decimals:2, ideal:[0.03,0.10],  acceptable:[0,0.15],
+    po4:  {label:'Phosphate (PO4³⁻)',      unit:'ppm', group:'chart',     decimals:2, ideal:[0.03,0.10],  acceptable:[0,0.15], optimal:0.06, color:'#4FA37A',
            presetValues:[0,0.25,0.5,1,2,4,10],
            swatches:{0:[243,232,137],0.25:[227,228,149],0.5:[211,223,145],1:[186,214,141],2:[131,190,133],4:[98,164,128],10:[48,134,120]}},
-    kh:   {label:'KH / Alcalinité',        unit:'dKH', group:'titration', decimals:1, ideal:[8,12],       acceptable:[7,13], calc:r=>(1-r)*16},
-    ca:   {label:'Calcium',                unit:'ppm', group:'titration', decimals:0, ideal:[380,450],    acceptable:[350,480], calc:r=>(1-r)*500},
-    mg:   {label:'Magnésium',              unit:'ppm', group:'titration', decimals:0, ideal:[1250,1350],  acceptable:[1200,1400], calc:r=>(1-r)*1500},
-    temp: {label:'Température',            unit:'°C',  group:'direct',    decimals:1, ideal:[24,27],      acceptable:[23,28]},
-    sal:  {label:'Salinité (densité)',     unit:'SG',  group:'direct',    decimals:3, ideal:[1.023,1.026],acceptable:[1.020,1.028]},
+    kh:   {label:'KH / Alcalinité',        unit:'dKH', group:'titration', decimals:1, ideal:[8,12],       acceptable:[7,13], optimal:10, color:'#A66BD1', calc:r=>(1-r)*16},
+    ca:   {label:'Calcium',                unit:'ppm', group:'titration', decimals:0, ideal:[380,450],    acceptable:[350,480], optimal:420, color:'#FF6B9D', calc:r=>(1-r)*500},
+    mg:   {label:'Magnésium',              unit:'ppm', group:'titration', decimals:0, ideal:[1250,1350],  acceptable:[1200,1400], optimal:1300, color:'#4CD787', calc:r=>(1-r)*1500},
+    temp: {label:'Température',            unit:'°C',  group:'direct',    decimals:1, ideal:[24,27],      acceptable:[23,28], optimal:25.5, color:'#6B8FFF'},
+    sal:  {label:'Salinité (densité)',     unit:'SG',  group:'direct',    decimals:3, ideal:[1.023,1.026],acceptable:[1.020,1.028], optimal:1.0245, color:'#4DD9E8'},
     autre:{label:'Autre',                  unit:'',    group:'chart',     decimals:2, ideal:null,         acceptable:null}
   };
 
@@ -490,6 +502,37 @@
     return value<=aMax ? 'high-warn' : 'high';
   }
   function statusMeta(s){ return (s && STATUS_META[s]) ? STATUS_META[s] : {cls:'none', label:'—'}; }
+
+  // Barre dégradée rouge -> vert -> rouge avec repère à la valeur mesurée,
+  // + bloc Acceptable / Good / Optimal (plages chiffrées réelles).
+  function renderGauge(container, paramKey, value){
+    const p = PARAMS[paramKey];
+    if(!p || !p.ideal){ container.innerHTML=''; return; }
+    const [aMin,aMax] = p.acceptable, [iMin,iMax] = p.ideal, opt = p.optimal;
+    const span = aMax - aMin || 1;
+    const pad = span * 0.15;
+    const dMin = aMin - pad, dMax = aMax + pad;
+    const pct = v => Math.max(0, Math.min(100, ((v-dMin)/(dMax-dMin))*100));
+    const gAMin=pct(aMin), gIMin=pct(iMin), gIMax=pct(iMax), gAMax=pct(aMax);
+    const markerPct = pct(value);
+    const gradient = `linear-gradient(90deg,
+      var(--bad) 0%, var(--bad) ${gAMin}%,
+      var(--amber) ${gAMin}%, var(--amber) ${gIMin}%,
+      var(--good) ${gIMin}%, var(--good) ${gIMax}%,
+      var(--amber) ${gIMax}%, var(--amber) ${gAMax}%,
+      var(--bad) ${gAMax}%, var(--bad) 100%)`;
+    const dec = p.decimals;
+    container.innerHTML = `
+      <div class="gauge-bar" style="background:${gradient}">
+        <div class="gauge-marker" style="left:${markerPct}%"></div>
+      </div>
+      <div class="gauge-cols">
+        <div class="gauge-col"><div class="gc-label">Acceptable</div><div class="gc-val amber">${aMin}–${aMax}<span class="gc-unit">${p.unit}</span></div></div>
+        <div class="gauge-col"><div class="gc-label">Idéal</div><div class="gc-val good">${iMin}–${iMax}<span class="gc-unit">${p.unit}</span></div></div>
+        <div class="gauge-col"><div class="gc-label">Optimal</div><div class="gc-val optimal">${opt}<span class="gc-unit">${p.unit}</span></div></div>
+      </div>`;
+  }
+
 
   // ================= history (Supabase) =================
   let historyData = [];
@@ -564,7 +607,7 @@
       const p=PARAMS[k], latest=latestFor(k); if(latest) any=true;
       const meta = statusMeta(latest? latest.status : null);
       const card=document.createElement('div'); card.className='dash-card';
-      card.innerHTML = `<div class="lbl">${p.label}</div><div class="val">${latest?Number(latest.value).toFixed(p.decimals):'—'}<span class="unit">${p.unit}</span></div>
+      card.innerHTML = `<div class="lbl"><span class="param-dot" style="background:${p.color||'#6E93BE'}"></span> ${p.label}</div><div class="val">${latest?Number(latest.value).toFixed(p.decimals):'—'}<span class="unit">${p.unit}</span></div>
       <div class="meta"><span class="status-pill ${meta.cls}">${meta.label}</span><span class="date">${latest?relDate(latest.date):''}</span></div>
       <canvas class="spark"></canvas>`;
       card.addEventListener('click', ()=>{ showView('history'); document.getElementById('historyFilter').value=k; renderHistory(); });
@@ -592,7 +635,8 @@
       const label = e.param==='autre'?(e.customLabel||'Autre'):p.label;
       const meta = statusMeta(e.status);
       const tr=document.createElement('tr');
-      tr.innerHTML = `<td>${new Date(e.date).toLocaleDateString('fr-FR')}</td><td>${label}</td><td>${Number(e.value).toFixed(p.decimals!==undefined?p.decimals:2)} ${p.unit||''}</td><td><span class="status-pill ${meta.cls}">${meta.label}</span></td><td><button class="del">×</button></td>`;
+      const dotColor = e.param==='autre' ? '#6E93BE' : (p.color||'#6E93BE');
+      tr.innerHTML = `<td>${new Date(e.date).toLocaleDateString('fr-FR')}</td><td><span class="param-dot" style="background:${dotColor}"></span> ${label}</td><td>${Number(e.value).toFixed(p.decimals!==undefined?p.decimals:2)} ${p.unit||''}</td><td><span class="status-pill ${meta.cls}">${meta.label}</span></td><td><button class="del">×</button></td>`;
       tr.querySelector('.del').addEventListener('click', ()=>deleteHistoryEntry(e.id));
       tbody.appendChild(tr);
     });
@@ -768,7 +812,7 @@
       document.getElementById('titrationResultPanel').style.display='block';
       document.getElementById('titrationResultValue').textContent=value.toFixed(p.decimals);
       document.getElementById('titrationResultUnit').textContent=p.unit;
-      const st=document.getElementById('titrationResultStatus'); st.className='status-pill '+meta.cls; st.textContent=meta.label;
+      renderGauge(document.getElementById('titrationGauge'), key, value);
       document.getElementById('titrationBannerValue').textContent = value.toFixed(p.decimals)+' '+p.unit;
 
       const saved=await addHistoryEntry({param:key,value,status,source:'titration'});
@@ -858,7 +902,7 @@
     document.getElementById('timerStop').addEventListener('click', ()=>stopTimer(false));
   })();
 
-  // ================= NUANCIER v1.9 =================
+  // ================= NUANCIER v2.0 =================
   let dataCanvas=document.createElement('canvas');
   let dataCtx=dataCanvas.getContext('2d',{willReadFrequently:true});
   const viewCanvas=document.getElementById('viewCanvas');
@@ -1335,7 +1379,8 @@
     document.getElementById('readoutValue').value = value;
     document.getElementById('readoutUnit').textContent = p.unit;
     document.getElementById('readoutParam').textContent = isCustom ? (chartCustomLabel.value.trim()||'Autre') : p.label;
-    const st=document.getElementById('readoutStatus'); st.className='status-pill '+meta.cls; st.textContent=meta.label;
+    const gaugeEl=document.getElementById('readoutGauge');
+    if(isCustom){ gaugeEl.innerHTML=''; } else { renderGauge(gaugeEl, refParam, value); }
     const conf=document.getElementById('confidenceText');
     conf.textContent = manual ? 'Sélection manuelle' : `ΔE ${best.de.toFixed(1)} · ${confLabel}`;
     conf.style.color = manual ? 'var(--text-dim)' : confColor;
@@ -1359,6 +1404,11 @@
     resultPanel.scrollIntoView({behavior:'smooth', block:'start'});
   }
 
+  document.getElementById('readoutValue').addEventListener('input', ()=>{
+    if(refParam==='autre') return;
+    const v = parseFloat(document.getElementById('readoutValue').value.replace(',','.'));
+    if(!isNaN(v)) renderGauge(document.getElementById('readoutGauge'), refParam, v);
+  });
   document.getElementById('btnValidateResult').addEventListener('click', async ()=>{
     const p=PARAMS[refParam]; const isCustom=refParam==='autre';
     const val=parseFloat(document.getElementById('readoutValue').value.replace(',','.'));
