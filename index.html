@@ -82,6 +82,27 @@
   .gauge-col .gc-val.optimal{color:var(--good);}
   .gauge-col .gc-unit{display:block;font-size:0.65rem;font-weight:500;color:var(--text-dim);}
   .param-dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none;}
+
+  .highlight-row-card{padding:20px 14px;}
+  .highlight-row{display:flex;gap:12px;justify-content:center;}
+  .highlight-badge{
+    width:92px;height:92px;border-radius:50%;flex:none;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:var(--bg-panel-raised);border:3px solid var(--line);
+  }
+  .highlight-badge .hv{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:1.3rem;line-height:1.1;}
+  .highlight-badge .hl{font-size:0.6rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.03em;margin-top:4px;text-align:center;}
+
+  .section-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1rem;margin:0 0 2px;}
+  .section-sub{font-size:0.78rem;color:var(--text-dim);margin:0 0 18px;}
+
+  .bar-row{display:flex;gap:16px;overflow-x:auto;padding:4px 4px 8px;-webkit-overflow-scrolling:touch;}
+  .bar-col{flex:none;width:52px;display:flex;flex-direction:column;align-items:center;background:none;border:none;color:var(--text);padding:0;}
+  .bar-track{width:14px;height:130px;background:var(--bg-panel-raised);border-radius:10px;display:flex;align-items:flex-end;overflow:hidden;}
+  .bar-fill{width:100%;border-radius:10px;min-height:6px;transition:height .25s ease;}
+  .bar-col .bl{font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:var(--text-dim);margin-top:9px;}
+  .bar-col .bv{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;font-weight:600;margin-top:1px;text-align:center;line-height:1.2;}
+  .bar-col .bu{display:block;font-size:0.6rem;color:var(--text-dim);font-weight:500;}
   .empty-state{text-align:center;padding:34px 10px;color:var(--text-dim);}
   .empty-state .big{font-size:2rem;margin-bottom:10px;}
   .empty-state p{font-size:0.88rem;line-height:1.5;margin:0 0 16px;}
@@ -187,7 +208,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v2.0</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v2.1</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -196,7 +217,17 @@
     <section class="view active" id="view-dashboard">
       <p class="step-label active"><span class="dot"></span>Tableau de bord</p>
       <div class="card sync-error" id="syncError" style="display:none;"><p>⚠️ Connexion à Supabase impossible.</p></div>
-      <div class="dash-grid" id="dashGrid"></div>
+
+      <div class="card highlight-row-card">
+        <div class="highlight-row" id="highlightRow"></div>
+      </div>
+
+      <div class="card">
+        <p class="section-title">Dernières mesures</p>
+        <p class="section-sub" id="lastMeasureSub">Aucune mesure encore</p>
+        <div class="bar-row" id="barRow"></div>
+      </div>
+
       <div class="empty-state" id="dashEmpty" style="display:none;">
         <div class="big">🐠</div>
         <p>Aucune mesure encore.<br>Commence par un nouveau test.</p>
@@ -220,7 +251,7 @@
       </button>
     </section>
 
-    <!-- ================= NUANCIER (v2.0) ================= -->
+    <!-- ================= NUANCIER (v2.1) ================= -->
     <section class="view" id="view-nuancier">
       <div class="sticky-banner" id="nuancierBanner"><span class="sp" id="nuancierBannerParam"></span><span class="sv" id="nuancierBannerValue"></span></div>
 
@@ -516,11 +547,9 @@
     const gAMin=pct(aMin), gIMin=pct(iMin), gIMax=pct(iMax), gAMax=pct(aMax);
     const markerPct = pct(value);
     const gradient = `linear-gradient(90deg,
-      var(--bad) 0%, var(--bad) ${gAMin}%,
-      var(--amber) ${gAMin}%, var(--amber) ${gIMin}%,
+      var(--bad) 0%, var(--amber) ${gAMin}%,
       var(--good) ${gIMin}%, var(--good) ${gIMax}%,
-      var(--amber) ${gIMax}%, var(--amber) ${gAMax}%,
-      var(--bad) ${gAMax}%, var(--bad) 100%)`;
+      var(--amber) ${gAMax}%, var(--bad) 100%)`;
     const dec = p.decimals;
     container.innerHTML = `
       <div class="gauge-bar" style="background:${gradient}">
@@ -600,19 +629,51 @@
     const lx=xAt(values.length-1), ly=yAt(values[values.length-1]);
     ctx.beginPath(); ctx.arc(lx,ly,2.2,0,Math.PI*2); ctx.fillStyle='#2ED9C3'; ctx.fill();
   }
+  const SHORT_LABEL = {ph:'pH', nh3:'NH3', no2:'NO2', no3:'NO3', po4:'PO4', kh:'KH', ca:'Ca', mg:'Mg', temp:'Temp', sal:'Sal'};
+  function gaugeRange(p){
+    const [aMin,aMax]=p.acceptable, span=(aMax-aMin)||1, pad=span*0.2;
+    return [aMin-pad, aMax+pad];
+  }
   function renderDashboard(){
-    const grid=document.getElementById('dashGrid'); grid.innerHTML='';
-    let any=false;
+    const allSorted = historyData.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
+    const mostRecent = allSorted[0];
+    const phLatest = latestFor('ph'), tempLatest = latestFor('temp');
+    const daysSince = mostRecent ? Math.floor((new Date() - new Date(mostRecent.date))/86400000) : null;
+
+    document.getElementById('highlightRow').innerHTML = `
+      <div class="highlight-badge" style="border-color:${PARAMS.temp.color}">
+        <div class="hv">${tempLatest?Number(tempLatest.value).toFixed(1):'—'}</div>
+        <div class="hl">°C · Temp</div>
+      </div>
+      <div class="highlight-badge" style="border-color:${PARAMS.ph.color}">
+        <div class="hv">${phLatest?Number(phLatest.value).toFixed(2):'—'}</div>
+        <div class="hl">pH</div>
+      </div>
+      <div class="highlight-badge">
+        <div class="hv">${daysSince!==null?daysSince:'—'}</div>
+        <div class="hl">Jours</div>
+      </div>`;
+    document.getElementById('lastMeasureSub').textContent = mostRecent
+      ? `Dernière mesure le ${new Date(mostRecent.date).toLocaleDateString('fr-FR')}`
+      : 'Aucune mesure encore';
+
+    const barRow = document.getElementById('barRow');
+    barRow.innerHTML = '';
+    let any = false;
     Object.keys(PARAMS).filter(k=>k!=='autre').forEach(k=>{
-      const p=PARAMS[k], latest=latestFor(k); if(latest) any=true;
-      const meta = statusMeta(latest? latest.status : null);
-      const card=document.createElement('div'); card.className='dash-card';
-      card.innerHTML = `<div class="lbl"><span class="param-dot" style="background:${p.color||'#6E93BE'}"></span> ${p.label}</div><div class="val">${latest?Number(latest.value).toFixed(p.decimals):'—'}<span class="unit">${p.unit}</span></div>
-      <div class="meta"><span class="status-pill ${meta.cls}">${meta.label}</span><span class="date">${latest?relDate(latest.date):''}</span></div>
-      <canvas class="spark"></canvas>`;
-      card.addEventListener('click', ()=>{ showView('history'); document.getElementById('historyFilter').value=k; renderHistory(); });
-      grid.appendChild(card);
-      requestAnimationFrame(()=>drawSparkline(card.querySelector('canvas.spark'), seriesFor(k,10).map(e=>e.value), p.ideal));
+      const p=PARAMS[k], latest=latestFor(k);
+      if(latest) any = true;
+      const [dMin,dMax] = gaugeRange(p);
+      const val = latest ? Number(latest.value) : null;
+      const heightPct = val!==null ? Math.max(5, Math.min(100, ((val-dMin)/(dMax-dMin))*100)) : 4;
+      const col = document.createElement('button');
+      col.className='bar-col'; col.type='button';
+      col.innerHTML = `
+        <div class="bar-track"><div class="bar-fill" style="height:${heightPct}%;background:${p.color||'#6E93BE'}"></div></div>
+        <div class="bl">${SHORT_LABEL[k]||k}</div>
+        <div class="bv">${val!==null?val.toFixed(p.decimals):'—'}${p.unit?`<span class="bu">${p.unit}</span>`:''}</div>`;
+      col.addEventListener('click', ()=>{ showView('history'); document.getElementById('historyFilter').value=k; renderHistory(); });
+      barRow.appendChild(col);
     });
     document.getElementById('dashEmpty').style.display = any ? 'none':'block';
   }
@@ -902,7 +963,7 @@
     document.getElementById('timerStop').addEventListener('click', ()=>stopTimer(false));
   })();
 
-  // ================= NUANCIER v2.0 =================
+  // ================= NUANCIER v2.1 =================
   let dataCanvas=document.createElement('canvas');
   let dataCtx=dataCanvas.getContext('2d',{willReadFrequently:true});
   const viewCanvas=document.getElementById('viewCanvas');
