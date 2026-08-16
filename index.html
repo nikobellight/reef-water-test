@@ -96,13 +96,13 @@
   .section-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1rem;margin:0 0 2px;}
   .section-sub{font-size:0.78rem;color:var(--text-dim);margin:0 0 18px;}
 
-  .bar-row{display:flex;gap:16px;overflow-x:auto;padding:4px 4px 8px;-webkit-overflow-scrolling:touch;}
-  .bar-col{flex:none;width:52px;display:flex;flex-direction:column;align-items:center;background:none;border:none;color:var(--text);padding:0;}
-  .bar-track{width:14px;height:130px;background:var(--bg-panel-raised);border-radius:10px;display:flex;align-items:flex-end;overflow:hidden;}
-  .bar-fill{width:100%;border-radius:10px;min-height:6px;transition:height .25s ease;}
-  .bar-col .bl{font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:var(--text-dim);margin-top:9px;}
-  .bar-col .bv{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;font-weight:600;margin-top:1px;text-align:center;line-height:1.2;}
-  .bar-col .bu{display:block;font-size:0.6rem;color:var(--text-dim);font-weight:500;}
+  .bar-row{display:flex;gap:4px;justify-content:space-between;padding:4px 0 8px;}
+  .bar-col{flex:1 1 0;min-width:0;max-width:34px;display:flex;flex-direction:column;align-items:center;background:none;border:none;color:var(--text);padding:0;}
+  .bar-track{width:10px;height:110px;background:var(--bg-panel-raised);border-radius:8px;display:flex;align-items:flex-end;overflow:hidden;}
+  .bar-fill{width:100%;border-radius:8px;min-height:5px;transition:height .25s ease;}
+  .bar-col .bl{font-family:'IBM Plex Mono',monospace;font-size:0.58rem;color:var(--text-dim);margin-top:7px;white-space:nowrap;}
+  .bar-col .bv{font-family:'IBM Plex Mono',monospace;font-size:0.56rem;font-weight:600;margin-top:1px;text-align:center;line-height:1.15;white-space:nowrap;}
+  .bar-col .bu{display:block;font-size:0.5rem;color:var(--text-dim);font-weight:500;}
   .empty-state{text-align:center;padding:34px 10px;color:var(--text-dim);}
   .empty-state .big{font-size:2rem;margin-bottom:10px;}
   .empty-state p{font-size:0.88rem;line-height:1.5;margin:0 0 16px;}
@@ -208,7 +208,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v2.1</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v2.2</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -251,7 +251,7 @@
       </button>
     </section>
 
-    <!-- ================= NUANCIER (v2.1) ================= -->
+    <!-- ================= NUANCIER (v2.2) ================= -->
     <section class="view" id="view-nuancier">
       <div class="sticky-banner" id="nuancierBanner"><span class="sp" id="nuancierBannerParam"></span><span class="sv" id="nuancierBannerValue"></span></div>
 
@@ -963,7 +963,7 @@
     document.getElementById('timerStop').addEventListener('click', ()=>stopTimer(false));
   })();
 
-  // ================= NUANCIER v2.1 =================
+  // ================= NUANCIER v2.2 =================
   let dataCanvas=document.createElement('canvas');
   let dataCtx=dataCanvas.getContext('2d',{willReadFrequently:true});
   const viewCanvas=document.getElementById('viewCanvas');
