@@ -175,7 +175,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v1.7</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v1.8</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -208,7 +208,7 @@
       </button>
     </section>
 
-    <!-- ================= NUANCIER (v1.7) ================= -->
+    <!-- ================= NUANCIER (v1.8) ================= -->
     <section class="view" id="view-nuancier">
       <div class="sticky-banner" id="nuancierBanner"><span class="sp" id="nuancierBannerParam"></span><span class="sv" id="nuancierBannerValue"></span></div>
 
@@ -854,7 +854,7 @@
     document.getElementById('timerStop').addEventListener('click', ()=>stopTimer(false));
   })();
 
-  // ================= NUANCIER v1.7 =================
+  // ================= NUANCIER v1.8 =================
   let dataCanvas=document.createElement('canvas');
   let dataCtx=dataCanvas.getContext('2d',{willReadFrequently:true});
   const viewCanvas=document.getElementById('viewCanvas');
@@ -1148,9 +1148,12 @@
     aimTarget=target; pendingTarget=null;
     fsTargetLabel.textContent = label;
     targetFullscreen.classList.add('show');
-    targetPreview.classList.remove('show');
+    targetPreview.classList.add('show');
     targetConfirm.classList.remove('show');
     renderMarkers();
+    // pré-remplit la loupe avec le centre de la photo pour qu'elle soit visible
+    // immédiatement, avant même le premier toucher.
+    if(hasPhoto) updateTargetPreview(Math.round(dataCanvas.width/2), Math.round(dataCanvas.height/2));
   }
   function disarmAim(){
     aimTarget=null; pendingTarget=null;
@@ -1208,6 +1211,7 @@
   viewCanvas.addEventListener('pointerdown', e=>{
     if(!aimTarget) return;
     e.preventDefault(); activePointerId=e.pointerId;
+    targetPreview.classList.add('show');
     const [x,y]=getCanvasCoords(e.clientX,e.clientY); updateTargetPreview(x,y);
   });
   window.addEventListener('pointermove', e=>{
