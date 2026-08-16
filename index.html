@@ -48,6 +48,8 @@
   .ref-rect-list{display:flex;flex-direction:column;gap:6px;}
   .ref-rect{display:flex;align-items:center;gap:12px;background:var(--bg-panel-raised);border-radius:10px;padding:8px 12px;border:none;width:100%;text-align:left;color:var(--text);}
   .ref-rect.disabled{opacity:0.7;}
+  .ref-rect.bad{background:rgba(255,90,95,0.14);border:1px solid var(--bad);}
+  .ref-rect .swatch.bad-x{display:flex;align-items:center;justify-content:center;font-size:1.1rem;background:rgba(255,90,95,0.2) !important;}
   .ref-rect .swatch{width:44px;height:34px;border-radius:6px;border:1px solid rgba(255,255,255,0.25);flex:none;}
   .ref-rect .val{font-family:'IBM Plex Mono',monospace;font-size:0.92rem;flex:1;}
   .ref-rect .edit-ic{color:var(--text-dim);font-size:0.9rem;}
@@ -167,7 +169,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v1.4</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v1.5</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -200,7 +202,7 @@
       </button>
     </section>
 
-    <!-- ================= NUANCIER (v1.4) ================= -->
+    <!-- ================= NUANCIER (v1.5) ================= -->
     <section class="view" id="view-nuancier">
       <div class="sticky-banner" id="nuancierBanner"><span class="sp" id="nuancierBannerParam"></span><span class="sv" id="nuancierBannerValue"></span></div>
 
@@ -844,7 +846,7 @@
     document.getElementById('timerStop').addEventListener('click', ()=>stopTimer(false));
   })();
 
-  // ================= NUANCIER v1.4 =================
+  // ================= NUANCIER v1.5 =================
   let dataCanvas=document.createElement('canvas');
   let dataCtx=dataCanvas.getContext('2d',{willReadFrequently:true});
   const viewCanvas=document.getElementById('viewCanvas');
@@ -964,7 +966,8 @@
       const t = n===1?0:i/(n-1);
       const x=Math.round(firstSwatchPos.x + (lastSwatchPos.x-firstSwatchPos.x)*t);
       const y=Math.round(firstSwatchPos.y + (lastSwatchPos.y-firstSwatchPos.y)*t);
-      refPoints[preset[i]] = {rgb:averageColorAt(x,y,4), x, y};
+      const s=sampleColorRobust(x,y,6);
+      refPoints[preset[i]] = {rgb:s.rgb, x, y, contaminated:s.contaminated};
     }
     renderVerifyStrip();
   }
@@ -975,19 +978,40 @@
     if(keys.length===0){ verifyCard.style.display='none'; return; }
     verifyCard.style.display='block';
     refRectList.innerHTML='';
+    const badKeys=[];
     keys.forEach(val=>{
       const obj=refPoints[val];
       const rect=document.createElement('button');
       const canRecalibrate = calibMode==='photo' && obj.x!==undefined;
-      rect.className='ref-rect' + (canRecalibrate ? '' : ' disabled');
+      const isBad = !!obj.contaminated;
+      if(isBad) badKeys.push(val);
+      rect.className='ref-rect' + (canRecalibrate ? '' : ' disabled') + (isBad ? ' bad' : '');
       rect.type='button';
-      rect.innerHTML = `<span class="swatch" style="background:${rgbCss(obj.rgb)}"></span><span class="val">${val}${p.unit?(' '+p.unit):''}</span>${canRecalibrate?'<span class="edit-ic">✏️</span>':''}`;
+      if(isBad){
+        rect.innerHTML = `<span class="swatch bad-x">❌</span><span class="val">${val}${p.unit?(' '+p.unit):''} — illisible</span>${canRecalibrate?'<span class="edit-ic">✏️</span>':''}`;
+      } else {
+        rect.innerHTML = `<span class="swatch" style="background:${rgbCss(obj.rgb)}"></span><span class="val">${val}${p.unit?(' '+p.unit):''}</span>${canRecalibrate?'<span class="edit-ic">✏️</span>':''}`;
+      }
       if(canRecalibrate){
         rect.addEventListener('click', ()=>armAim({chip:val}, `Pastille ${val}${p.unit?(' '+p.unit):''}`));
       }
       refRectList.appendChild(rect);
     });
+    let warnEl=document.getElementById('verifyWarning');
+    if(!warnEl){
+      warnEl=document.createElement('p');
+      warnEl.id='verifyWarning';
+      warnEl.style.cssText='color:var(--bad);font-size:0.85rem;margin:0 0 10px;font-weight:600;';
+      verifyCard.insertBefore(warnEl, refRectList);
+    }
+    if(badKeys.length>0){
+      warnEl.style.display='block';
+      warnEl.textContent = `❌ ${badKeys.length>1?'Pastilles':'Pastille'} illisible${badKeys.length>1?'s':''} (${badKeys.join(', ')}) — probablement cachée par le tube ou un reflet. Corrige-la (✏️) ou reprends la photo avant de continuer.`;
+    } else {
+      warnEl.style.display='none';
+    }
     renderMarkers();
+    updateComputeBtn();
   }
 
   function addCustomChip(){
@@ -1130,15 +1154,30 @@
   document.getElementById('btnAimCancel').addEventListener('click', disarmAim);
   document.getElementById('targetRedo').addEventListener('click', ()=>{ pendingTarget=null; targetConfirm.classList.remove('show'); });
 
-  function averageColorAt(x,y,radius){
-    radius=radius||4;
+  // Échantillonnage robuste : médiane (pas moyenne) pour ignorer les pixels contaminés
+  // (bord du tube, reflet...) tant qu'ils restent minoritaires — méthode standard en
+  // détection de nuanciers colorimétriques (ColorChecker). Détecte aussi si la zone
+  // est trop hétérogène pour être fiable (mélange pastille + autre chose).
+  function sampleColorRobust(x,y,radius){
+    radius=radius||6;
     const w=dataCanvas.width,h=dataCanvas.height;
     const x0=clamp(x-radius,0,w-1),y0=clamp(y-radius,0,h-1),x1=clamp(x+radius,0,w-1),y1=clamp(y+radius,0,h-1);
     const data=dataCtx.getImageData(x0,y0,x1-x0+1,y1-y0+1).data;
-    let r=0,g=0,b=0,n=0;
-    for(let i=0;i<data.length;i+=4){ r+=data[i]; g+=data[i+1]; b+=data[i+2]; n++; }
-    return [Math.round(r/n),Math.round(g/n),Math.round(b/n)];
+    const rs=[],gs=[],bs=[];
+    for(let i=0;i<data.length;i+=4){ rs.push(data[i]); gs.push(data[i+1]); bs.push(data[i+2]); }
+    const sr=[...rs].sort((a,b)=>a-b), sg=[...gs].sort((a,b)=>a-b), sb=[...bs].sort((a,b)=>a-b);
+    const mid=Math.floor(sr.length/2);
+    const median=[sr[mid],sg[mid],sb[mid]];
+    let outliers=0;
+    for(let i=0;i<rs.length;i++){
+      const d=Math.sqrt((rs[i]-median[0])**2+(gs[i]-median[1])**2+(bs[i]-median[2])**2);
+      if(d>40) outliers++;
+    }
+    const contaminated = (outliers/rs.length) > 0.35;
+    return {rgb:median, contaminated};
   }
+  function averageColorAt(x,y,radius){ return sampleColorRobust(x,y,radius).rgb; }
+
   function getCanvasCoords(clientX,clientY){
     const rect=viewCanvas.getBoundingClientRect();
     const sx=viewCanvas.width/rect.width, sy=viewCanvas.height/rect.height;
@@ -1172,9 +1211,9 @@
     if(!aimTarget || e.pointerId!==activePointerId) return;
     activePointerId=null;
     const [x,y]=getCanvasCoords(e.clientX,e.clientY);
-    const rgb=averageColorAt(x,y,4);
-    pendingTarget={x,y,rgb};
-    targetSwatch.style.background=rgbCss(rgb);
+    const s=sampleColorRobust(x,y,6);
+    pendingTarget={x,y,rgb:s.rgb,contaminated:s.contaminated};
+    targetSwatch.style.background=rgbCss(s.rgb);
     targetConfirm.classList.add('show');
   });
   viewCanvas.addEventListener('touchstart', e=>{ if(aimTarget) e.preventDefault(); }, {passive:false});
@@ -1192,7 +1231,7 @@
     } else if(aimTarget==='sample'){
       samplePointRaw=pendingTarget.rgb;
     } else if(aimTarget && aimTarget.chip!==undefined){
-      refPoints[aimTarget.chip]={rgb:pendingTarget.rgb, x:pendingTarget.x, y:pendingTarget.y};
+      refPoints[aimTarget.chip]={rgb:pendingTarget.rgb, x:pendingTarget.x, y:pendingTarget.y, contaminated:pendingTarget.contaminated};
       renderVerifyStrip();
     }
     disarmAim();
@@ -1203,8 +1242,9 @@
 
   function updateComputeBtn(){
     const n = Object.keys(refPoints).length;
+    const hasContamination = Object.values(refPoints).some(o=>o.contaminated);
     if(calibMode==='fallback') btnCompute.disabled = !(n>=2 && whitePoint && samplePointRaw);
-    else btnCompute.disabled = !(n>=2 && samplePointRaw);
+    else btnCompute.disabled = !(n>=2 && samplePointRaw) || hasContamination;
   }
 
   // -------- canvas markers (visual only, on-photo) --------
@@ -1238,17 +1278,25 @@
     else{ const w1=1/(best.de+0.001), w2=1/(second.de+0.001); resultValue=(best.value*w1+second.value*w2)/(w1+w2); }
     resultValue=Math.round(resultValue*100)/100;
 
-    // Confiance RELATIVE : l'écart absolu de ΔE dépend de l'appareil (photo vs scanner),
-    // donc peu fiable comme seuil universel. Ce qui compte vraiment : la pastille gagnante
-    // se distingue-t-elle clairement de sa voisine la plus proche ?
+    // Fiabilité : en mode 'photo' (nuancier + échantillon dans la même photo, même appareil,
+    // même éclairage), un seuil ΔE absolu est de nouveau pertinent — pas de décalage d'appareil
+    // à compenser. En mode 'fallback' (profil/scanner + photo séparée), l'appareil diffère,
+    // donc on juge plutôt la distinction relative avec la pastille voisine.
     let confLabel, confColor;
-    if(!second){ confLabel='Une seule pastille de référence'; confColor='var(--amber)'; }
-    else{
-      const gapRatio = second.de / (best.de + 0.001);
-      if(best.de < 1.5){ confLabel='Correspondance quasi parfaite'; confColor='var(--good)'; }
-      else if(gapRatio > 1.6){ confLabel='Nette — bien distincte des pastilles voisines'; confColor='var(--good)'; }
-      else if(gapRatio > 1.2){ confLabel='Correcte — assez distincte des voisines'; confColor='var(--amber)'; }
-      else{ confLabel='Ambiguë — proche de plusieurs pastilles voisines, vérifie visuellement'; confColor='var(--bad)'; }
+    if(calibMode==='fallback'){
+      if(!second){ confLabel='Une seule pastille de référence'; confColor='var(--amber)'; }
+      else{
+        const gapRatio = second.de / (best.de + 0.001);
+        if(best.de < 1.5){ confLabel='Correspondance quasi parfaite'; confColor='var(--good)'; }
+        else if(gapRatio > 1.6){ confLabel='Nette — bien distincte des pastilles voisines'; confColor='var(--good)'; }
+        else if(gapRatio > 1.2){ confLabel='Correcte — assez distincte des voisines'; confColor='var(--amber)'; }
+        else{ confLabel='Ambiguë — proche de plusieurs pastilles voisines, vérifie visuellement'; confColor='var(--bad)'; }
+      }
+    } else {
+      if(best.de < 3){ confLabel='Correspondance excellente'; confColor='var(--good)'; }
+      else if(best.de < 7){ confLabel='Bonne correspondance'; confColor='var(--good)'; }
+      else if(best.de < 14){ confLabel='Correspondance approximative'; confColor='var(--amber)'; }
+      else{ confLabel='Peu fiable — vise plus précisément ou reprends la photo'; confColor='var(--bad)'; }
     }
 
     const status = refParam==='autre' ? null : statusOf(refParam, resultValue);
