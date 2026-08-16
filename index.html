@@ -175,7 +175,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v1.8</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v1.9</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -208,7 +208,7 @@
       </button>
     </section>
 
-    <!-- ================= NUANCIER (v1.8) ================= -->
+    <!-- ================= NUANCIER (v1.9) ================= -->
     <section class="view" id="view-nuancier">
       <div class="sticky-banner" id="nuancierBanner"><span class="sp" id="nuancierBannerParam"></span><span class="sv" id="nuancierBannerValue"></span></div>
 
@@ -250,6 +250,10 @@
         </div>
 
         <div class="card">
+          <div id="sampleReminder" style="display:none;align-items:center;gap:10px;margin-bottom:12px;">
+            <div id="sampleReminderSwatch" style="width:36px;height:36px;border-radius:8px;border:1px solid var(--line);flex:none;"></div>
+            <span style="font-size:0.82rem;color:var(--text-dim);">Échantillon ciblé — celui qui sera calculé</span>
+          </div>
           <button class="primary" id="btnCompute" disabled>Calculer le résultat</button>
           <button class="ghost" id="btnReset">↺ Nouvelle photo</button>
         </div>
@@ -854,7 +858,7 @@
     document.getElementById('timerStop').addEventListener('click', ()=>stopTimer(false));
   })();
 
-  // ================= NUANCIER v1.8 =================
+  // ================= NUANCIER v1.9 =================
   let dataCanvas=document.createElement('canvas');
   let dataCtx=dataCanvas.getContext('2d',{willReadFrequently:true});
   const viewCanvas=document.getElementById('viewCanvas');
@@ -921,6 +925,7 @@
     btnBackToPhoto.style.display='none';
     resultPanel.style.display='none';
     verifyCard.style.display='none';
+    document.getElementById('sampleReminder').style.display='none';
     disarmAim();
     renderTargetButtons();
     updateComputeBtn();
@@ -1248,6 +1253,8 @@
       whitePoint=pendingTarget.rgb; wbWhiteSwatch.style.background=rgbCss(whitePoint);
     } else if(aimTarget==='sample'){
       samplePointRaw=pendingTarget.rgb;
+      document.getElementById('sampleReminderSwatch').style.background=rgbCss(samplePointRaw);
+      document.getElementById('sampleReminder').style.display='flex';
     } else if(aimTarget && aimTarget.chip!==undefined){
       refPoints[aimTarget.chip]={rgb:pendingTarget.rgb, x:pendingTarget.x, y:pendingTarget.y, homogeneity:pendingTarget.homogeneity};
       renderVerifyStrip();
