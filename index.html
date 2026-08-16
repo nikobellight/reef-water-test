@@ -81,6 +81,13 @@
   .picker-btn .txt span{font-size:0.8rem;color:var(--text-dim);}
 
   .mode-help{font-size:0.85rem;color:var(--text-dim);margin:0 0 14px;line-height:1.5;}
+  .photo-sticky{
+    position:sticky; top:70px; z-index:22;
+    background:var(--bg-panel); box-shadow:0 8px 16px -8px rgba(0,0,0,0.6);
+    max-height:60vh; overflow-y:auto;
+  }
+  .photo-sticky .canvas-wrap{max-height:34vh;}
+  .photo-sticky #viewCanvas{width:auto;max-width:100%;max-height:34vh;height:auto;margin:0 auto;display:block;}
   .canvas-wrap{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#000;line-height:0;}
   #viewCanvas{width:100%;height:auto;display:block;}
   .canvas-wrap.armed #viewCanvas{touch-action:none;cursor:crosshair;}
@@ -227,12 +234,7 @@
 
       <section id="workspace" style="display:none;">
 
-        <div class="card" id="verifyCard" style="display:none;">
-          <p class="step-label done"><span class="dot"></span>Pastilles détectées — touche pour corriger</p>
-          <div class="ref-rect-list" id="refRectList"></div>
-        </div>
-
-        <div class="card">
+        <div class="card photo-sticky">
           <p class="step-label active"><span class="dot"></span>Cibler sur la photo</p>
           <p class="mode-help" id="refModeHelp"></p>
 
@@ -260,6 +262,11 @@
           <div class="canvas-wrap" id="canvasWrap"><canvas id="viewCanvas"></canvas></div>
 
           <div class="btn-row" id="targetButtons" style="margin-top:12px;flex-wrap:wrap;"></div>
+        </div>
+
+        <div class="card" id="verifyCard" style="display:none;">
+          <p class="step-label done"><span class="dot"></span>Pastilles détectées — touche pour corriger</p>
+          <div class="ref-rect-list" id="refRectList"></div>
         </div>
 
         <div class="card">
