@@ -84,10 +84,11 @@
   .photo-sticky{
     position:sticky; top:70px; z-index:22;
     background:var(--bg-panel); box-shadow:0 8px 16px -8px rgba(0,0,0,0.6);
-    max-height:60vh; overflow-y:auto;
+    max-height:42vh; overflow-y:auto; padding:14px;
   }
-  .photo-sticky .canvas-wrap{max-height:34vh;}
-  .photo-sticky #viewCanvas{width:auto;max-width:100%;max-height:34vh;height:auto;margin:0 auto;display:block;}
+  .photo-sticky .step-label, .photo-sticky .mode-help{margin-bottom:6px;}
+  .photo-sticky .canvas-wrap{max-height:20vh;}
+  .photo-sticky #viewCanvas{width:auto;max-width:100%;max-height:20vh;height:auto;margin:0 auto;display:block;}
   .canvas-wrap{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#000;line-height:0;}
   #viewCanvas{width:100%;height:auto;display:block;}
   .canvas-wrap.armed #viewCanvas{touch-action:none;cursor:crosshair;}
@@ -174,7 +175,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v1.5</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v1.6</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -207,7 +208,7 @@
       </button>
     </section>
 
-    <!-- ================= NUANCIER (v1.5) ================= -->
+    <!-- ================= NUANCIER (v1.6) ================= -->
     <section class="view" id="view-nuancier">
       <div class="sticky-banner" id="nuancierBanner"><span class="sp" id="nuancierBannerParam"></span><span class="sv" id="nuancierBannerValue"></span></div>
 
@@ -851,7 +852,7 @@
     document.getElementById('timerStop').addEventListener('click', ()=>stopTimer(false));
   })();
 
-  // ================= NUANCIER v1.5 =================
+  // ================= NUANCIER v1.6 =================
   let dataCanvas=document.createElement('canvas');
   let dataCtx=dataCanvas.getContext('2d',{willReadFrequently:true});
   const viewCanvas=document.getElementById('viewCanvas');
@@ -1328,9 +1329,12 @@
     document.getElementById('cmpSample').style.background = rgbCss(sample);
     document.getElementById('cmpMatch').style.background = rgbCss(best.rgb);
     const tbody=document.getElementById('matchesBody'); tbody.innerHTML='';
-    (entries||[best]).forEach(s=>{
+    const sortedForDisplay = (entries||[best]).slice().sort((a,b)=>a.value-b.value);
+    sortedForDisplay.forEach(s=>{
       const tr=document.createElement('tr');
-      tr.innerHTML=`<td><span class="sw" style="background:${rgbCss(s.rgb)}"></span></td><td>${s.value}</td><td>${s.de!==undefined?s.de.toFixed(1):'—'}</td>`;
+      const isBest = best && s.value===best.value;
+      if(isBest) tr.style.color='var(--aqua)';
+      tr.innerHTML=`<td><span class="sw" style="background:${rgbCss(s.rgb)}"></span></td><td>${s.value}${isBest?' ✓':''}</td><td>${s.de!==undefined?s.de.toFixed(1):'—'}</td>`;
       tbody.appendChild(tr);
     });
     document.getElementById('savedNote').textContent='';
