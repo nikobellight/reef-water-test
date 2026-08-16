@@ -286,7 +286,7 @@
           <table class="matches"><thead><tr><th>Pastille</th><th>Valeur</th><th>ΔE</th></tr></thead><tbody id="matchesBody"></tbody></table>
           <button class="primary" id="btnValidateResult" style="margin-top:16px;">✅ Valider cette mesure</button>
           <p class="saved-note" id="savedNote"></p>
-          <p class="disclaimer">Résultat basé sur une comparaison colorimétrique corrigée de l'éclairage ambiant (référence fond blanc). Tu peux corriger la valeur ci-dessus avant de valider.</p>
+          <p class="disclaimer">Comparer une photo de téléphone à des couleurs scannées a une limite physique (appareils différents) — même bien ciblé et bien éclairé. Pour la précision maximale, utilise <button class="ghost" id="btnGotoRecalibrate" style="padding:0;font-size:inherit;">📷 Recalibrer avec le nuancier dans cette photo</button> : ça compare deux zones de la même photo, sans ce décalage.</p>
         </div>
       </section>
     </section>
@@ -950,6 +950,12 @@
     renderRefUI(); updateComputeBtn();
   });
   btnUseDefaults.addEventListener('click', resetRefState);
+  document.addEventListener('click', e=>{
+    if(e.target && e.target.id==='btnGotoRecalibrate'){
+      btnRecalibrate.click();
+      btnRecalibrate.scrollIntoView({behavior:'smooth', block:'center'});
+    }
+  });
   document.getElementById('btnAddChip').addEventListener('click', ()=>{
     openSheet({
       title:'Nouvelle pastille — valeur', showSwatch:false, placeholder:'ex. 0.5', confirmText:'Ajouter',
@@ -1149,11 +1155,18 @@
     else{ const w1=1/(best.de+0.001), w2=1/(second.de+0.001); resultValue=(best.value*w1+second.value*w2)/(w1+w2); }
     resultValue=Math.round(resultValue*100)/100;
 
+    // Confiance RELATIVE : l'écart absolu de ΔE dépend de l'appareil (photo vs scanner),
+    // donc peu fiable comme seuil universel. Ce qui compte vraiment : la pastille gagnante
+    // se distingue-t-elle clairement de sa voisine la plus proche ?
     let confLabel, confColor;
-    if(best.de<3){ confLabel='Correspondance excellente'; confColor='var(--good)'; }
-    else if(best.de<7){ confLabel='Bonne correspondance'; confColor='var(--good)'; }
-    else if(best.de<14){ confLabel='Correspondance approximative'; confColor='var(--amber)'; }
-    else{ confLabel='Peu fiable — vérifie le fond blanc / l\'éclairage'; confColor='var(--bad)'; }
+    if(!second){ confLabel='Une seule pastille de référence'; confColor='var(--amber)'; }
+    else{
+      const gapRatio = second.de / (best.de + 0.001);
+      if(best.de < 1.5){ confLabel='Correspondance quasi parfaite'; confColor='var(--good)'; }
+      else if(gapRatio > 1.6){ confLabel='Nette — bien distincte des pastilles voisines'; confColor='var(--good)'; }
+      else if(gapRatio > 1.2){ confLabel='Correcte — assez distincte des voisines'; confColor='var(--amber)'; }
+      else{ confLabel='Ambiguë — proche de plusieurs pastilles voisines, vérifie visuellement'; confColor='var(--bad)'; }
+    }
 
     const status = refParam==='autre' ? null : statusOf(refParam, resultValue);
     showResult({value:resultValue, status, best, sample:sampleForMatch, entries, confLabel, confColor, manual:false});
