@@ -100,7 +100,7 @@
   .bar-col{flex:1 1 0;min-width:0;max-width:34px;display:flex;flex-direction:column;align-items:center;background:none;border:none;color:var(--text);padding:0;}
   .bar-track{width:10px;height:110px;background:var(--bg-panel-raised);border-radius:8px;display:flex;align-items:flex-end;overflow:hidden;position:relative;}
   .bar-fill{width:100%;border-radius:8px;min-height:5px;transition:height .25s ease;}
-  .bar-dim{position:absolute;top:0;left:0;right:0;background:rgba(5,11,20,0.8);transition:height .25s ease;}
+  .bar-dim{position:absolute;bottom:0;left:0;right:0;background:rgba(5,11,20,0.8);border-radius:0 0 8px 8px;transition:height .25s ease;}
   .bar-col .bl{font-family:'IBM Plex Mono',monospace;font-size:0.58rem;color:var(--text-dim);margin-top:7px;white-space:nowrap;}
   .bar-col .bv{font-family:'IBM Plex Mono',monospace;font-size:0.56rem;font-weight:600;margin-top:1px;text-align:center;line-height:1.15;white-space:nowrap;}
   .bar-col .bu{display:block;font-size:0.5rem;color:var(--text-dim);font-weight:500;}
@@ -209,7 +209,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v2.3</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v2.4</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -252,7 +252,7 @@
       </button>
     </section>
 
-    <!-- ================= NUANCIER (v2.3) ================= -->
+    <!-- ================= NUANCIER (v2.4) ================= -->
     <section class="view" id="view-nuancier">
       <div class="sticky-banner" id="nuancierBanner"><span class="sp" id="nuancierBannerParam"></span><span class="sv" id="nuancierBannerValue"></span></div>
 
@@ -631,18 +631,23 @@
     ctx.beginPath(); ctx.arc(lx,ly,2.2,0,Math.PI*2); ctx.fillStyle='#2ED9C3'; ctx.fill();
   }
   const SHORT_LABEL = {ph:'pH', nh3:'NH3', no2:'NO2', no3:'NO3', po4:'PO4', kh:'KH', ca:'Ca', mg:'Mg', temp:'Temp', sal:'Sal'};
-  // Dégradé construit à partir des vraies couleurs du nuancier scanné (une couleur par
-  // pastille, réparties également le long de la barre — comme sur la carte physique).
+  // Dégradé simplifié à 3 couleurs clés (bas / milieu / haut du nuancier) pour un
+  // contraste net et lisible, orienté comme la carte physique : valeur faible en haut,
+  // valeur forte en bas.
   function buildSwatchGradient(p){
     if(!p.swatches) return null;
     const keys = Object.keys(p.swatches).map(Number).sort((a,b)=>a-b);
     const n = keys.length;
-    const stops = keys.map((v,i)=>{
-      const pct = n===1 ? 50 : (i/(n-1))*100;
+    const pick = n<=3 ? keys : [keys[0], keys[Math.floor((n-1)/2)], keys[n-1]];
+    const m = pick.length;
+    const stops = pick.map((v,i)=>{
+      const pct = m===1 ? 50 : (i/(m-1))*100;
       return `rgb(${p.swatches[v].join(',')}) ${pct.toFixed(1)}%`;
     }).join(', ');
-    return `linear-gradient(to top, ${stops})`;
+    return `linear-gradient(to bottom, ${stops})`;
   }
+  // Convention thermomètre universelle : bleu (froid) en haut, rouge (chaud) en bas.
+  const TEMP_GRADIENT = 'linear-gradient(to bottom, #4A90E2 0%, #3ED9A0 50%, #E24A4A 100%)';
   function gaugeRange(p){
     const [aMin,aMax]=p.acceptable, span=(aMax-aMin)||1, pad=span*0.2;
     return [aMin-pad, aMax+pad];
@@ -681,7 +686,7 @@
       const heightPct = val!==null ? Math.max(5, Math.min(100, ((val-dMin)/(dMax-dMin))*100)) : 4;
       const col = document.createElement('button');
       col.className='bar-col'; col.type='button';
-      const grad = buildSwatchGradient(p);
+      const grad = buildSwatchGradient(p) || (k==='temp' ? TEMP_GRADIENT : null);
       const trackHtml = grad
         ? `<div class="bar-track" style="background:${grad}"><div class="bar-dim" style="height:${100-heightPct}%"></div></div>`
         : `<div class="bar-track"><div class="bar-fill" style="height:${heightPct}%;background:${p.color||'#6E93BE'}"></div></div>`;
@@ -980,7 +985,7 @@
     document.getElementById('timerStop').addEventListener('click', ()=>stopTimer(false));
   })();
 
-  // ================= NUANCIER v2.3 =================
+  // ================= NUANCIER v2.4 =================
   let dataCanvas=document.createElement('canvas');
   let dataCtx=dataCanvas.getContext('2d',{willReadFrequently:true});
   const viewCanvas=document.getElementById('viewCanvas');
