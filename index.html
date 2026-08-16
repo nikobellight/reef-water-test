@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Suivi récifal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#050B14; --bg-panel:#0A1830; --bg-panel-raised:#12294F; --line:#1E3A63;
+    --text:#E9F3FF; --text-dim:#6E93BE; --actinic:#2F80FF; --aqua:#2ED9C3;
+    --amber:#F2A65A; --coral:#FF7A59; --good:#3ED9A0; --bad:#FF5A5F; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--bg-deep);color:var(--text);font-family:'Inter',system-ui,sans-serif;-webkit-tap-highlight-color:transparent;padding-bottom:84px;}
+  .ribbon{height:6px;width:100%;background:linear-gradient(90deg,#16225C,var(--actinic),var(--aqua),var(--amber));position:sticky;top:0;z-index:25;}
+  header.masthead{padding:24px 20px 14px;max-width:640px;margin:0 auto;}
+  header.masthead h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.4rem;letter-spacing:-0.01em;margin:0 0 4px;}
+  header.masthead p{color:var(--text-dim);font-size:0.86rem;line-height:1.5;margin:0;}
+  main{max-width:640px;margin:0 auto;padding:0 20px;}
+  .card{background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:16px;}
+  .step-label{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-dim);margin:0 0 10px;display:flex;align-items:center;gap:8px;}
+  .step-label .dot{width:7px;height:7px;border-radius:50%;background:var(--text-dim);flex:none;}
+  .step-label.active .dot{background:var(--actinic);box-shadow:0 0 8px var(--actinic);}
+  .step-label.done .dot{background:var(--good);}
+  button{font-family:'Inter',sans-serif;font-weight:600;font-size:0.95rem;border:none;border-radius:10px;padding:13px 18px;cursor:pointer;transition:transform .08s ease, opacity .15s ease;}
+  button:active{transform:scale(0.97);}
+  button.primary{background:var(--amber);color:#241505;width:100%;}
+  button.primary:disabled{opacity:0.35;cursor:not-allowed;}
+  button.secondary{background:transparent;color:var(--text);border:1px solid var(--line);}
+  button.ghost{background:transparent;color:var(--aqua);border:none;text-decoration:underline;padding:8px 4px;font-weight:500;font-size:0.85rem;}
+  .btn-row{display:flex;gap:10px;}
+  .btn-row button{flex:1;}
+  input[type=file]{display:none;}
+  select, input[type=number], input[type=text]{background:var(--bg-panel-raised);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:11px 12px;font-family:'Inter',sans-serif;font-size:0.9rem;width:100%;}
+  label.field-label{display:block;font-size:0.78rem;color:var(--text-dim);margin:0 0 6px;font-family:'IBM Plex Mono',monospace;}
+  .field{margin-bottom:14px;}
+  .view{display:none;} .view.active{display:block;}
+
+  .sticky-banner{position:sticky;top:6px;z-index:24;background:var(--bg-panel);border-bottom:1px solid var(--line);margin:0 -20px 16px;padding:10px 20px;display:none;align-items:center;justify-content:space-between;gap:10px;}
+  .sticky-banner.show{display:flex;}
+  .sticky-banner .sp{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.04em;}
+  .sticky-banner .sv{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:1.1rem;color:var(--aqua);}
+
+  .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px;}
+  .dash-card{background:var(--bg-panel);border:1px solid var(--line);border-radius:12px;padding:12px;}
+  .dash-card .lbl{font-size:0.68rem;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:4px;}
+  .dash-card .val{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:1.25rem;}
+  .dash-card .val .unit{font-size:0.65rem;color:var(--text-dim);font-weight:500;margin-left:2px;}
+  .dash-card .meta{display:flex;align-items:center;justify-content:space-between;margin-top:6px;gap:4px;}
+  .dash-card .date{font-size:0.65rem;color:var(--text-dim);white-space:nowrap;}
+  .dash-card canvas.spark{width:100%;height:28px;display:block;margin-top:8px;}
+  .status-pill{display:inline-flex;align-items:center;gap:4px;font-size:0.65rem;font-family:'IBM Plex Mono',monospace;padding:2px 7px;border-radius:20px;white-space:nowrap;}
+  .status-pill.good{color:var(--good);background:rgba(62,217,160,0.14);}
+  .status-pill.warn{color:var(--amber);background:rgba(242,166,90,0.16);}
+  .status-pill.bad{color:var(--bad);background:rgba(255,90,95,0.16);}
+  .status-pill.none{color:var(--text-dim);background:rgba(110,147,190,0.12);}
+  .empty-state{text-align:center;padding:34px 10px;color:var(--text-dim);}
+  .empty-state .big{font-size:2rem;margin-bottom:10px;}
+  .empty-state p{font-size:0.88rem;line-height:1.5;margin:0 0 16px;}
+  .sync-error{border-color:var(--bad) !important;} .sync-error p{color:var(--bad);font-size:0.85rem;margin:0;}
+
+  .picker-btn{display:flex;align-items:center;gap:14px;width:100%;background:var(--bg-panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:12px;text-align:left;color:var(--text);}
+  .picker-btn .ic{font-size:1.6rem;flex:none;}
+  .picker-btn .txt strong{display:block;font-family:'Space Grotesk',sans-serif;font-size:1rem;margin-bottom:2px;}
+  .picker-btn .txt span{font-size:0.8rem;color:var(--text-dim);}
+
+  .mode-help{font-size:0.85rem;color:var(--text-dim);margin:0 0 14px;line-height:1.5;}
+  .canvas-wrap{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#000;line-height:0;}
+  #viewCanvas{width:100%;height:auto;display:block;}
+  .canvas-wrap.armed #viewCanvas{touch-action:none;cursor:crosshair;}
+
+  .target-preview{display:none;border-radius:10px;overflow:hidden;border:1px solid var(--actinic);background:#000;margin-bottom:10px;position:relative;height:150px;}
+  .target-preview.show{display:block;}
+  .target-preview canvas{width:100%;height:100%;display:block;}
+  .target-label{position:absolute;top:6px;left:8px;font-family:'IBM Plex Mono',monospace;font-size:0.7rem;background:rgba(0,0,0,0.55);color:var(--text);padding:3px 8px;border-radius:20px;}
+  .target-confirm{display:none;align-items:center;gap:10px;background:var(--bg-panel-raised);border-radius:10px;padding:10px;margin-bottom:10px;}
+  .target-confirm.show{display:flex;}
+  .target-confirm .swatch{width:36px;height:36px;border-radius:8px;border:1px solid var(--line);flex:none;}
+  .target-confirm .btns{display:flex;gap:8px;flex:1;}
+  .target-confirm .btns button{flex:1;padding:10px;font-size:0.85rem;}
+  .aim-hint{display:none;align-items:center;justify-content:space-between;background:rgba(47,128,255,0.12);border:1px solid var(--actinic);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:0.85rem;}
+  .aim-hint.show{display:flex;}
+  .aim-hint button{padding:6px 12px;font-size:0.78rem;}
+
+  .chip-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;}
+  .chip{display:flex;align-items:center;gap:8px;background:var(--bg-panel-raised);border-radius:20px;padding:6px 10px 6px 6px;font-family:'IBM Plex Mono',monospace;font-size:0.8rem;border:none;color:var(--text);}
+  .chip .swatch{width:20px;height:20px;border-radius:50%;border:1px solid rgba(255,255,255,0.3);flex:none;}
+  .chip .edit{background:transparent;border:none;color:var(--text-dim);padding:0 2px 0 4px;font-size:0.9rem;}
+  .wb-row{display:flex;gap:10px;margin-bottom:10px;}
+  .wb-item{flex:1;background:var(--bg-panel-raised);border-radius:10px;padding:10px;text-align:center;}
+  .wb-item .swatch{width:100%;height:32px;border-radius:6px;margin-bottom:6px;border:1px solid var(--line);}
+  .wb-item .lbl{font-size:0.7rem;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;}
+
+  .profile-row{display:flex;gap:10px;} .profile-row select{flex:1;} .profile-row button{white-space:nowrap;}
+
+  #sheetOverlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:60;display:none;}
+  #sheet{position:fixed;left:0;right:0;bottom:0;background:var(--bg-panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 20px 26px;z-index:61;display:none;max-width:640px;margin:0 auto;}
+  #sheet h3{font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 14px;}
+  #sheet .swatch-big{width:56px;height:56px;border-radius:12px;border:1px solid var(--line);margin-bottom:14px;}
+  #sheet input{margin-bottom:8px;font-family:'IBM Plex Mono',monospace;}
+  #sheetError{color:var(--bad);font-size:0.8rem;margin:0 0 10px;min-height:1em;}
+
+  .readout{background:var(--bg-deep);border:1px solid var(--line);border-radius:12px;padding:22px 18px;text-align:center;margin-bottom:14px;}
+  .readout input.value-edit{
+    font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:2.4rem;letter-spacing:0.01em;color:var(--aqua);
+    background:transparent;border:none;text-align:center;width:100%;padding:0;margin-bottom:2px;
+    text-shadow:0 0 16px rgba(46,217,195,0.35);
+  }
+  .readout .u{font-size:1rem;color:var(--text-dim);margin-left:4px;}
+  .readout .param{color:var(--text-dim);font-size:0.85rem;margin-top:2px;}
+  .confidence{font-family:'IBM Plex Mono',monospace;font-size:0.8rem;text-align:center;margin-bottom:16px;letter-spacing:0.02em;}
+  .compare-row{display:flex;justify-content:center;gap:26px;margin-bottom:18px;}
+  .compare-item{text-align:center;}
+  .compare-item .swatch{width:52px;height:52px;border-radius:10px;border:1px solid var(--line);margin:0 auto 6px;}
+  .compare-item .lbl{font-size:0.72rem;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;}
+  table.matches{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:0.8rem;}
+  table.matches th{text-align:left;color:var(--text-dim);font-weight:500;padding:4px 6px;border-bottom:1px solid var(--line);}
+  table.matches td{padding:6px 6px;border-bottom:1px solid var(--line);}
+  table.matches .sw{width:14px;height:14px;border-radius:3px;display:inline-block;vertical-align:middle;margin-right:6px;border:1px solid rgba(255,255,255,0.25);}
+  .disclaimer{font-size:0.78rem;color:var(--text-dim);line-height:1.55;margin-top:16px;}
+  .saved-note{text-align:center;font-size:0.85rem;margin-bottom:10px;min-height:1.2em;}
+
+  .reading-row{display:flex;gap:10px;}
+  .toggle-row{display:flex;align-items:center;gap:8px;margin:12px 0 16px;font-size:0.85rem;color:var(--text-dim);}
+  .toggle-row input{width:18px;height:18px;}
+  .save-msg{display:none;font-size:0.85rem;margin-top:8px;text-align:center;}
+
+  table.history{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:0.78rem;}
+  table.history th{text-align:left;color:var(--text-dim);font-weight:500;padding:6px;border-bottom:1px solid var(--line);}
+  table.history td{padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  table.history .del{background:none;border:none;color:var(--text-dim);font-size:1rem;padding:0 4px;}
+  .chart-wrap{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:16px;background:var(--bg-deep);display:none;}
+  #historyChart{width:100%;height:180px;display:block;}
+  .report-box{width:100%;min-height:280px;background:var(--bg-deep);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:14px;font-family:'IBM Plex Mono',monospace;font-size:0.76rem;line-height:1.55;white-space:pre-wrap;resize:vertical;margin-bottom:14px;}
+  .mode-toggle{display:flex;background:var(--bg-panel-raised);border-radius:10px;padding:4px;gap:4px;margin-bottom:14px;}
+  .mode-toggle button{flex:1;background:transparent;color:var(--text-dim);padding:10px 6px;font-size:0.8rem;}
+  .mode-toggle button.active{background:var(--bg-deep);color:var(--text);}
+
+  .bottom-nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--bg-panel);border-top:1px solid var(--line);z-index:30;padding:6px 4px calc(6px + env(safe-area-inset-bottom));}
+  .nav-btn{flex:1;background:none;border:none;color:var(--text-dim);display:flex;flex-direction:column;align-items:center;gap:2px;font-size:0.66rem;font-weight:500;padding:6px 2px;border-radius:10px;}
+  .nav-btn .ic{font-size:1.2rem;line-height:1;}
+  .nav-btn.active{color:var(--aqua);}
+  .nav-btn.fab .ic{background:var(--amber);color:#241505;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.05rem;margin-bottom:1px;}
+
+  .timer-fab{position:fixed;right:16px;bottom:90px;width:52px;height:52px;border-radius:50%;background:var(--actinic);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.3rem;box-shadow:0 4px 14px rgba(0,0,0,0.4);z-index:29;border:none;font-family:'IBM Plex Mono',monospace;}
+  .timer-fab.running{background:var(--coral);font-size:0.85rem;font-weight:600;}
+  .timer-presets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+  .timer-presets button{flex:1;min-width:60px;padding:12px 6px;font-size:0.85rem;}
+</style>
+</head>
+<body>
+  <div class="ribbon"></div>
+  <header class="masthead">
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v1.3</span></h1>
+    <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
+  </header>
+
+  <main>
+
+    <section class="view active" id="view-dashboard">
+      <p class="step-label active"><span class="dot"></span>Tableau de bord</p>
+      <div class="card sync-error" id="syncError" style="display:none;"><p>⚠️ Connexion à Supabase impossible.</p></div>
+      <div class="dash-grid" id="dashGrid"></div>
+      <div class="empty-state" id="dashEmpty" style="display:none;">
+        <div class="big">🐠</div>
+        <p>Aucune mesure encore.<br>Commence par un nouveau test.</p>
+        <button class="primary" style="width:auto;" onclick="showView('picker')">➕ Nouveau test</button>
+      </div>
+    </section>
+
+    <section class="view" id="view-picker">
+      <p class="step-label active"><span class="dot"></span>Nouveau test</p>
+      <button class="picker-btn" onclick="showView('nuancier')">
+        <span class="ic">📷</span>
+        <span class="txt"><strong>Nuancier photo</strong><span>pH · Ammoniac · Nitrite · Nitrate · Phosphate</span></span>
+      </button>
+      <button class="picker-btn" onclick="showView('titration')">
+        <span class="ic">💧</span>
+        <span class="txt"><strong>Titration (Salifert)</strong><span>KH/Alcalinité · Calcium · Magnésium</span></span>
+      </button>
+      <button class="picker-btn" onclick="showView('direct')">
+        <span class="ic">🌡️</span>
+        <span class="txt"><strong>Mesure directe</strong><span>Température · Salinité (densité)</span></span>
+      </button>
+    </section>
+
+    <!-- ================= NUANCIER (v1.3) ================= -->
+    <section class="view" id="view-nuancier">
+      <div class="sticky-banner" id="nuancierBanner"><span class="sp" id="nuancierBannerParam"></span><span class="sv" id="nuancierBannerValue"></span></div>
+
+      <div class="card">
+        <p class="step-label active"><span class="dot"></span>Paramètre testé</p>
+        <select id="chartParamSelect"></select>
+        <div class="field" id="chartCustomLabelField" style="display:none;margin-top:12px;">
+          <label class="field-label">Nom du paramètre</label>
+          <input type="text" id="chartCustomLabel" placeholder="ex. Cuivre">
+        </div>
+        <button class="ghost" id="btnManualEntry" style="margin-top:6px;">✏️ Entrer une valeur manuellement (sans test)</button>
+      </div>
+
+      <section id="captureSection" class="card">
+        <p class="step-label"><span class="dot"></span>Photo</p>
+        <p class="mode-help" id="captureHelp">Photographie l'échantillon (goutte ou tube) sur fond blanc, sous un éclairage stable.</p>
+        <div class="btn-row">
+          <button class="primary" id="btnCamera">📷 Prendre une photo</button>
+          <button class="secondary" id="btnGallery">Galerie</button>
+        </div>
+        <input type="file" accept="image/*" capture="environment" id="fileCamera">
+        <input type="file" accept="image/*" id="fileGallery">
+      </section>
+
+      <section id="workspace" style="display:none;">
+        <div class="card" id="profileCard">
+          <p class="step-label"><span class="dot"></span>Profils enregistrés (Supabase)</p>
+          <div class="profile-row">
+            <select id="profileSelect"><option value="">— Aucun profil chargé —</option></select>
+            <button class="secondary" id="btnLoadProfile">Charger</button>
+          </div>
+          <p class="mode-help" style="margin-top:8px;">Charge une calibration que tu as sauvegardée toi-même. Les 5 paramètres du kit Pawfly ont déjà des valeurs intégrées par défaut — pas besoin de charger un profil pour ceux-là.</p>
+        </div>
+
+        <div class="card">
+          <p class="step-label"><span class="dot"></span>Pastilles de référence</p>
+          <p class="mode-help" id="refModeHelp"></p>
+          <div class="chip-list" id="refChipList"></div>
+          <div class="btn-row" style="margin-top:12px;">
+            <button class="ghost" id="btnAddChip" style="display:none;">+ Ajouter une pastille</button>
+            <button class="ghost" id="btnRecalibrate">📷 Recalibrer avec le nuancier dans cette photo</button>
+            <button class="ghost" id="btnUseDefaults" style="display:none;">↺ Revenir aux valeurs par défaut</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <p class="step-label"><span class="dot"></span>Cibler sur la photo</p>
+          <div class="wb-row" id="wbRow">
+            <div class="wb-item"><div class="swatch" id="wbWhiteSwatch" style="background:#1a2332;"></div><div class="lbl">FOND BLANC</div></div>
+            <div class="wb-item"><div class="swatch" id="wbSampleSwatch" style="background:#1a2332;"></div><div class="lbl">ÉCHANTILLON</div></div>
+          </div>
+
+          <div class="aim-hint" id="aimHint">
+            <span id="aimHintText">Vise sur la photo…</span>
+            <button class="secondary" id="btnAimCancel">Annuler</button>
+          </div>
+
+          <div class="target-preview" id="targetPreview">
+            <span class="target-label" id="targetLabel"></span>
+            <canvas id="targetPreviewCanvas" width="600" height="300"></canvas>
+          </div>
+          <div class="target-confirm" id="targetConfirm">
+            <div class="swatch" id="targetSwatch"></div>
+            <div class="btns">
+              <button class="secondary" id="targetRedo">Recommencer</button>
+              <button class="primary" id="targetValidate">✅ Valider ce point</button>
+            </div>
+          </div>
+
+          <div class="canvas-wrap" id="canvasWrap"><canvas id="viewCanvas"></canvas></div>
+
+          <div class="btn-row" id="targetButtons" style="margin-top:12px;">
+            <button class="secondary" id="btnAimWhite">🎯 Fond blanc</button>
+            <button class="secondary" id="btnAimSample">🎯 Échantillon</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <button class="primary" id="btnCompute" disabled>Calculer le résultat</button>
+          <button class="ghost" id="btnReset">↺ Nouvelle photo</button>
+        </div>
+
+        <div class="card" id="resultPanel" style="display:none;">
+          <p class="step-label done"><span class="dot"></span>Résultat — modifiable avant validation</p>
+          <div class="readout">
+            <div><input type="text" inputmode="decimal" class="value-edit" id="readoutValue"><span class="u" id="readoutUnit"></span></div>
+            <div class="param" id="readoutParam"></div>
+          </div>
+          <div style="text-align:center;margin-bottom:10px;"><span class="status-pill" id="readoutStatus"></span></div>
+          <div class="confidence" id="confidenceText"></div>
+          <div class="compare-row">
+            <div class="compare-item"><div class="swatch" id="cmpSample"></div><div class="lbl">ÉCHANTILLON</div></div>
+            <div class="compare-item"><div class="swatch" id="cmpMatch"></div><div class="lbl">CORRESPONDANCE</div></div>
+          </div>
+          <table class="matches"><thead><tr><th>Pastille</th><th>Valeur</th><th>ΔE</th></tr></thead><tbody id="matchesBody"></tbody></table>
+          <button class="primary" id="btnValidateResult" style="margin-top:16px;">✅ Valider cette mesure</button>
+          <p class="saved-note" id="savedNote"></p>
+          <p class="disclaimer">Résultat basé sur une comparaison colorimétrique corrigée de l'éclairage ambiant (référence fond blanc). Tu peux corriger la valeur ci-dessus avant de valider.</p>
+        </div>
+      </section>
+    </section>
+
+    <!-- ================= TITRATION ================= -->
+    <section class="view" id="view-titration">
+      <div class="sticky-banner" id="titrationBanner"><span class="sp" id="titrationBannerParam"></span><span class="sv" id="titrationBannerValue"></span></div>
+      <div class="card">
+        <p class="step-label active"><span class="dot"></span>Titration Salifert</p>
+        <div class="field"><label class="field-label">Paramètre</label><select id="titrationParamSelect"></select></div>
+        <button class="ghost" id="btnManualEntryTitration" style="margin-bottom:14px;">✏️ Entrer une valeur manuellement (sans test)</button>
+        <div class="field">
+          <label class="field-label">Lecture de la seringue (ml, 0.00 – 1.00)</label>
+          <div class="reading-row"><input type="number" id="titrationReading" step="0.01" min="0" max="1" placeholder="ex. 0.42"></div>
+        </div>
+        <div class="toggle-row"><input type="checkbox" id="titrationLowRes"><label for="titrationLowRes">Mode basse résolution du kit (×2)</label></div>
+        <p id="titrationError" style="color:var(--bad);font-size:0.8rem;min-height:1em;margin:0 0 10px;"></p>
+        <button class="primary" id="btnCalcTitration">Calculer</button>
+        <p class="mode-help" style="margin-top:12px;">Vérifie ces formules par rapport à la notice papier de ta boîte Salifert (SALCORE).</p>
+      </div>
+      <div class="card" id="titrationResultPanel" style="display:none;">
+        <p class="step-label done"><span class="dot"></span>Résultat</p>
+        <div class="readout"><div class="value" style="font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:2.4rem;color:var(--aqua);"><span id="titrationResultValue">—</span><span class="u" id="titrationResultUnit"></span></div></div>
+        <div style="text-align:center;"><span class="status-pill" id="titrationResultStatus"></span></div>
+        <p class="saved-note" id="titrationSavedNote" style="margin-top:10px;"></p>
+        <button class="secondary" style="width:100%;margin-top:12px;" onclick="showView('dashboard')">Voir le tableau de bord</button>
+      </div>
+    </section>
+
+    <!-- ================= DIRECT ================= -->
+    <section class="view" id="view-direct">
+      <div class="card">
+        <p class="step-label active"><span class="dot"></span>Température</p>
+        <div class="field"><label class="field-label">Température (°C)</label><input type="number" id="tempInput" step="0.1" placeholder="ex. 25.5"></div>
+        <button class="primary" id="btnSaveTemp">Enregistrer</button>
+        <p class="save-msg" id="tempSaveMsg"></p>
+      </div>
+      <div class="card">
+        <p class="step-label active"><span class="dot"></span>Salinité</p>
+        <div class="field"><label class="field-label">Densité — Specific Gravity (ex. 1.025)</label><input type="number" id="salInput" step="0.001" placeholder="ex. 1.025"></div>
+        <button class="primary" id="btnSaveSal">Enregistrer</button>
+        <p class="save-msg" id="salSaveMsg"></p>
+      </div>
+    </section>
+
+    <section class="view" id="view-history">
+      <div class="card">
+        <p class="step-label active"><span class="dot"></span>Historique</p>
+        <select class="field" id="historyFilter" style="margin-bottom:14px;"></select>
+        <div class="chart-wrap" id="chartWrap"><canvas id="historyChart"></canvas></div>
+        <div class="empty-note" id="historyEmpty" style="display:none;margin-bottom:10px;color:var(--text-dim);font-size:0.85rem;">Aucune mesure pour ce filtre.</div>
+        <table class="history"><thead><tr><th>Date</th><th>Paramètre</th><th>Valeur</th><th>Statut</th><th></th></tr></thead><tbody id="historyBody"></tbody></table>
+      </div>
+    </section>
+
+    <section class="view" id="view-report">
+      <div class="card">
+        <p class="step-label active"><span class="dot"></span>Rapport</p>
+        <p class="mode-help">Résumé à copier-coller dans une conversation avec une IA pour analyse.</p>
+        <div class="mode-toggle" id="reportPeriodToggle">
+          <button data-period="today" class="active">Jour</button>
+          <button data-period="week">Semaine</button>
+          <button data-period="month">Mois</button>
+          <button data-period="all">Tout</button>
+        </div>
+        <textarea class="report-box" id="reportBox" readonly></textarea>
+        <div class="btn-row">
+          <button class="secondary" id="btnCopyReport">📋 Copier</button>
+          <button class="secondary" id="btnDownloadReport">⬇️ Télécharger</button>
+        </div>
+        <p class="mode-help" id="copyHint" style="margin-top:8px;"></p>
+      </div>
+    </section>
+
+  </main>
+
+  <button class="timer-fab" id="timerFab">⏱</button>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-view="dashboard"><span class="ic">🏠</span>Accueil</button>
+    <button class="nav-btn" data-view="history"><span class="ic">📜</span>Historique</button>
+    <button class="nav-btn" data-view="report"><span class="ic">📄</span>Rapport</button>
+    <button class="nav-btn fab" data-view="picker"><span class="ic">➕</span>Nouveau</button>
+  </nav>
+
+  <div id="sheetOverlay"></div>
+  <div id="sheet">
+    <h3 id="sheetTitle">Valeur</h3>
+    <div class="swatch-big" id="sheetSwatch" style="display:none;"></div>
+    <input id="sheetInput" type="text" inputmode="decimal" placeholder="ex. 7,4">
+    <p id="sheetError"></p>
+    <div class="btn-row">
+      <button class="secondary" id="sheetCancel">Annuler</button>
+      <button class="primary" id="sheetConfirm">OK</button>
+    </div>
+  </div>
+
+  <div id="timerOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:70;display:none;"></div>
+  <div id="timerSheet" style="position:fixed;left:0;right:0;bottom:0;background:var(--bg-panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 20px 26px;z-index:71;display:none;max-width:640px;margin:0 auto;">
+    <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 14px;">Minuteur</h3>
+    <div id="timerIdleView">
+      <div class="timer-presets">
+        <button class="secondary" data-min="1">1 min</button>
+        <button class="secondary" data-min="3">3 min</button>
+        <button class="secondary" data-min="5">5 min</button>
+        <button class="secondary" data-min="7">7 min</button>
+      </div>
+      <div class="reading-row" style="margin-bottom:14px;">
+        <input type="number" id="timerCustomMin" placeholder="Autre (minutes)" min="1">
+        <button class="secondary" id="timerCustomStart" style="width:auto;white-space:nowrap;">Démarrer</button>
+      </div>
+    </div>
+    <div id="timerRunningView" style="display:none;text-align:center;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:3rem;font-weight:600;color:var(--aqua);margin-bottom:16px;" id="timerDisplay">00:00</div>
+      <button class="secondary" id="timerStop" style="width:100%;">Arrêter</button>
+    </div>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ================= Supabase =================
+  const SUPABASE_URL = 'https://wqbxylnrgdtcnxlbemdf.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_T9dDFWDk4lB4p7mjRpkrsg_VPlzbEMK';
+  function sbHeaders(extra){
+    return Object.assign({'apikey':SUPABASE_KEY,'Content-Type':'application/json'}, extra||{});
+  }
+  function showSyncError(msg){
+    const el = document.getElementById('syncError');
+    el.style.display = 'block';
+    el.querySelector('p').textContent = msg ? ('⚠️ '+msg) : '⚠️ Connexion à Supabase impossible.';
+  }
+  async function sbErrorDetail(res){
+    let text=''; try{ text = await res.text(); }catch(e){}
+    try{ const j = JSON.parse(text); return `${res.status} — ${j.message||j.error||j.hint||text}`; }
+    catch(e){ return `${res.status}`+(text?' — '+text.slice(0,200):''); }
+  }
+
+  // ================= parameter registry =================
+  const PARAMS = {
+    ph:   {label:'pH',                     unit:'',    group:'chart',     decimals:2, ideal:[8.1,8.4],    acceptable:[7.8,8.6],
+           presetValues:[7.4,7.8,8.0,8.4],
+           swatches:{7.4:[223,113,110],7.8:[218,84,142],8.0:[217,80,157],8.4:[194,85,151]}},
+    nh3:  {label:'Ammoniac (NH3/NH4⁺)',    unit:'ppm', group:'chart',     decimals:2, ideal:[0,0],        acceptable:[0,0.25],
+           presetValues:[0,0.25,0.5,1,2,4,8],
+           swatches:{0:[235,229,26],0.25:[169,205,37],0.5:[124,193,51],1:[78,181,58],2:[36,171,84],4:[20,155,109],8:[14,145,105]}},
+    no2:  {label:'Nitrite (NO2⁻)',         unit:'ppm', group:'chart',     decimals:2, ideal:[0,0],        acceptable:[0,0.25],
+           presetValues:[0,0.25,0.5,1,2,5],
+           swatches:{0:[250,250,252],0.25:[247,241,243],0.5:[239,222,223],1:[223,182,199],2:[178,125,166],5:[177,101,155]}},
+    no3:  {label:'Nitrate (NO3⁻)',         unit:'ppm', group:'chart',     decimals:1, ideal:[2,10],       acceptable:[0,20],
+           presetValues:[0,5,10,20,40,80,160],
+           swatches:{0:[252,252,254],5:[252,250,251],10:[243,232,232],20:[233,212,219],40:[218,165,188],80:[186,131,173],160:[172,75,146]}},
+    po4:  {label:'Phosphate (PO4³⁻)',      unit:'ppm', group:'chart',     decimals:2, ideal:[0.03,0.10],  acceptable:[0,0.15],
+           presetValues:[0,0.25,0.5,1,2,4,10],
+           swatches:{0:[243,232,137],0.25:[227,228,149],0.5:[211,223,145],1:[186,214,141],2:[131,190,133],4:[98,164,128],10:[48,134,120]}},
+    kh:   {label:'KH / Alcalinité',        unit:'dKH', group:'titration', decimals:1, ideal:[8,12],       acceptable:[7,13], calc:r=>(1-r)*16},
+    ca:   {label:'Calcium',                unit:'ppm', group:'titration', decimals:0, ideal:[380,450],    acceptable:[350,480], calc:r=>(1-r)*500},
+    mg:   {label:'Magnésium',              unit:'ppm', group:'titration', decimals:0, ideal:[1250,1350],  acceptable:[1200,1400], calc:r=>(1-r)*1500},
+    temp: {label:'Température',            unit:'°C',  group:'direct',    decimals:1, ideal:[24,27],      acceptable:[23,28]},
+    sal:  {label:'Salinité (densité)',     unit:'SG',  group:'direct',    decimals:3, ideal:[1.023,1.026],acceptable:[1.020,1.028]},
+    autre:{label:'Autre',                  unit:'',    group:'chart',     decimals:2, ideal:null,         acceptable:null}
+  };
+
+  const STATUS_META = {
+    ideal:      {cls:'good', label:'Idéal'},
+    'low-warn': {cls:'warn', label:'Un peu bas'},
+    'high-warn':{cls:'warn', label:'Un peu haut'},
+    low:        {cls:'bad',  label:'Trop bas'},
+    high:       {cls:'bad',  label:'Trop haut'},
+    good:{cls:'good',label:'Idéal'}, warn:{cls:'warn',label:'Attention'}, bad:{cls:'bad',label:'Hors norme'}
+  };
+  function statusOf(paramKey, value){
+    const p = PARAMS[paramKey];
+    if(!p || !p.ideal) return null;
+    const [iMin,iMax] = p.ideal, [aMin,aMax] = p.acceptable;
+    if(value>=iMin && value<=iMax) return 'ideal';
+    if(value<iMin) return value>=aMin ? 'low-warn' : 'low';
+    return value<=aMax ? 'high-warn' : 'high';
+  }
+  function statusMeta(s){ return (s && STATUS_META[s]) ? STATUS_META[s] : {cls:'none', label:'—'}; }
+
+  // ================= history (Supabase) =================
+  let historyData = [];
+  async function loadHistory(){
+    try{
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/measurements?select=*&order=created_at.desc`, {headers: sbHeaders()});
+      if(!res.ok){ showSyncError(await sbErrorDetail(res)); historyData=[]; return; }
+      const rows = await res.json();
+      historyData = rows.map(r=>({id:r.id, date:r.created_at, param:r.param, value:Number(r.value), status:r.status, source:r.source, note:r.note, customLabel:r.custom_label}));
+    }catch(e){ console.error(e); historyData=[]; showSyncError(e.message||'réseau indisponible'); }
+  }
+  async function addHistoryEntry(entry){
+    const body = {param:entry.param, value:entry.value, status:entry.status, source:entry.source, note:entry.note||null, custom_label:entry.customLabel||null};
+    let ok=false;
+    try{
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/measurements`, {method:'POST', headers: sbHeaders({'Prefer':'return=representation'}), body: JSON.stringify(body)});
+      if(!res.ok){ showSyncError(await sbErrorDetail(res)); }
+      else{
+        const rows = await res.json(); const r = rows[0];
+        historyData.push({id:r.id, date:r.created_at, param:r.param, value:Number(r.value), status:r.status, source:r.source, note:r.note, customLabel:r.custom_label});
+        ok=true;
+      }
+    }catch(e){ console.error(e); showSyncError(e.message||'réseau indisponible'); }
+    renderDashboard();
+    return ok;
+  }
+  async function deleteHistoryEntry(id){
+    historyData = historyData.filter(x=>x.id!==id);
+    renderHistory(); renderDashboard();
+    try{ await fetch(`${SUPABASE_URL}/rest/v1/measurements?id=eq.${id}`, {method:'DELETE', headers: sbHeaders()}); }catch(e){ console.error(e); }
+  }
+  function latestFor(k){ return historyData.filter(e=>e.param===k).sort((a,b)=>new Date(b.date)-new Date(a.date))[0] || null; }
+  function seriesFor(k,n){ return historyData.filter(e=>e.param===k).sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(-n); }
+  function relDate(iso){
+    const d=new Date(iso), diffDays=Math.floor((new Date()-d)/86400000);
+    if(diffDays<=0) return "aujourd'hui"; if(diffDays===1) return "hier";
+    if(diffDays<30) return `il y a ${diffDays} j`; return d.toLocaleDateString('fr-FR');
+  }
+
+  // ================= navigation =================
+  window.showView = function(name){
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('view-'+name).classList.add('active');
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
+    window.scrollTo({top:0});
+    if(name==='dashboard') renderDashboard();
+    if(name==='history') renderHistory();
+    if(name==='report') renderReport();
+  };
+  document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click', ()=>showView(b.dataset.view)));
+
+  // ================= dashboard =================
+  function drawSparkline(canvas, values, idealRange){
+    const dpr=window.devicePixelRatio||1, w=canvas.clientWidth||100, h=28;
+    canvas.width=w*dpr; canvas.height=h*dpr;
+    const ctx=canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
+    if(values.length<2) return;
+    let min=Math.min(...values), max=Math.max(...values);
+    if(idealRange){ min=Math.min(min,idealRange[0]); max=Math.max(max,idealRange[1]); }
+    if(min===max){ min-=1; max+=1; }
+    const pad=3, xAt=i=>pad+(w-2*pad)*(i/(values.length-1)), yAt=v=>h-pad-(h-2*pad)*((v-min)/(max-min));
+    if(idealRange){ ctx.fillStyle='rgba(62,217,160,0.10)'; const y1=yAt(idealRange[1]), y2=yAt(idealRange[0]); ctx.fillRect(0,y1,w,y2-y1); }
+    ctx.beginPath(); values.forEach((v,i)=>{ const x=xAt(i),y=yAt(v); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+    ctx.strokeStyle='#2ED9C3'; ctx.lineWidth=1.5; ctx.stroke();
+    const lx=xAt(values.length-1), ly=yAt(values[values.length-1]);
+    ctx.beginPath(); ctx.arc(lx,ly,2.2,0,Math.PI*2); ctx.fillStyle='#2ED9C3'; ctx.fill();
+  }
+  function renderDashboard(){
+    const grid=document.getElementById('dashGrid'); grid.innerHTML='';
+    let any=false;
+    Object.keys(PARAMS).filter(k=>k!=='autre').forEach(k=>{
+      const p=PARAMS[k], latest=latestFor(k); if(latest) any=true;
+      const meta = statusMeta(latest? latest.status : null);
+      const card=document.createElement('div'); card.className='dash-card';
+      card.innerHTML = `<div class="lbl">${p.label}</div><div class="val">${latest?Number(latest.value).toFixed(p.decimals):'—'}<span class="unit">${p.unit}</span></div>
+      <div class="meta"><span class="status-pill ${meta.cls}">${meta.label}</span><span class="date">${latest?relDate(latest.date):''}</span></div>
+      <canvas class="spark"></canvas>`;
+      card.addEventListener('click', ()=>{ showView('history'); document.getElementById('historyFilter').value=k; renderHistory(); });
+      grid.appendChild(card);
+      requestAnimationFrame(()=>drawSparkline(card.querySelector('canvas.spark'), seriesFor(k,10).map(e=>e.value), p.ideal));
+    });
+    document.getElementById('dashEmpty').style.display = any ? 'none':'block';
+  }
+
+  // ================= history view =================
+  function populateHistoryFilter(){
+    const sel=document.getElementById('historyFilter');
+    sel.innerHTML = '<option value="">Tous les paramètres</option>' +
+      Object.keys(PARAMS).filter(k=>k!=='autre').map(k=>`<option value="${k}">${PARAMS[k].label}</option>`).join('') +
+      '<option value="autre">Autre</option>';
+  }
+  function renderHistory(){
+    const filter=document.getElementById('historyFilter').value;
+    const tbody=document.getElementById('historyBody'); tbody.innerHTML='';
+    let entries = historyData.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
+    if(filter) entries = entries.filter(e=>e.param===filter);
+    document.getElementById('historyEmpty').style.display = entries.length?'none':'block';
+    entries.forEach(e=>{
+      const p=PARAMS[e.param]||{label:'Autre',unit:'',decimals:2};
+      const label = e.param==='autre'?(e.customLabel||'Autre'):p.label;
+      const meta = statusMeta(e.status);
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${new Date(e.date).toLocaleDateString('fr-FR')}</td><td>${label}</td><td>${Number(e.value).toFixed(p.decimals!==undefined?p.decimals:2)} ${p.unit||''}</td><td><span class="status-pill ${meta.cls}">${meta.label}</span></td><td><button class="del">×</button></td>`;
+      tr.querySelector('.del').addEventListener('click', ()=>deleteHistoryEntry(e.id));
+      tbody.appendChild(tr);
+    });
+    drawHistoryChart(filter);
+  }
+  function drawHistoryChart(filter){
+    const wrap=document.getElementById('chartWrap'), canvas=document.getElementById('historyChart');
+    if(!filter||filter==='autre'){ wrap.style.display='none'; return; }
+    const series=seriesFor(filter,60);
+    if(series.length<2){ wrap.style.display='none'; return; }
+    wrap.style.display='block';
+    const p=PARAMS[filter], dpr=window.devicePixelRatio||1, w=canvas.clientWidth, h=180;
+    canvas.width=w*dpr; canvas.height=h*dpr;
+    const ctx=canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
+    const values=series.map(e=>e.value);
+    let min=Math.min(...values), max=Math.max(...values);
+    if(p.ideal){ min=Math.min(min,p.ideal[0]); max=Math.max(max,p.ideal[1]); }
+    if(min===max){ min-=1; max+=1; }
+    const range=max-min; min-=range*0.15; max+=range*0.15;
+    const padL=38,padR=14,padT=14,padB=22;
+    const xAt=i=>padL+(w-padL-padR)*(series.length===1?0:(i/(values.length-1)));
+    const yAt=v=>h-padB-(h-padT-padB)*((v-min)/(max-min));
+    if(p.ideal){ ctx.fillStyle='rgba(62,217,160,0.10)'; const y1=yAt(p.ideal[1]),y2=yAt(p.ideal[0]); ctx.fillRect(padL,y1,w-padL-padR,y2-y1); }
+    ctx.fillStyle='#6E93BE'; ctx.font="10px 'IBM Plex Mono',monospace"; ctx.textAlign='right';
+    ctx.fillText(max.toFixed(p.decimals), padL-6, padT+8); ctx.fillText(min.toFixed(p.decimals), padL-6, h-padB);
+    ctx.beginPath(); values.forEach((v,i)=>{ const x=xAt(i),y=yAt(v); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+    ctx.strokeStyle='#2ED9C3'; ctx.lineWidth=2; ctx.stroke();
+    series.forEach((e,i)=>{
+      const x=xAt(i),y=yAt(e.value); ctx.beginPath(); ctx.arc(x,y,3,0,Math.PI*2);
+      const meta=statusMeta(e.status);
+      ctx.fillStyle = meta.cls==='good'?'#3ED9A0':meta.cls==='warn'?'#F2A65A':meta.cls==='bad'?'#FF5A5F':'#2ED9C3';
+      ctx.fill();
+    });
+    ctx.fillStyle='#6E93BE'; ctx.textAlign='left';
+    ctx.fillText(new Date(series[0].date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}), padL, h-6);
+    ctx.textAlign='right';
+    ctx.fillText(new Date(series[series.length-1].date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}), w-padR, h-6);
+  }
+  document.getElementById('historyFilter').addEventListener('change', renderHistory);
+
+  // ================= report =================
+  let reportPeriod='today';
+  function periodCutoff(p){ const now=new Date();
+    if(p==='today'){ const d=new Date(now); d.setHours(0,0,0,0); return d; }
+    if(p==='week') return new Date(now.getTime()-7*86400000);
+    if(p==='month') return new Date(now.getTime()-30*86400000);
+    return null;
+  }
+  function periodLabelText(p){ return p==='today'?"Aujourd'hui":p==='week'?'7 derniers jours':p==='month'?'30 derniers jours':"Tout l'historique"; }
+  document.querySelectorAll('#reportPeriodToggle button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('#reportPeriodToggle button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active'); reportPeriod=b.dataset.period; renderReport();
+    });
+  });
+  function generateReport(){
+    const cutoff=periodCutoff(reportPeriod);
+    const filtered = historyData.filter(e=>!cutoff || new Date(e.date)>=cutoff);
+    const lines=[];
+    lines.push('RAPPORT DE SUIVI — AQUARIUM RÉCIFAL');
+    lines.push(`Généré le ${new Date().toLocaleString('fr-FR')}`);
+    lines.push(`Période : ${periodLabelText(reportPeriod)}`);
+    lines.push('');
+    lines.push('PLAGES DE RÉFÉRENCE (consensus récifal) :');
+    Object.keys(PARAMS).filter(k=>k!=='autre'&&PARAMS[k].ideal).forEach(k=>{
+      const p=PARAMS[k];
+      lines.push(`- ${p.label} : idéal ${p.ideal[0]}–${p.ideal[1]} ${p.unit} (acceptable ${p.acceptable[0]}–${p.acceptable[1]} ${p.unit})`);
+    });
+    lines.push(''); lines.push('HISTORIQUE DES MESURES (par paramètre, ordre chronologique) :');
+    const byParam={};
+    filtered.forEach(e=>{ const key=e.param==='autre'?('autre:'+(e.customLabel||'Autre')):e.param; (byParam[key]=byParam[key]||[]).push(e); });
+    const gk=Object.keys(byParam);
+    if(gk.length===0) lines.push('  Aucune mesure sur cette période.');
+    gk.forEach(key=>{
+      const entries=byParam[key].slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
+      const label=key.startsWith('autre:')?key.slice(6):PARAMS[key].label;
+      const unit=key.startsWith('autre:')?'':PARAMS[key].unit;
+      lines.push(''); lines.push(`■ ${label}`);
+      entries.forEach(e=>{
+        const meta=statusMeta(e.status);
+        lines.push(`  ${new Date(e.date).toLocaleDateString('fr-FR')} — ${e.value}${unit?' '+unit:''} (${meta.label.toLowerCase()})${e.note?' — '+e.note:''}`);
+      });
+    });
+    return lines.join('\n');
+  }
+  function renderReport(){ document.getElementById('reportBox').value = generateReport(); }
+  function flashBtn(id,text){ const b=document.getElementById(id); const old=b.textContent; b.textContent=text; setTimeout(()=>b.textContent=old,1800); }
+  document.getElementById('btnCopyReport').addEventListener('click', async ()=>{
+    const ta=document.getElementById('reportBox');
+    const hint=document.getElementById('copyHint');
+    try{
+      await navigator.clipboard.writeText(ta.value);
+      flashBtn('btnCopyReport','Copié !'); hint.textContent='';
+    }catch(e){
+      ta.focus(); ta.select();
+      hint.textContent = "Texte sélectionné : maintiens le doigt dessus puis touche « Copier » dans le menu qui apparaît (ou utilise Télécharger).";
+    }
+  });
+  document.getElementById('btnDownloadReport').addEventListener('click', ()=>{
+    const txt=document.getElementById('reportBox').value;
+    const blob=new Blob([txt],{type:'text/plain;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download=`rapport-recif-${new Date().toISOString().slice(0,10)}.txt`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),2000);
+  });
+
+  // ================= generic bottom sheet (value entry) =================
+  const sheetOverlay=document.getElementById('sheetOverlay'), sheet=document.getElementById('sheet');
+  const sheetTitle=document.getElementById('sheetTitle'), sheetSwatch=document.getElementById('sheetSwatch');
+  const sheetInput=document.getElementById('sheetInput'), sheetError=document.getElementById('sheetError');
+  const sheetConfirmBtn=document.getElementById('sheetConfirm');
+  let sheetOnConfirm=null;
+  function openSheet(opts){
+    sheetTitle.textContent=opts.title;
+    sheetSwatch.style.display = opts.showSwatch?'block':'none';
+    if(opts.showSwatch) sheetSwatch.style.background = opts.swatchColor;
+    sheetInput.value=''; sheetInput.placeholder=opts.placeholder||''; sheetError.textContent='';
+    sheetConfirmBtn.textContent=opts.confirmText||'OK';
+    sheetOnConfirm=opts.onConfirm;
+    sheetOverlay.style.display='block'; sheet.style.display='block';
+    setTimeout(()=>sheetInput.focus(),50);
+  }
+  function closeSheet(){ sheetOverlay.style.display='none'; sheet.style.display='none'; sheetOnConfirm=null; }
+  document.getElementById('sheetCancel').addEventListener('click', closeSheet);
+  sheetOverlay.addEventListener('click', closeSheet);
+  sheetConfirmBtn.addEventListener('click', ()=>{ if(sheetOnConfirm) sheetOnConfirm(); });
+  sheetInput.addEventListener('keydown', e=>{ if(e.key==='Enter' && sheetOnConfirm) sheetOnConfirm(); });
+
+  // ================= manual "no test" entry (generic) =================
+  function openManualEntry(paramKey, customLabelGetter){
+    const p = PARAMS[paramKey];
+    const label = paramKey==='autre' ? (customLabelGetter?customLabelGetter():'Autre') : p.label;
+    openSheet({
+      title:`Valeur manuelle — ${label}`, showSwatch:false, placeholder:`ex. 8,2 ${p.unit||''}`, confirmText:'Enregistrer',
+      onConfirm: async ()=>{
+        const raw=sheetInput.value.trim().replace(',','.'); const val=parseFloat(raw);
+        if(!raw||isNaN(val)){ sheetError.textContent='Entre une valeur numérique.'; return; }
+        const status = paramKey==='autre' ? null : statusOf(paramKey, val);
+        closeSheet();
+        await addHistoryEntry({param:paramKey, value:val, status, source:'manual', customLabel: paramKey==='autre'?label:undefined});
+        showView('dashboard');
+      }
+    });
+  }
+  document.getElementById('btnManualEntryTitration').addEventListener('click', ()=>{
+    openManualEntry(document.getElementById('titrationParamSelect').value);
+  });
+
+  // ================= titration =================
+  (function(){
+    const sel=document.getElementById('titrationParamSelect');
+    sel.innerHTML=['kh','ca','mg'].map(k=>`<option value="${k}">${PARAMS[k].label}</option>`).join('');
+    function updateBanner(){
+      document.getElementById('titrationBanner').classList.add('show');
+      document.getElementById('titrationBannerParam').textContent = PARAMS[sel.value].label;
+      document.getElementById('titrationBannerValue').textContent = '';
+    }
+    sel.addEventListener('change', updateBanner); updateBanner();
+
+    document.getElementById('btnCalcTitration').addEventListener('click', async ()=>{
+      const key=sel.value;
+      const raw=document.getElementById('titrationReading').value.trim().replace(',','.');
+      const reading=parseFloat(raw);
+      const errEl=document.getElementById('titrationError');
+      if(!raw||isNaN(reading)||reading<0||reading>1){ errEl.textContent='Entre une lecture entre 0.00 et 1.00 ml.'; return; }
+      errEl.textContent='';
+      const lowRes=document.getElementById('titrationLowRes').checked;
+      const p=PARAMS[key]; let value=p.calc(reading); if(lowRes) value*=2;
+      const factor=Math.pow(10,p.decimals); value=Math.round(value*factor)/factor;
+      const status=statusOf(key,value); const meta=statusMeta(status);
+
+      document.getElementById('titrationResultPanel').style.display='block';
+      document.getElementById('titrationResultValue').textContent=value.toFixed(p.decimals);
+      document.getElementById('titrationResultUnit').textContent=p.unit;
+      const st=document.getElementById('titrationResultStatus'); st.className='status-pill '+meta.cls; st.textContent=meta.label;
+      document.getElementById('titrationBannerValue').textContent = value.toFixed(p.decimals)+' '+p.unit;
+
+      const saved=await addHistoryEntry({param:key,value,status,source:'titration'});
+      const savedEl=document.getElementById('titrationSavedNote');
+      savedEl.textContent = saved? "✅ Enregistré dans l'historique" : '⚠️ Non enregistré — échec Supabase';
+      savedEl.style.color = saved? 'var(--good)' : 'var(--bad)';
+      document.getElementById('titrationResultPanel').scrollIntoView({behavior:'smooth'});
+    });
+  })();
+
+  // ================= direct entry =================
+  document.getElementById('btnSaveTemp').addEventListener('click', async ()=>{
+    const raw=document.getElementById('tempInput').value.trim().replace(',','.'); const v=parseFloat(raw);
+    if(!raw||isNaN(v)) return;
+    const saved=await addHistoryEntry({param:'temp',value:v,status:statusOf('temp',v),source:'direct'});
+    if(saved) document.getElementById('tempInput').value='';
+    const msg=document.getElementById('tempSaveMsg');
+    msg.textContent = saved? "✅ Enregistré dans l'historique" : '⚠️ Échec Supabase';
+    msg.style.color = saved? 'var(--good)':'var(--bad)';
+    msg.style.display='block'; setTimeout(()=>msg.style.display='none', saved?1800:4000);
+  });
+  document.getElementById('btnSaveSal').addEventListener('click', async ()=>{
+    const raw=document.getElementById('salInput').value.trim().replace(',','.'); const v=parseFloat(raw);
+    if(!raw||isNaN(v)) return;
+    const saved=await addHistoryEntry({param:'sal',value:v,status:statusOf('sal',v),source:'direct'});
+    if(saved) document.getElementById('salInput').value='';
+    const msg=document.getElementById('salSaveMsg');
+    msg.textContent = saved? "✅ Enregistré dans l'historique" : '⚠️ Échec Supabase';
+    msg.style.color = saved? 'var(--good)':'var(--bad)';
+    msg.style.display='block'; setTimeout(()=>msg.style.display='none', saved?1800:4000);
+  });
+
+  // ================= timer =================
+  (function(){
+    const fab=document.getElementById('timerFab'), overlay=document.getElementById('timerOverlay'), sheetEl=document.getElementById('timerSheet');
+    const idleView=document.getElementById('timerIdleView'), runView=document.getElementById('timerRunningView');
+    const display=document.getElementById('timerDisplay');
+    let endTime=null, intervalId=null, audioCtx=null;
+
+    function openTimerSheet(){ overlay.style.display='block'; sheetEl.style.display='block'; }
+    function closeTimerSheet(){ overlay.style.display='none'; sheetEl.style.display='none'; }
+    fab.addEventListener('click', openTimerSheet);
+    overlay.addEventListener('click', closeTimerSheet);
+
+    function beep(){
+      try{
+        audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+        for(let i=0;i<3;i++){
+          const t = audioCtx.currentTime + i*0.35;
+          const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+          osc.frequency.value = 880; osc.type='sine';
+          gain.gain.setValueAtTime(0.2, t); gain.gain.exponentialRampToValueAtTime(0.001, t+0.25);
+          osc.connect(gain); gain.connect(audioCtx.destination);
+          osc.start(t); osc.stop(t+0.28);
+        }
+      }catch(e){ console.error('beep failed', e); }
+      if(navigator.vibrate) navigator.vibrate([200,100,200,100,200]);
+    }
+
+    function startTimer(minutes){
+      endTime = Date.now() + minutes*60000;
+      idleView.style.display='none'; runView.style.display='block';
+      fab.classList.add('running');
+      tick();
+      intervalId = setInterval(tick, 250);
+    }
+    function tick(){
+      const remain = Math.max(0, endTime-Date.now());
+      const mm = Math.floor(remain/60000), ss = Math.floor((remain%60000)/1000);
+      const txt = `${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+      display.textContent = txt; fab.textContent = (mm>0||ss>0) ? txt : '⏱';
+      if(remain<=0){ stopTimer(true); }
+    }
+    function stopTimer(finished){
+      clearInterval(intervalId); intervalId=null; endTime=null;
+      fab.classList.remove('running'); fab.textContent='⏱';
+      idleView.style.display='block'; runView.style.display='none';
+      if(finished){ beep(); closeTimerSheet(); alert('⏱ Minuteur terminé !'); }
+    }
+    document.querySelectorAll('.timer-presets button').forEach(b=>{
+      b.addEventListener('click', ()=>{ startTimer(parseFloat(b.dataset.min)); });
+    });
+    document.getElementById('timerCustomStart').addEventListener('click', ()=>{
+      const v=parseFloat(document.getElementById('timerCustomMin').value);
+      if(v>0) startTimer(v);
+    });
+    document.getElementById('timerStop').addEventListener('click', ()=>stopTimer(false));
+  })();
+
+  // ================= NUANCIER v1.3 =================
+  let dataCanvas=document.createElement('canvas');
+  let dataCtx=dataCanvas.getContext('2d',{willReadFrequently:true});
+  const viewCanvas=document.getElementById('viewCanvas');
+  const viewCtx=viewCanvas.getContext('2d');
+  const canvasWrap=document.getElementById('canvasWrap');
+
+  let refParam='ph';
+  let usingDefaults=true;
+  let refPoints={}; // {value(number): rgb}
+  let whitePoint=null;
+  let samplePointRaw=null;
+  let aimTarget=null; // 'white' | 'sample' | {chip:value}
+  let pendingTarget=null; // {x,y,rgb}
+  let hasPhoto=false;
+
+  const workspace=document.getElementById('workspace');
+  const captureSection=document.getElementById('captureSection');
+  const fileCamera=document.getElementById('fileCamera'), fileGallery=document.getElementById('fileGallery');
+  const chartParamSelect=document.getElementById('chartParamSelect');
+  const chartCustomLabelField=document.getElementById('chartCustomLabelField'), chartCustomLabel=document.getElementById('chartCustomLabel');
+  const refChipList=document.getElementById('refChipList');
+  const refModeHelp=document.getElementById('refModeHelp');
+  const btnAddChip=document.getElementById('btnAddChip'), btnRecalibrate=document.getElementById('btnRecalibrate'), btnUseDefaults=document.getElementById('btnUseDefaults');
+  const wbRow=document.getElementById('wbRow'), wbWhiteSwatch=document.getElementById('wbWhiteSwatch'), wbSampleSwatch=document.getElementById('wbSampleSwatch');
+  const aimHint=document.getElementById('aimHint'), aimHintText=document.getElementById('aimHintText');
+  const targetButtons=document.getElementById('targetButtons');
+  const btnAimWhite=document.getElementById('btnAimWhite'), btnAimSample=document.getElementById('btnAimSample');
+  const targetPreview=document.getElementById('targetPreview'), targetPreviewCanvas=document.getElementById('targetPreviewCanvas');
+  const targetPreviewCtx=targetPreviewCanvas.getContext('2d');
+  const targetLabel=document.getElementById('targetLabel');
+  const targetConfirm=document.getElementById('targetConfirm'), targetSwatch=document.getElementById('targetSwatch');
+  const btnCompute=document.getElementById('btnCompute');
+  const resultPanel=document.getElementById('resultPanel');
+  const profileSelect=document.getElementById('profileSelect');
+  const nuancierBanner=document.getElementById('nuancierBanner'), nuancierBannerParam=document.getElementById('nuancierBannerParam'), nuancierBannerValue=document.getElementById('nuancierBannerValue');
+
+  chartParamSelect.innerHTML = Object.keys(PARAMS).filter(k=>PARAMS[k].group==='chart').map(k=>`<option value="${k}">${PARAMS[k].label}</option>`).join('');
+
+  function clamp(v,mn,mx){ return Math.max(mn, Math.min(mx, v)); }
+  function rgbCss(rgb){ return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`; }
+  function srgbToLinear(c){ c/=255; return c<=0.04045 ? c/12.92 : Math.pow((c+0.055)/1.055,2.4); }
+  function rgbToLab(rgb){
+    const r=srgbToLinear(rgb[0]),g=srgbToLinear(rgb[1]),b=srgbToLinear(rgb[2]);
+    let x=r*0.4124564+g*0.3575761+b*0.1804375, y=r*0.2126729+g*0.7151522+b*0.0721750, z=r*0.0193339+g*0.1191920+b*0.9503041;
+    x=x*100/95.047; y=y*100/100.0; z=z*100/108.883;
+    const f=t=>t>0.008856?Math.cbrt(t):(7.787*t+16/116);
+    const fx=f(x),fy=f(y),fz=f(z);
+    return [116*fy-16, 500*(fx-fy), 200*(fy-fz)];
+  }
+  function deltaE(a,b){ const l1=rgbToLab(a),l2=rgbToLab(b); return Math.sqrt((l1[0]-l2[0])**2+(l1[1]-l2[1])**2+(l1[2]-l2[2])**2); }
+  function whiteBalance(sample, white){
+    const scale=[255/Math.max(white[0],1),255/Math.max(white[1],1),255/Math.max(white[2],1)];
+    return [clamp(Math.round(sample[0]*scale[0]),0,255), clamp(Math.round(sample[1]*scale[1]),0,255), clamp(Math.round(sample[2]*scale[2]),0,255)];
+  }
+
+  // -------- param / mode switching --------
+  function resetRefState(){
+    const p=PARAMS[refParam];
+    if(p.swatches){ usingDefaults=true; refPoints=Object.assign({}, p.swatches); }
+    else{ usingDefaults=false; refPoints={}; }
+    whitePoint=null; samplePointRaw=null; aimTarget=null; pendingTarget=null;
+    wbWhiteSwatch.style.background='#1a2332'; wbSampleSwatch.style.background='#1a2332';
+    resultPanel.style.display='none';
+    renderRefUI();
+    updateComputeBtn();
+    updateBanner();
+  }
+  function renderRefUI(){
+    const p=PARAMS[refParam];
+    refChipList.innerHTML='';
+    Object.keys(refPoints).map(Number).sort((a,b)=>a-b).forEach(val=>{
+      const chip=document.createElement('button');
+      chip.className='chip'; chip.type='button';
+      chip.innerHTML = `<span class="swatch" style="background:${rgbCss(refPoints[val])}"></span><span>${val}${p.unit?(' '+p.unit):''}</span>`;
+      chip.addEventListener('click', ()=>manualOverride(val));
+      if(!usingDefaults){
+        const editBtn=document.createElement('span'); editBtn.className='edit'; editBtn.textContent='✏️';
+        editBtn.addEventListener('click', (e)=>{ e.stopPropagation(); armAim({chip:val}, `Pastille ${val}${p.unit?(' '+p.unit):''}`); });
+        chip.appendChild(editBtn);
+      }
+      refChipList.appendChild(chip);
+    });
+    if(usingDefaults){
+      refModeHelp.textContent = "Valeurs intégrées pour ce kit (scan officiel). Touche une pastille pour l'utiliser directement comme résultat.";
+      btnAddChip.style.display='none'; btnUseDefaults.style.display='none'; wbRow.style.display='flex';
+      targetButtons.innerHTML=''; targetButtons.appendChild(btnAimWhite); targetButtons.appendChild(btnAimSample);
+    } else {
+      refModeHelp.textContent = "Calibration à partir de cette photo — touche ✏️ sur une pastille pour lui assigner une couleur, ou ajoutes-en une nouvelle.";
+      btnAddChip.style.display = refParam==='autre' ? 'inline-block' : 'none';
+      btnUseDefaults.style.display = PARAMS[refParam].swatches ? 'inline-block' : 'none';
+      wbRow.style.display='none';
+      targetButtons.innerHTML=''; targetButtons.appendChild(btnAimSample);
+    }
+  }
+  function manualOverride(val){
+    showResult({value:val, status: refParam==='autre'?null:statusOf(refParam,val), best:{rgb:refPoints[val], de:0}, sample:refPoints[val], manual:true});
+  }
+  chartParamSelect.addEventListener('change', ()=>{
+    refParam=chartParamSelect.value;
+    chartCustomLabelField.style.display = refParam==='autre' ? 'block' : 'none';
+    resetRefState();
+  });
+  document.getElementById('btnManualEntry').addEventListener('click', ()=>{
+    openManualEntry(refParam, ()=>chartCustomLabel.value.trim()||'Autre');
+  });
+  btnRecalibrate.addEventListener('click', ()=>{
+    usingDefaults=false; refPoints={};
+    if(PARAMS[refParam].presetValues){
+      PARAMS[refParam].presetValues.forEach(v=>{ refPoints[v]=[60,60,60]; });
+    }
+    renderRefUI(); updateComputeBtn();
+  });
+  btnUseDefaults.addEventListener('click', resetRefState);
+  document.getElementById('btnAddChip').addEventListener('click', ()=>{
+    openSheet({
+      title:'Nouvelle pastille — valeur', showSwatch:false, placeholder:'ex. 0.5', confirmText:'Ajouter',
+      onConfirm: ()=>{
+        const raw=sheetInput.value.trim().replace(',','.'); const val=parseFloat(raw);
+        if(!raw||isNaN(val)){ sheetError.textContent='Entre une valeur numérique.'; return; }
+        refPoints[val]=[60,60,60]; closeSheet(); renderRefUI(); updateComputeBtn();
+        armAim({chip:val}, `Nouvelle pastille ${val}`);
+      }
+    });
+  });
+
+  function updateBanner(){
+    nuancierBanner.classList.add('show');
+    const p=PARAMS[refParam];
+    nuancierBannerParam.textContent = refParam==='autre' ? (chartCustomLabel.value.trim()||'Autre') : p.label;
+    nuancierBannerValue.textContent = '';
+  }
+  chartCustomLabel.addEventListener('input', updateBanner);
+
+  // -------- capture --------
+  document.getElementById('btnCamera').addEventListener('click', ()=>fileCamera.click());
+  document.getElementById('btnGallery').addEventListener('click', ()=>fileGallery.click());
+  fileCamera.addEventListener('change', e=>{ if(e.target.files[0]) handleFile(e.target.files[0]); });
+  fileGallery.addEventListener('change', e=>{ if(e.target.files[0]) handleFile(e.target.files[0]); });
+
+  async function handleFile(file){
+    let srcImg;
+    try{ srcImg = await createImageBitmap(file, {imageOrientation:'from-image'}); }
+    catch(e){ srcImg = await loadViaImageElement(file); }
+    const iw=srcImg.width, ih=srcImg.height, maxDim=1100;
+    const scale=Math.min(1, maxDim/Math.max(iw,ih));
+    const w=Math.round(iw*scale), h=Math.round(ih*scale);
+    dataCanvas.width=w; dataCanvas.height=h; dataCtx.drawImage(srcImg,0,0,w,h);
+    viewCanvas.width=w; viewCanvas.height=h; viewCtx.drawImage(dataCanvas,0,0);
+    hasPhoto=true;
+    captureSection.style.display='none'; workspace.style.display='block';
+    refreshProfileList();
+  }
+  function loadViaImageElement(file){
+    return new Promise((resolve,reject)=>{
+      const url=URL.createObjectURL(file); const img=new Image();
+      img.onload=()=>resolve(img); img.onerror=reject; img.src=url;
+    });
+  }
+  document.getElementById('btnReset').addEventListener('click', ()=>{
+    workspace.style.display='none'; captureSection.style.display='block';
+    fileCamera.value=''; fileGallery.value=''; hasPhoto=false;
+    resetRefState();
+  });
+
+  // -------- aiming / fixed preview / confirm --------
+  function armAim(target, label){
+    aimTarget=target; pendingTarget=null;
+    aimHint.classList.add('show'); aimHintText.textContent = `Vise : ${label} — touche et déplace sur la photo`;
+    targetButtons.style.display='none';
+    canvasWrap.classList.add('armed');
+    targetPreview.classList.add('show'); targetLabel.textContent=label;
+    targetConfirm.classList.remove('show');
+  }
+  function disarmAim(){
+    aimTarget=null; pendingTarget=null;
+    aimHint.classList.remove('show'); targetButtons.style.display='flex';
+    canvasWrap.classList.remove('armed');
+    targetPreview.classList.remove('show'); targetConfirm.classList.remove('show');
+  }
+  btnAimWhite.addEventListener('click', ()=>armAim('white','Fond blanc'));
+  btnAimSample.addEventListener('click', ()=>armAim('sample','Échantillon'));
+  document.getElementById('btnAimCancel').addEventListener('click', disarmAim);
+  document.getElementById('targetRedo').addEventListener('click', ()=>{ pendingTarget=null; targetConfirm.classList.remove('show'); });
+
+  function averageColorAt(x,y,radius){
+    radius=radius||4;
+    const w=dataCanvas.width,h=dataCanvas.height;
+    const x0=clamp(x-radius,0,w-1),y0=clamp(y-radius,0,h-1),x1=clamp(x+radius,0,w-1),y1=clamp(y+radius,0,h-1);
+    const data=dataCtx.getImageData(x0,y0,x1-x0+1,y1-y0+1).data;
+    let r=0,g=0,b=0,n=0;
+    for(let i=0;i<data.length;i+=4){ r+=data[i]; g+=data[i+1]; b+=data[i+2]; n++; }
+    return [Math.round(r/n),Math.round(g/n),Math.round(b/n)];
+  }
+  function getCanvasCoords(clientX,clientY){
+    const rect=viewCanvas.getBoundingClientRect();
+    const sx=viewCanvas.width/rect.width, sy=viewCanvas.height/rect.height;
+    return [clamp(Math.round((clientX-rect.left)*sx),0,viewCanvas.width-1), clamp(Math.round((clientY-rect.top)*sy),0,viewCanvas.height-1)];
+  }
+  function updateTargetPreview(x,y){
+    const zoom=14, w=dataCanvas.width, h=dataCanvas.height;
+    const sx=clamp(x-zoom,0,w-1), sy=clamp(y-zoom,0,h-1), sw=clamp(zoom*2,1,w-sx), sh=clamp(zoom*2,1,h-sy);
+    const tw=targetPreviewCanvas.width, th=targetPreviewCanvas.height;
+    targetPreviewCtx.imageSmoothingEnabled=false;
+    targetPreviewCtx.clearRect(0,0,tw,th);
+    targetPreviewCtx.drawImage(dataCanvas, sx,sy,sw,sh, 0,0,tw,th);
+    targetPreviewCtx.strokeStyle='rgba(255,255,255,0.9)'; targetPreviewCtx.lineWidth=1;
+    targetPreviewCtx.beginPath(); targetPreviewCtx.moveTo(tw/2,0); targetPreviewCtx.lineTo(tw/2,th);
+    targetPreviewCtx.moveTo(0,th/2); targetPreviewCtx.lineTo(tw,th/2); targetPreviewCtx.stroke();
+    targetPreviewCtx.strokeStyle='rgba(0,0,0,0.6)';
+    targetPreviewCtx.strokeRect(tw/2-14,th/2-14,28,28);
+  }
+  let activePointerId=null;
+  viewCanvas.addEventListener('pointerdown', e=>{
+    if(!aimTarget) return;
+    e.preventDefault(); activePointerId=e.pointerId;
+    const [x,y]=getCanvasCoords(e.clientX,e.clientY); updateTargetPreview(x,y);
+  });
+  window.addEventListener('pointermove', e=>{
+    if(!aimTarget || e.pointerId!==activePointerId) return;
+    e.preventDefault();
+    const [x,y]=getCanvasCoords(e.clientX,e.clientY); updateTargetPreview(x,y);
+  }, {passive:false});
+  window.addEventListener('pointerup', e=>{
+    if(!aimTarget || e.pointerId!==activePointerId) return;
+    activePointerId=null;
+    const [x,y]=getCanvasCoords(e.clientX,e.clientY);
+    const rgb=averageColorAt(x,y,4);
+    pendingTarget={x,y,rgb};
+    targetSwatch.style.background=rgbCss(rgb);
+    targetConfirm.classList.add('show');
+  });
+  viewCanvas.addEventListener('touchstart', e=>{ if(aimTarget) e.preventDefault(); }, {passive:false});
+
+  document.getElementById('targetValidate').addEventListener('click', ()=>{
+    if(!pendingTarget) return;
+    if(aimTarget==='white'){ whitePoint=pendingTarget.rgb; wbWhiteSwatch.style.background=rgbCss(whitePoint); }
+    else if(aimTarget==='sample'){ samplePointRaw=pendingTarget.rgb; wbSampleSwatch.style.background=rgbCss(samplePointRaw); }
+    else if(aimTarget && aimTarget.chip!==undefined){ refPoints[aimTarget.chip]=pendingTarget.rgb; renderRefUI(); }
+    disarmAim();
+    updateComputeBtn();
+  });
+
+  function updateComputeBtn(){
+    if(usingDefaults){ btnCompute.disabled = !(whitePoint && samplePointRaw); }
+    else{
+      const validPoints = Object.values(refPoints).filter(rgb=>!(rgb[0]===60&&rgb[1]===60&&rgb[2]===60)).length;
+      btnCompute.disabled = !(validPoints>=2 && samplePointRaw);
+    }
+  }
+
+  // -------- profiles (Supabase) --------
+  async function refreshProfileList(){
+    profileSelect.innerHTML='<option value="">— Aucun profil chargé —</option>';
+    try{
+      const res=await fetch(`${SUPABASE_URL}/rest/v1/nuancier_profiles?select=*&order=created_at.desc`, {headers:sbHeaders()});
+      if(!res.ok) throw new Error('http '+res.status);
+      const rows=await res.json();
+      rows.forEach(r=>{
+        const opt=document.createElement('option'); opt.value=String(r.id);
+        const pLabel = r.param_key==='autre' ? (r.custom_label||'Autre') : (PARAMS[r.param_key]?PARAMS[r.param_key].label:'');
+        opt.textContent = r.name + (pLabel?' · '+pLabel:'');
+        opt.dataset.points=JSON.stringify(r.points||[]); opt.dataset.paramKey=r.param_key||''; opt.dataset.customLabel=r.custom_label||'';
+        profileSelect.appendChild(opt);
+      });
+    }catch(e){ console.error(e); showSyncError(e.message); }
+  }
+  document.getElementById('btnLoadProfile').addEventListener('click', ()=>{
+    const opt=profileSelect.selectedOptions[0]; if(!opt||!opt.value) return;
+    const points=JSON.parse(opt.dataset.points||'[]');
+    const paramKey=opt.dataset.paramKey;
+    if(paramKey){ chartParamSelect.value=paramKey; refParam=paramKey; chartCustomLabelField.style.display = paramKey==='autre'?'block':'none'; if(paramKey==='autre') chartCustomLabel.value=opt.dataset.customLabel||''; }
+    usingDefaults=false; refPoints={};
+    points.forEach(p=>{ refPoints[p.value]=p.rgb; });
+    renderRefUI(); updateComputeBtn(); updateBanner();
+  });
+  const btnSaveProfileRow = document.createElement('button');
+  btnSaveProfileRow.className='ghost'; btnSaveProfileRow.textContent='💾 Enregistrer la calibration actuelle comme profil'; btnSaveProfileRow.style.marginTop='10px';
+  document.getElementById('profileCard').appendChild(btnSaveProfileRow);
+  btnSaveProfileRow.addEventListener('click', ()=>{
+    const validEntries = Object.entries(refPoints).filter(([v,rgb])=>!(rgb[0]===60&&rgb[1]===60&&rgb[2]===60));
+    if(validEntries.length<2){ alert('Calibre au moins 2 pastilles avant de sauvegarder un profil.'); return; }
+    openSheet({
+      title:'Nom du profil', showSwatch:false, placeholder:'ex. Mon nuancier recalibré', confirmText:'Enregistrer',
+      onConfirm: async ()=>{
+        const name=sheetInput.value.trim();
+        if(!name){ sheetError.textContent='Entre un nom.'; return; }
+        const payload={ name, param_key:refParam, custom_label:chartCustomLabel.value.trim()||null, points: validEntries.map(([v,rgb])=>({value:parseFloat(v),rgb})) };
+        try{
+          const res=await fetch(`${SUPABASE_URL}/rest/v1/nuancier_profiles`, {method:'POST', headers:sbHeaders({'Prefer':'return=representation'}), body:JSON.stringify(payload)});
+          if(!res.ok) throw new Error('http '+res.status);
+          closeSheet(); refreshProfileList();
+        }catch(e){ sheetError.textContent="Échec de l'enregistrement en ligne."; }
+      }
+    });
+  });
+
+  // -------- compute + editable result + validate --------
+  btnCompute.addEventListener('click', computeResult);
+  function computeResult(){
+    let sampleForMatch = samplePointRaw;
+    if(usingDefaults) sampleForMatch = whiteBalance(samplePointRaw, whitePoint);
+
+    const entries = Object.entries(refPoints)
+      .filter(([v,rgb])=>!(rgb[0]===60&&rgb[1]===60&&rgb[2]===60))
+      .map(([v,rgb])=>({value:parseFloat(v), rgb, de:deltaE(rgb, sampleForMatch)}))
+      .sort((a,b)=>a.de-b.de);
+    const best=entries[0], second=entries[1];
+    let resultValue;
+    if(best.de<2 || !second) resultValue=best.value;
+    else{ const w1=1/(best.de+0.001), w2=1/(second.de+0.001); resultValue=(best.value*w1+second.value*w2)/(w1+w2); }
+    resultValue=Math.round(resultValue*100)/100;
+
+    let confLabel, confColor;
+    if(best.de<3){ confLabel='Correspondance excellente'; confColor='var(--good)'; }
+    else if(best.de<7){ confLabel='Bonne correspondance'; confColor='var(--good)'; }
+    else if(best.de<14){ confLabel='Correspondance approximative'; confColor='var(--amber)'; }
+    else{ confLabel='Peu fiable — vérifie le fond blanc / l\'éclairage'; confColor='var(--bad)'; }
+
+    const status = refParam==='autre' ? null : statusOf(refParam, resultValue);
+    showResult({value:resultValue, status, best, sample:sampleForMatch, entries, confLabel, confColor, manual:false});
+  }
+
+  function showResult(opts){
+    const value=opts.value, status=opts.status, best=opts.best, sample=opts.sample, entries=opts.entries, confLabel=opts.confLabel, confColor=opts.confColor, manual=opts.manual;
+    const p=PARAMS[refParam]; const isCustom=refParam==='autre'; const meta=statusMeta(status);
+    document.getElementById('readoutValue').value = value;
+    document.getElementById('readoutUnit').textContent = p.unit;
+    document.getElementById('readoutParam').textContent = isCustom ? (chartCustomLabel.value.trim()||'Autre') : p.label;
+    const st=document.getElementById('readoutStatus'); st.className='status-pill '+meta.cls; st.textContent=meta.label;
+    const conf=document.getElementById('confidenceText');
+    conf.textContent = manual ? 'Sélection manuelle (pastille choisie directement)' : `ΔE ${best.de.toFixed(1)} · ${confLabel}`;
+    conf.style.color = manual ? 'var(--text-dim)' : confColor;
+    document.getElementById('cmpSample').style.background = rgbCss(sample);
+    document.getElementById('cmpMatch').style.background = rgbCss(best.rgb);
+    const tbody=document.getElementById('matchesBody'); tbody.innerHTML='';
+    (entries||[best]).forEach(s=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td><span class="sw" style="background:${rgbCss(s.rgb)}"></span></td><td>${s.value}</td><td>${s.de!==undefined?s.de.toFixed(1):'—'}</td>`;
+      tbody.appendChild(tr);
+    });
+    document.getElementById('savedNote').textContent='';
+    nuancierBannerValue.textContent = value+' '+p.unit;
+    resultPanel.style.display='block';
+    resultPanel.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  document.getElementById('btnValidateResult').addEventListener('click', async ()=>{
+    const p=PARAMS[refParam]; const isCustom=refParam==='autre';
+    const val=parseFloat(document.getElementById('readoutValue').value.replace(',','.'));
+    if(isNaN(val)) return;
+    const status = isCustom ? null : statusOf(refParam, val);
+    const saved = await addHistoryEntry({
+      param: refParam, value: val, status, source:'nuancier',
+      note: document.getElementById('confidenceText').textContent,
+      customLabel: isCustom ? (chartCustomLabel.value.trim()||'Autre') : undefined
+    });
+    const savedEl=document.getElementById('savedNote');
+    savedEl.textContent = saved? "✅ Enregistré dans l'historique" : '⚠️ Non enregistré — échec Supabase';
+    savedEl.style.color = saved? 'var(--good)' : 'var(--bad)';
+    if(saved) setTimeout(()=>showView('dashboard'), 900);
+  });
+
+  // ---------- init ----------
+  populateHistoryFilter();
+  resetRefState();
+  loadHistory().then(renderDashboard);
+
+})();
+</script>
+</body>
+</html>
