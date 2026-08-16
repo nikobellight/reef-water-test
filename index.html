@@ -183,10 +183,23 @@
   .toggle-row input{width:18px;height:18px;}
   .save-msg{display:none;font-size:0.85rem;margin-top:8px;text-align:center;}
 
-  table.history{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:0.78rem;}
-  table.history th{text-align:left;color:var(--text-dim);font-weight:500;padding:6px;border-bottom:1px solid var(--line);}
-  table.history td{padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:middle;}
-  table.history .del{background:none;border:none;color:var(--text-dim);font-size:1rem;padding:0 4px;}
+  .chip-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:14px;-webkit-overflow-scrolling:touch;}
+  .hist-chip{flex:none;display:flex;align-items:center;gap:5px;background:var(--bg-panel-raised);border:2px solid transparent;border-radius:20px;padding:7px 12px;font-family:'IBM Plex Mono',monospace;font-size:0.76rem;color:var(--text);}
+  .hist-chip.active{border-color:var(--actinic);}
+  .hist-chip .dot{width:8px;height:8px;border-radius:50%;flex:none;}
+
+  .hist-list{display:flex;flex-direction:column;}
+  .hist-row{display:flex;align-items:center;gap:10px;padding:11px 2px;border-bottom:1px solid var(--line);font-family:'IBM Plex Mono',monospace;font-size:0.8rem;flex-wrap:wrap;}
+  .hist-row .hr-date{color:var(--text-dim);font-size:0.72rem;width:44px;flex:none;}
+  .hist-row .hr-mid{display:flex;align-items:center;gap:6px;flex:1;min-width:0;}
+  .hist-row .hr-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .hist-row .hr-value{font-weight:600;white-space:nowrap;}
+  .hist-row .del{background:none;border:none;color:var(--text-dim);font-size:1rem;padding:0 2px;flex:none;}
+  .bar-dot{width:6px;height:6px;border-radius:50%;margin-top:7px;flex:none;}
+  .bar-dot.good{background:var(--good);}
+  .bar-dot.warn{background:var(--amber);}
+  .bar-dot.bad{background:var(--bad);}
+  .bar-dot.none{background:var(--text-dim);opacity:0.4;}
   .chart-wrap{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:16px;background:var(--bg-deep);display:none;}
   #historyChart{width:100%;height:180px;display:block;}
   .report-box{width:100%;min-height:280px;background:var(--bg-deep);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:14px;font-family:'IBM Plex Mono',monospace;font-size:0.76rem;line-height:1.55;white-space:pre-wrap;resize:vertical;margin-bottom:14px;}
@@ -209,7 +222,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v2.4</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v2.5</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -252,7 +265,7 @@
       </button>
     </section>
 
-    <!-- ================= NUANCIER (v2.4) ================= -->
+    <!-- ================= NUANCIER (v2.5) ================= -->
     <section class="view" id="view-nuancier">
       <div class="sticky-banner" id="nuancierBanner"><span class="sp" id="nuancierBannerParam"></span><span class="sv" id="nuancierBannerValue"></span></div>
 
@@ -378,10 +391,10 @@
     <section class="view" id="view-history">
       <div class="card">
         <p class="step-label active"><span class="dot"></span>Historique</p>
-        <select class="field" id="historyFilter" style="margin-bottom:14px;"></select>
+        <div class="chip-row" id="historyChips"></div>
         <div class="chart-wrap" id="chartWrap"><canvas id="historyChart"></canvas></div>
         <div class="empty-note" id="historyEmpty" style="display:none;margin-bottom:10px;color:var(--text-dim);font-size:0.85rem;">Aucune mesure pour ce filtre.</div>
-        <table class="history"><thead><tr><th>Date</th><th>Paramètre</th><th>Valeur</th><th>Statut</th><th></th></tr></thead><tbody id="historyBody"></tbody></table>
+        <div class="hist-list" id="historyList"></div>
       </div>
     </section>
 
@@ -647,7 +660,7 @@
     return `linear-gradient(to bottom, ${stops})`;
   }
   // Convention thermomètre universelle : bleu (froid) en haut, rouge (chaud) en bas.
-  const TEMP_GRADIENT = 'linear-gradient(to bottom, #4A90E2 0%, #3ED9A0 50%, #E24A4A 100%)';
+  const TEMP_GRADIENT = 'linear-gradient(to top, #4A90E2 0%, #3ED9A0 50%, #E24A4A 100%)';
   function gaugeRange(p){
     const [aMin,aMax]=p.acceptable, span=(aMax-aMin)||1, pad=span*0.2;
     return [aMin-pad, aMax+pad];
@@ -686,30 +699,50 @@
       const heightPct = val!==null ? Math.max(5, Math.min(100, ((val-dMin)/(dMax-dMin))*100)) : 4;
       const col = document.createElement('button');
       col.className='bar-col'; col.type='button';
-      const grad = buildSwatchGradient(p) || (k==='temp' ? TEMP_GRADIENT : null);
-      const trackHtml = grad
-        ? `<div class="bar-track" style="background:${grad}"><div class="bar-dim" style="height:${100-heightPct}%"></div></div>`
-        : `<div class="bar-track"><div class="bar-fill" style="height:${heightPct}%;background:${p.color||'#6E93BE'}"></div></div>`;
+      const cardGrad = buildSwatchGradient(p);
+      let trackHtml;
+      if(cardGrad){
+        // Mode carte du nuancier : faible en haut, fort en bas — on assombrit le bas.
+        trackHtml = `<div class="bar-track" style="background:${cardGrad}"><div class="bar-dim" style="height:${100-heightPct}%;bottom:0;top:auto;border-radius:0 0 8px 8px;"></div></div>`;
+      } else if(k==='temp'){
+        // Mode thermomètre : froid en bas, chaud en haut — on assombrit le haut.
+        trackHtml = `<div class="bar-track" style="background:${TEMP_GRADIENT}"><div class="bar-dim" style="height:${100-heightPct}%;top:0;bottom:auto;border-radius:8px 8px 0 0;"></div></div>`;
+      } else {
+        trackHtml = `<div class="bar-track"><div class="bar-fill" style="height:${heightPct}%;background:${p.color||'#6E93BE'}"></div></div>`;
+      }
+      const meta = statusMeta(latest ? latest.status : null);
       col.innerHTML = `
         ${trackHtml}
+        <div class="bar-dot ${meta.cls}"></div>
         <div class="bl">${SHORT_LABEL[k]||k}</div>
         <div class="bv">${val!==null?val.toFixed(p.decimals):'—'}${p.unit?`<span class="bu">${p.unit}</span>`:''}</div>`;
-      col.addEventListener('click', ()=>{ showView('history'); document.getElementById('historyFilter').value=k; renderHistory(); });
+      col.addEventListener('click', ()=>{ showView('history'); historyFilterParam=k; renderHistory(); });
       barRow.appendChild(col);
     });
     document.getElementById('dashEmpty').style.display = any ? 'none':'block';
   }
 
   // ================= history view =================
+  let historyFilterParam = '';
   function populateHistoryFilter(){
-    const sel=document.getElementById('historyFilter');
-    sel.innerHTML = '<option value="">Tous les paramètres</option>' +
-      Object.keys(PARAMS).filter(k=>k!=='autre').map(k=>`<option value="${k}">${PARAMS[k].label}</option>`).join('') +
-      '<option value="autre">Autre</option>';
+    const row = document.getElementById('historyChips');
+    row.innerHTML = '';
+    const mkChip = (val, label, color)=>{
+      const b = document.createElement('button');
+      b.className = 'hist-chip' + (historyFilterParam===val?' active':'');
+      b.type='button';
+      b.innerHTML = color ? `<span class="dot" style="background:${color}"></span>${label}` : label;
+      b.addEventListener('click', ()=>{ historyFilterParam = val; renderHistory(); });
+      row.appendChild(b);
+    };
+    mkChip('', 'Tous', null);
+    Object.keys(PARAMS).filter(k=>k!=='autre').forEach(k=>mkChip(k, SHORT_LABEL[k]||k, PARAMS[k].color));
+    mkChip('autre', 'Autre', '#6E93BE');
   }
   function renderHistory(){
-    const filter=document.getElementById('historyFilter').value;
-    const tbody=document.getElementById('historyBody'); tbody.innerHTML='';
+    populateHistoryFilter();
+    const filter = historyFilterParam;
+    const list = document.getElementById('historyList'); list.innerHTML='';
     let entries = historyData.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
     if(filter) entries = entries.filter(e=>e.param===filter);
     document.getElementById('historyEmpty').style.display = entries.length?'none':'block';
@@ -717,11 +750,16 @@
       const p=PARAMS[e.param]||{label:'Autre',unit:'',decimals:2};
       const label = e.param==='autre'?(e.customLabel||'Autre'):p.label;
       const meta = statusMeta(e.status);
-      const tr=document.createElement('tr');
       const dotColor = e.param==='autre' ? '#6E93BE' : (p.color||'#6E93BE');
-      tr.innerHTML = `<td>${new Date(e.date).toLocaleDateString('fr-FR')}</td><td><span class="param-dot" style="background:${dotColor}"></span> ${label}</td><td>${Number(e.value).toFixed(p.decimals!==undefined?p.decimals:2)} ${p.unit||''}</td><td><span class="status-pill ${meta.cls}">${meta.label}</span></td><td><button class="del">×</button></td>`;
-      tr.querySelector('.del').addEventListener('click', ()=>deleteHistoryEntry(e.id));
-      tbody.appendChild(tr);
+      const row = document.createElement('div'); row.className='hist-row';
+      row.innerHTML = `
+        <span class="hr-date">${new Date(e.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})}</span>
+        <span class="hr-mid"><span class="param-dot" style="background:${dotColor}"></span><span class="hr-label">${label}</span></span>
+        <span class="hr-value">${Number(e.value).toFixed(p.decimals!==undefined?p.decimals:2)} ${p.unit||''}</span>
+        <span class="bar-dot ${meta.cls}"></span>
+        <button class="del">×</button>`;
+      row.querySelector('.del').addEventListener('click', ()=>deleteHistoryEntry(e.id));
+      list.appendChild(row);
     });
     drawHistoryChart(filter);
   }
@@ -746,7 +784,7 @@
     ctx.fillStyle='#6E93BE'; ctx.font="10px 'IBM Plex Mono',monospace"; ctx.textAlign='right';
     ctx.fillText(max.toFixed(p.decimals), padL-6, padT+8); ctx.fillText(min.toFixed(p.decimals), padL-6, h-padB);
     ctx.beginPath(); values.forEach((v,i)=>{ const x=xAt(i),y=yAt(v); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
-    ctx.strokeStyle='#2ED9C3'; ctx.lineWidth=2; ctx.stroke();
+    ctx.strokeStyle=p.color||'#2ED9C3'; ctx.lineWidth=2; ctx.stroke();
     series.forEach((e,i)=>{
       const x=xAt(i),y=yAt(e.value); ctx.beginPath(); ctx.arc(x,y,3,0,Math.PI*2);
       const meta=statusMeta(e.status);
@@ -758,7 +796,6 @@
     ctx.textAlign='right';
     ctx.fillText(new Date(series[series.length-1].date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}), w-padR, h-6);
   }
-  document.getElementById('historyFilter').addEventListener('change', renderHistory);
 
   // ================= report =================
   let reportPeriod='today';
@@ -985,7 +1022,7 @@
     document.getElementById('timerStop').addEventListener('click', ()=>stopTimer(false));
   })();
 
-  // ================= NUANCIER v2.4 =================
+  // ================= NUANCIER v2.5 =================
   let dataCanvas=document.createElement('canvas');
   let dataCtx=dataCanvas.getContext('2d',{willReadFrequently:true});
   const viewCanvas=document.getElementById('viewCanvas');
