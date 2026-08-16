@@ -40,10 +40,22 @@
   .field{margin-bottom:14px;}
   .view{display:none;} .view.active{display:block;}
 
-  .sticky-banner{position:sticky;top:6px;z-index:24;background:var(--bg-panel);border-bottom:1px solid var(--line);margin:0 -20px 16px;padding:10px 20px;display:none;align-items:center;justify-content:space-between;gap:10px;}
+  .sticky-banner{position:sticky;top:6px;z-index:24;background:var(--actinic);border-bottom:1px solid var(--line);margin:0 -20px 16px;padding:14px 20px;display:none;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 4px 14px rgba(47,128,255,0.25);}
   .sticky-banner.show{display:flex;}
-  .sticky-banner .sp{font-family:'IBM Plex Mono',monospace;font-size:0.78rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.04em;}
-  .sticky-banner .sv{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:1.1rem;color:var(--aqua);}
+  .sticky-banner .sp{font-family:'IBM Plex Mono',monospace;font-size:0.82rem;color:#04101f;opacity:0.8;text-transform:uppercase;letter-spacing:0.04em;font-weight:600;}
+  .sticky-banner .sv{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:1.5rem;color:#04101f;}
+
+  .ref-rect-list{display:flex;flex-direction:column;gap:6px;}
+  .ref-rect{display:flex;align-items:center;gap:12px;background:var(--bg-panel-raised);border-radius:10px;padding:8px 12px;border:none;width:100%;text-align:left;color:var(--text);}
+  .ref-rect.disabled{opacity:0.7;}
+  .ref-rect .swatch{width:44px;height:34px;border-radius:6px;border:1px solid rgba(255,255,255,0.25);flex:none;}
+  .ref-rect .val{font-family:'IBM Plex Mono',monospace;font-size:0.92rem;flex:1;}
+  .ref-rect .edit-ic{color:var(--text-dim);font-size:0.9rem;}
+  details.card summary{cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:0.78rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-dim);list-style:none;}
+  details.card summary::-webkit-details-marker{display:none;}
+  details.card summary::before{content:'▸ '; }
+  details.card[open] summary::before{content:'▾ '; }
+  details.card[open] summary{margin-bottom:14px;}
 
   .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px;}
   .dash-card{background:var(--bg-panel);border:1px solid var(--line);border-radius:12px;padding:12px;}
@@ -155,7 +167,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v1.3</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v1.4</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -188,7 +200,7 @@
       </button>
     </section>
 
-    <!-- ================= NUANCIER (v1.3) ================= -->
+    <!-- ================= NUANCIER (v1.4) ================= -->
     <section class="view" id="view-nuancier">
       <div class="sticky-banner" id="nuancierBanner"><span class="sp" id="nuancierBannerParam"></span><span class="sv" id="nuancierBannerValue"></span></div>
 
@@ -204,7 +216,7 @@
 
       <section id="captureSection" class="card">
         <p class="step-label"><span class="dot"></span>Photo</p>
-        <p class="mode-help" id="captureHelp">Photographie l'échantillon (goutte ou tube) sur fond blanc, sous un éclairage stable.</p>
+        <p class="mode-help" id="captureHelp">Photographie le nuancier ET l'échantillon (goutte ou tube) ensemble, dans la même photo, sous le même éclairage.</p>
         <div class="btn-row">
           <button class="primary" id="btnCamera">📷 Prendre une photo</button>
           <button class="secondary" id="btnGallery">Galerie</button>
@@ -214,31 +226,18 @@
       </section>
 
       <section id="workspace" style="display:none;">
-        <div class="card" id="profileCard">
-          <p class="step-label"><span class="dot"></span>Profils enregistrés (Supabase)</p>
-          <div class="profile-row">
-            <select id="profileSelect"><option value="">— Aucun profil chargé —</option></select>
-            <button class="secondary" id="btnLoadProfile">Charger</button>
-          </div>
-          <p class="mode-help" style="margin-top:8px;">Charge une calibration que tu as sauvegardée toi-même. Les 5 paramètres du kit Pawfly ont déjà des valeurs intégrées par défaut — pas besoin de charger un profil pour ceux-là.</p>
+
+        <div class="card" id="verifyCard" style="display:none;">
+          <p class="step-label done"><span class="dot"></span>Pastilles détectées — touche pour corriger</p>
+          <div class="ref-rect-list" id="refRectList"></div>
         </div>
 
         <div class="card">
-          <p class="step-label"><span class="dot"></span>Pastilles de référence</p>
+          <p class="step-label active"><span class="dot"></span>Cibler sur la photo</p>
           <p class="mode-help" id="refModeHelp"></p>
-          <div class="chip-list" id="refChipList"></div>
-          <div class="btn-row" style="margin-top:12px;">
-            <button class="ghost" id="btnAddChip" style="display:none;">+ Ajouter une pastille</button>
-            <button class="ghost" id="btnRecalibrate">📷 Recalibrer avec le nuancier dans cette photo</button>
-            <button class="ghost" id="btnUseDefaults" style="display:none;">↺ Revenir aux valeurs par défaut</button>
-          </div>
-        </div>
 
-        <div class="card">
-          <p class="step-label"><span class="dot"></span>Cibler sur la photo</p>
-          <div class="wb-row" id="wbRow">
+          <div class="wb-row" id="wbRow" style="display:none;">
             <div class="wb-item"><div class="swatch" id="wbWhiteSwatch" style="background:#1a2332;"></div><div class="lbl">FOND BLANC</div></div>
-            <div class="wb-item"><div class="swatch" id="wbSampleSwatch" style="background:#1a2332;"></div><div class="lbl">ÉCHANTILLON</div></div>
           </div>
 
           <div class="aim-hint" id="aimHint">
@@ -260,10 +259,7 @@
 
           <div class="canvas-wrap" id="canvasWrap"><canvas id="viewCanvas"></canvas></div>
 
-          <div class="btn-row" id="targetButtons" style="margin-top:12px;">
-            <button class="secondary" id="btnAimWhite">🎯 Fond blanc</button>
-            <button class="secondary" id="btnAimSample">🎯 Échantillon</button>
-          </div>
+          <div class="btn-row" id="targetButtons" style="margin-top:12px;flex-wrap:wrap;"></div>
         </div>
 
         <div class="card">
@@ -271,11 +267,23 @@
           <button class="ghost" id="btnReset">↺ Nouvelle photo</button>
         </div>
 
+        <details class="card" id="fallbackDetails">
+          <summary>Options avancées — profil enregistré / valeurs scanner (secours, moins précis)</summary>
+          <p class="mode-help">À utiliser seulement si tu n'as pas le nuancier physique sous la main : compare une photo de l'échantillon seul à des couleurs enregistrées ailleurs (moins fiable, car appareil et éclairage différents).</p>
+          <div class="profile-row" style="margin-bottom:10px;">
+            <select id="profileSelect"><option value="">— Aucun profil chargé —</option></select>
+            <button class="secondary" id="btnLoadProfile">Charger</button>
+          </div>
+          <button class="ghost" id="btnUseScannerDefaults">Utiliser les valeurs scanner intégrées</button>
+          <button class="ghost" id="btnBackToPhoto" style="display:none;">↩ Revenir à la calibration avec cette photo</button>
+        </details>
+
         <div class="card" id="resultPanel" style="display:none;">
           <p class="step-label done"><span class="dot"></span>Résultat — modifiable avant validation</p>
           <div class="readout">
             <div><input type="text" inputmode="decimal" class="value-edit" id="readoutValue"><span class="u" id="readoutUnit"></span></div>
             <div class="param" id="readoutParam"></div>
+
           </div>
           <div style="text-align:center;margin-bottom:10px;"><span class="status-pill" id="readoutStatus"></span></div>
           <div class="confidence" id="confidenceText"></div>
@@ -836,7 +844,7 @@
     document.getElementById('timerStop').addEventListener('click', ()=>stopTimer(false));
   })();
 
-  // ================= NUANCIER v1.3 =================
+  // ================= NUANCIER v1.4 =================
   let dataCanvas=document.createElement('canvas');
   let dataCtx=dataCanvas.getContext('2d',{willReadFrequently:true});
   const viewCanvas=document.getElementById('viewCanvas');
@@ -844,11 +852,12 @@
   const canvasWrap=document.getElementById('canvasWrap');
 
   let refParam='ph';
-  let usingDefaults=true;
-  let refPoints={}; // {value(number): rgb}
-  let whitePoint=null;
+  let calibMode='photo'; // 'photo' (nuancier+échantillon dans cette photo) | 'fallback' (profil/scanner + fond blanc)
+  let firstSwatchPos=null, lastSwatchPos=null; // {x,y} — les 2 taps de calibration en mode 'photo'
+  let refPoints={}; // {value(number): {rgb:[r,g,b], x?, y?}}
+  let whitePoint=null; // fallback only
   let samplePointRaw=null;
-  let aimTarget=null; // 'white' | 'sample' | {chip:value}
+  let aimTarget=null; // 'firstSwatch' | 'lastSwatch' | 'sample' | 'white' | {chip:value}
   let pendingTarget=null; // {x,y,rgb}
   let hasPhoto=false;
 
@@ -857,13 +866,11 @@
   const fileCamera=document.getElementById('fileCamera'), fileGallery=document.getElementById('fileGallery');
   const chartParamSelect=document.getElementById('chartParamSelect');
   const chartCustomLabelField=document.getElementById('chartCustomLabelField'), chartCustomLabel=document.getElementById('chartCustomLabel');
-  const refChipList=document.getElementById('refChipList');
+  const verifyCard=document.getElementById('verifyCard'), refRectList=document.getElementById('refRectList');
   const refModeHelp=document.getElementById('refModeHelp');
-  const btnAddChip=document.getElementById('btnAddChip'), btnRecalibrate=document.getElementById('btnRecalibrate'), btnUseDefaults=document.getElementById('btnUseDefaults');
-  const wbRow=document.getElementById('wbRow'), wbWhiteSwatch=document.getElementById('wbWhiteSwatch'), wbSampleSwatch=document.getElementById('wbSampleSwatch');
+  const wbRow=document.getElementById('wbRow'), wbWhiteSwatch=document.getElementById('wbWhiteSwatch');
   const aimHint=document.getElementById('aimHint'), aimHintText=document.getElementById('aimHintText');
   const targetButtons=document.getElementById('targetButtons');
-  const btnAimWhite=document.getElementById('btnAimWhite'), btnAimSample=document.getElementById('btnAimSample');
   const targetPreview=document.getElementById('targetPreview'), targetPreviewCanvas=document.getElementById('targetPreviewCanvas');
   const targetPreviewCtx=targetPreviewCanvas.getContext('2d');
   const targetLabel=document.getElementById('targetLabel');
@@ -871,6 +878,9 @@
   const btnCompute=document.getElementById('btnCompute');
   const resultPanel=document.getElementById('resultPanel');
   const profileSelect=document.getElementById('profileSelect');
+  const fallbackDetails=document.getElementById('fallbackDetails');
+  const btnUseScannerDefaults=document.getElementById('btnUseScannerDefaults');
+  const btnBackToPhoto=document.getElementById('btnBackToPhoto');
   const nuancierBanner=document.getElementById('nuancierBanner'), nuancierBannerParam=document.getElementById('nuancierBannerParam'), nuancierBannerValue=document.getElementById('nuancierBannerValue');
 
   chartParamSelect.innerHTML = Object.keys(PARAMS).filter(k=>PARAMS[k].group==='chart').map(k=>`<option value="${k}">${PARAMS[k].label}</option>`).join('');
@@ -892,81 +902,105 @@
     return [clamp(Math.round(sample[0]*scale[0]),0,255), clamp(Math.round(sample[1]*scale[1]),0,255), clamp(Math.round(sample[2]*scale[2]),0,255)];
   }
 
-  // -------- param / mode switching --------
+  // -------- state reset / param switching --------
   function resetRefState(){
-    const p=PARAMS[refParam];
-    if(p.swatches){ usingDefaults=true; refPoints=Object.assign({}, p.swatches); }
-    else{ usingDefaults=false; refPoints={}; }
-    whitePoint=null; samplePointRaw=null; aimTarget=null; pendingTarget=null;
-    wbWhiteSwatch.style.background='#1a2332'; wbSampleSwatch.style.background='#1a2332';
+    calibMode='photo';
+    firstSwatchPos=null; lastSwatchPos=null;
+    refPoints={}; whitePoint=null; samplePointRaw=null; aimTarget=null; pendingTarget=null;
+    wbWhiteSwatch.style.background='#1a2332';
+    wbRow.style.display='none';
+    btnBackToPhoto.style.display='none';
     resultPanel.style.display='none';
-    renderRefUI();
+    verifyCard.style.display='none';
+    disarmAim();
+    renderTargetButtons();
     updateComputeBtn();
     updateBanner();
   }
-  function renderRefUI(){
+
+  function renderTargetButtons(){
+    targetButtons.innerHTML='';
     const p=PARAMS[refParam];
-    refChipList.innerHTML='';
-    Object.keys(refPoints).map(Number).sort((a,b)=>a-b).forEach(val=>{
-      const chip=document.createElement('button');
-      chip.className='chip'; chip.type='button';
-      chip.innerHTML = `<span class="swatch" style="background:${rgbCss(refPoints[val])}"></span><span>${val}${p.unit?(' '+p.unit):''}</span>`;
-      chip.addEventListener('click', ()=>manualOverride(val));
-      if(!usingDefaults){
-        const editBtn=document.createElement('span'); editBtn.className='edit'; editBtn.textContent='✏️';
-        editBtn.addEventListener('click', (e)=>{ e.stopPropagation(); armAim({chip:val}, `Pastille ${val}${p.unit?(' '+p.unit):''}`); });
-        chip.appendChild(editBtn);
+    if(calibMode==='fallback'){
+      refModeHelp.textContent = "Mode secours : vise le fond blanc puis l'échantillon sur une photo de l'échantillon seul.";
+      const b1=mkBtn('🎯 Fond blanc', ()=>armAim('white','Fond blanc'));
+      const b2=mkBtn('🎯 Échantillon', ()=>armAim('sample','Échantillon'));
+      targetButtons.appendChild(b1); targetButtons.appendChild(b2);
+      return;
+    }
+    if(refParam==='autre'){
+      refModeHelp.textContent = "Paramètre libre : ajoute chaque pastille une par une depuis cette photo.";
+      const bAdd=mkBtn('+ Ajouter une pastille', addCustomChip);
+      const bSample=mkBtn('🎯 Échantillon', ()=>armAim('sample','Échantillon'));
+      targetButtons.appendChild(bAdd); targetButtons.appendChild(bSample);
+      return;
+    }
+    if(!firstSwatchPos || !lastSwatchPos){
+      refModeHelp.textContent = "Vise les 2 pastilles extrêmes du nuancier : les autres sont calculées automatiquement entre les deux.";
+      const first=p.presetValues[0], last=p.presetValues[p.presetValues.length-1];
+      const b1=mkBtn(`🎯 Première pastille (${first})`, ()=>armAim('firstSwatch', `1ère pastille (${first})`), !!firstSwatchPos);
+      const b2=mkBtn(`🎯 Dernière pastille (${last})`, ()=>armAim('lastSwatch', `Dernière pastille (${last})`), !!lastSwatchPos);
+      targetButtons.appendChild(b1); targetButtons.appendChild(b2);
+      return;
+    }
+    refModeHelp.textContent = "Vérifie les pastilles ci-dessus, puis vise ton échantillon.";
+    const bSample=mkBtn('🎯 Échantillon', ()=>armAim('sample','Échantillon'));
+    targetButtons.appendChild(bSample);
+  }
+  function mkBtn(label, onClick, done){
+    const b=document.createElement('button');
+    b.className='secondary'; b.textContent = done? '✓ '+label : label;
+    if(done) b.style.opacity='0.6';
+    b.addEventListener('click', onClick);
+    return b;
+  }
+
+  function computeInterpolatedRefPoints(){
+    const preset=PARAMS[refParam].presetValues;
+    if(!preset || !firstSwatchPos || !lastSwatchPos) return;
+    refPoints={};
+    const n=preset.length;
+    for(let i=0;i<n;i++){
+      const t = n===1?0:i/(n-1);
+      const x=Math.round(firstSwatchPos.x + (lastSwatchPos.x-firstSwatchPos.x)*t);
+      const y=Math.round(firstSwatchPos.y + (lastSwatchPos.y-firstSwatchPos.y)*t);
+      refPoints[preset[i]] = {rgb:averageColorAt(x,y,4), x, y};
+    }
+    renderVerifyStrip();
+  }
+
+  function renderVerifyStrip(){
+    const p=PARAMS[refParam];
+    const keys=Object.keys(refPoints).map(Number).sort((a,b)=>a-b);
+    if(keys.length===0){ verifyCard.style.display='none'; return; }
+    verifyCard.style.display='block';
+    refRectList.innerHTML='';
+    keys.forEach(val=>{
+      const obj=refPoints[val];
+      const rect=document.createElement('button');
+      const canRecalibrate = calibMode==='photo' && obj.x!==undefined;
+      rect.className='ref-rect' + (canRecalibrate ? '' : ' disabled');
+      rect.type='button';
+      rect.innerHTML = `<span class="swatch" style="background:${rgbCss(obj.rgb)}"></span><span class="val">${val}${p.unit?(' '+p.unit):''}</span>${canRecalibrate?'<span class="edit-ic">✏️</span>':''}`;
+      if(canRecalibrate){
+        rect.addEventListener('click', ()=>armAim({chip:val}, `Pastille ${val}${p.unit?(' '+p.unit):''}`));
       }
-      refChipList.appendChild(chip);
+      refRectList.appendChild(rect);
     });
-    if(usingDefaults){
-      refModeHelp.textContent = "Valeurs intégrées pour ce kit (scan officiel). Touche une pastille pour l'utiliser directement comme résultat.";
-      btnAddChip.style.display='none'; btnUseDefaults.style.display='none'; wbRow.style.display='flex';
-      targetButtons.innerHTML=''; targetButtons.appendChild(btnAimWhite); targetButtons.appendChild(btnAimSample);
-    } else {
-      refModeHelp.textContent = "Calibration à partir de cette photo — touche ✏️ sur une pastille pour lui assigner une couleur, ou ajoutes-en une nouvelle.";
-      btnAddChip.style.display = refParam==='autre' ? 'inline-block' : 'none';
-      btnUseDefaults.style.display = PARAMS[refParam].swatches ? 'inline-block' : 'none';
-      wbRow.style.display='none';
-      targetButtons.innerHTML=''; targetButtons.appendChild(btnAimSample);
-    }
+    renderMarkers();
   }
-  function manualOverride(val){
-    showResult({value:val, status: refParam==='autre'?null:statusOf(refParam,val), best:{rgb:refPoints[val], de:0}, sample:refPoints[val], manual:true});
-  }
-  chartParamSelect.addEventListener('change', ()=>{
-    refParam=chartParamSelect.value;
-    chartCustomLabelField.style.display = refParam==='autre' ? 'block' : 'none';
-    resetRefState();
-  });
-  document.getElementById('btnManualEntry').addEventListener('click', ()=>{
-    openManualEntry(refParam, ()=>chartCustomLabel.value.trim()||'Autre');
-  });
-  btnRecalibrate.addEventListener('click', ()=>{
-    usingDefaults=false; refPoints={};
-    if(PARAMS[refParam].presetValues){
-      PARAMS[refParam].presetValues.forEach(v=>{ refPoints[v]=[60,60,60]; });
-    }
-    renderRefUI(); updateComputeBtn();
-  });
-  btnUseDefaults.addEventListener('click', resetRefState);
-  document.addEventListener('click', e=>{
-    if(e.target && e.target.id==='btnGotoRecalibrate'){
-      btnRecalibrate.click();
-      btnRecalibrate.scrollIntoView({behavior:'smooth', block:'center'});
-    }
-  });
-  document.getElementById('btnAddChip').addEventListener('click', ()=>{
+
+  function addCustomChip(){
     openSheet({
       title:'Nouvelle pastille — valeur', showSwatch:false, placeholder:'ex. 0.5', confirmText:'Ajouter',
       onConfirm: ()=>{
         const raw=sheetInput.value.trim().replace(',','.'); const val=parseFloat(raw);
         if(!raw||isNaN(val)){ sheetError.textContent='Entre une valeur numérique.'; return; }
-        refPoints[val]=[60,60,60]; closeSheet(); renderRefUI(); updateComputeBtn();
+        closeSheet();
         armAim({chip:val}, `Nouvelle pastille ${val}`);
       }
     });
-  });
+  }
 
   function updateBanner(){
     nuancierBanner.classList.add('show');
@@ -975,6 +1009,76 @@
     nuancierBannerValue.textContent = '';
   }
   chartCustomLabel.addEventListener('input', updateBanner);
+
+  chartParamSelect.addEventListener('change', ()=>{
+    refParam=chartParamSelect.value;
+    chartCustomLabelField.style.display = refParam==='autre' ? 'block' : 'none';
+    resetRefState();
+  });
+  document.getElementById('btnManualEntry').addEventListener('click', ()=>{
+    openManualEntry(refParam, ()=>chartCustomLabel.value.trim()||'Autre');
+  });
+
+  // -------- fallback (profil / scanner) --------
+  btnUseScannerDefaults.addEventListener('click', ()=>{
+    const p=PARAMS[refParam];
+    if(!p.swatches){ alert("Pas de valeurs scanner intégrées pour ce paramètre."); return; }
+    calibMode='fallback';
+    refPoints={};
+    Object.keys(p.swatches).forEach(v=>{ refPoints[v]={rgb:p.swatches[v]}; });
+    whitePoint=null; samplePointRaw=null;
+    wbRow.style.display='flex'; wbWhiteSwatch.style.background='#1a2332';
+    btnBackToPhoto.style.display='inline-block';
+    renderVerifyStrip(); renderTargetButtons(); updateComputeBtn();
+  });
+  btnBackToPhoto.addEventListener('click', resetRefState);
+  document.getElementById('btnLoadProfile').addEventListener('click', ()=>{
+    const opt=profileSelect.selectedOptions[0]; if(!opt||!opt.value) return;
+    const points=JSON.parse(opt.dataset.points||'[]');
+    const paramKey=opt.dataset.paramKey;
+    if(paramKey){ chartParamSelect.value=paramKey; refParam=paramKey; chartCustomLabelField.style.display = paramKey==='autre'?'block':'none'; if(paramKey==='autre') chartCustomLabel.value=opt.dataset.customLabel||''; }
+    calibMode='fallback'; refPoints={};
+    points.forEach(p=>{ refPoints[p.value]={rgb:p.rgb}; });
+    whitePoint=null; samplePointRaw=null;
+    wbRow.style.display='flex'; wbWhiteSwatch.style.background='#1a2332';
+    btnBackToPhoto.style.display='inline-block';
+    renderVerifyStrip(); renderTargetButtons(); updateComputeBtn(); updateBanner();
+  });
+  async function refreshProfileList(){
+    profileSelect.innerHTML='<option value="">— Aucun profil chargé —</option>';
+    try{
+      const res=await fetch(`${SUPABASE_URL}/rest/v1/nuancier_profiles?select=*&order=created_at.desc`, {headers:sbHeaders()});
+      if(!res.ok) throw new Error('http '+res.status);
+      const rows=await res.json();
+      rows.forEach(r=>{
+        const opt=document.createElement('option'); opt.value=String(r.id);
+        const pLabel = r.param_key==='autre' ? (r.custom_label||'Autre') : (PARAMS[r.param_key]?PARAMS[r.param_key].label:'');
+        opt.textContent = r.name + (pLabel?' · '+pLabel:'');
+        opt.dataset.points=JSON.stringify(r.points||[]); opt.dataset.paramKey=r.param_key||''; opt.dataset.customLabel=r.custom_label||'';
+        profileSelect.appendChild(opt);
+      });
+    }catch(e){ console.error(e); showSyncError(e.message); }
+  }
+  const btnSaveProfileRow = document.createElement('button');
+  btnSaveProfileRow.className='ghost'; btnSaveProfileRow.textContent='💾 Enregistrer la calibration actuelle comme profil'; btnSaveProfileRow.style.marginTop='10px';
+  fallbackDetails.appendChild(btnSaveProfileRow);
+  btnSaveProfileRow.addEventListener('click', ()=>{
+    const validEntries = Object.entries(refPoints);
+    if(validEntries.length<2){ alert('Calibre au moins 2 pastilles avant de sauvegarder un profil.'); return; }
+    openSheet({
+      title:'Nom du profil', showSwatch:false, placeholder:'ex. Mon nuancier recalibré', confirmText:'Enregistrer',
+      onConfirm: async ()=>{
+        const name=sheetInput.value.trim();
+        if(!name){ sheetError.textContent='Entre un nom.'; return; }
+        const payload={ name, param_key:refParam, custom_label:chartCustomLabel.value.trim()||null, points: validEntries.map(([v,obj])=>({value:parseFloat(v),rgb:obj.rgb})) };
+        try{
+          const res=await fetch(`${SUPABASE_URL}/rest/v1/nuancier_profiles`, {method:'POST', headers:sbHeaders({'Prefer':'return=representation'}), body:JSON.stringify(payload)});
+          if(!res.ok) throw new Error('http '+res.status);
+          closeSheet(); refreshProfileList();
+        }catch(e){ sheetError.textContent="Échec de l'enregistrement en ligne."; }
+      }
+    });
+  });
 
   // -------- capture --------
   document.getElementById('btnCamera').addEventListener('click', ()=>fileCamera.click());
@@ -994,6 +1098,7 @@
     hasPhoto=true;
     captureSection.style.display='none'; workspace.style.display='block';
     refreshProfileList();
+    renderTargetButtons();
   }
   function loadViaImageElement(file){
     return new Promise((resolve,reject)=>{
@@ -1022,8 +1127,6 @@
     canvasWrap.classList.remove('armed');
     targetPreview.classList.remove('show'); targetConfirm.classList.remove('show');
   }
-  btnAimWhite.addEventListener('click', ()=>armAim('white','Fond blanc'));
-  btnAimSample.addEventListener('click', ()=>armAim('sample','Échantillon'));
   document.getElementById('btnAimCancel').addEventListener('click', disarmAim);
   document.getElementById('targetRedo').addEventListener('click', ()=>{ pendingTarget=null; targetConfirm.classList.remove('show'); });
 
@@ -1078,76 +1181,56 @@
 
   document.getElementById('targetValidate').addEventListener('click', ()=>{
     if(!pendingTarget) return;
-    if(aimTarget==='white'){ whitePoint=pendingTarget.rgb; wbWhiteSwatch.style.background=rgbCss(whitePoint); }
-    else if(aimTarget==='sample'){ samplePointRaw=pendingTarget.rgb; wbSampleSwatch.style.background=rgbCss(samplePointRaw); }
-    else if(aimTarget && aimTarget.chip!==undefined){ refPoints[aimTarget.chip]=pendingTarget.rgb; renderRefUI(); }
+    if(aimTarget==='firstSwatch'){
+      firstSwatchPos={x:pendingTarget.x,y:pendingTarget.y};
+      if(lastSwatchPos) computeInterpolatedRefPoints();
+    } else if(aimTarget==='lastSwatch'){
+      lastSwatchPos={x:pendingTarget.x,y:pendingTarget.y};
+      if(firstSwatchPos) computeInterpolatedRefPoints();
+    } else if(aimTarget==='white'){
+      whitePoint=pendingTarget.rgb; wbWhiteSwatch.style.background=rgbCss(whitePoint);
+    } else if(aimTarget==='sample'){
+      samplePointRaw=pendingTarget.rgb;
+    } else if(aimTarget && aimTarget.chip!==undefined){
+      refPoints[aimTarget.chip]={rgb:pendingTarget.rgb, x:pendingTarget.x, y:pendingTarget.y};
+      renderVerifyStrip();
+    }
     disarmAim();
+    renderTargetButtons();
+    renderMarkers();
     updateComputeBtn();
   });
 
   function updateComputeBtn(){
-    if(usingDefaults){ btnCompute.disabled = !(whitePoint && samplePointRaw); }
-    else{
-      const validPoints = Object.values(refPoints).filter(rgb=>!(rgb[0]===60&&rgb[1]===60&&rgb[2]===60)).length;
-      btnCompute.disabled = !(validPoints>=2 && samplePointRaw);
-    }
+    const n = Object.keys(refPoints).length;
+    if(calibMode==='fallback') btnCompute.disabled = !(n>=2 && whitePoint && samplePointRaw);
+    else btnCompute.disabled = !(n>=2 && samplePointRaw);
   }
 
-  // -------- profiles (Supabase) --------
-  async function refreshProfileList(){
-    profileSelect.innerHTML='<option value="">— Aucun profil chargé —</option>';
-    try{
-      const res=await fetch(`${SUPABASE_URL}/rest/v1/nuancier_profiles?select=*&order=created_at.desc`, {headers:sbHeaders()});
-      if(!res.ok) throw new Error('http '+res.status);
-      const rows=await res.json();
-      rows.forEach(r=>{
-        const opt=document.createElement('option'); opt.value=String(r.id);
-        const pLabel = r.param_key==='autre' ? (r.custom_label||'Autre') : (PARAMS[r.param_key]?PARAMS[r.param_key].label:'');
-        opt.textContent = r.name + (pLabel?' · '+pLabel:'');
-        opt.dataset.points=JSON.stringify(r.points||[]); opt.dataset.paramKey=r.param_key||''; opt.dataset.customLabel=r.custom_label||'';
-        profileSelect.appendChild(opt);
-      });
-    }catch(e){ console.error(e); showSyncError(e.message); }
-  }
-  document.getElementById('btnLoadProfile').addEventListener('click', ()=>{
-    const opt=profileSelect.selectedOptions[0]; if(!opt||!opt.value) return;
-    const points=JSON.parse(opt.dataset.points||'[]');
-    const paramKey=opt.dataset.paramKey;
-    if(paramKey){ chartParamSelect.value=paramKey; refParam=paramKey; chartCustomLabelField.style.display = paramKey==='autre'?'block':'none'; if(paramKey==='autre') chartCustomLabel.value=opt.dataset.customLabel||''; }
-    usingDefaults=false; refPoints={};
-    points.forEach(p=>{ refPoints[p.value]=p.rgb; });
-    renderRefUI(); updateComputeBtn(); updateBanner();
-  });
-  const btnSaveProfileRow = document.createElement('button');
-  btnSaveProfileRow.className='ghost'; btnSaveProfileRow.textContent='💾 Enregistrer la calibration actuelle comme profil'; btnSaveProfileRow.style.marginTop='10px';
-  document.getElementById('profileCard').appendChild(btnSaveProfileRow);
-  btnSaveProfileRow.addEventListener('click', ()=>{
-    const validEntries = Object.entries(refPoints).filter(([v,rgb])=>!(rgb[0]===60&&rgb[1]===60&&rgb[2]===60));
-    if(validEntries.length<2){ alert('Calibre au moins 2 pastilles avant de sauvegarder un profil.'); return; }
-    openSheet({
-      title:'Nom du profil', showSwatch:false, placeholder:'ex. Mon nuancier recalibré', confirmText:'Enregistrer',
-      onConfirm: async ()=>{
-        const name=sheetInput.value.trim();
-        if(!name){ sheetError.textContent='Entre un nom.'; return; }
-        const payload={ name, param_key:refParam, custom_label:chartCustomLabel.value.trim()||null, points: validEntries.map(([v,rgb])=>({value:parseFloat(v),rgb})) };
-        try{
-          const res=await fetch(`${SUPABASE_URL}/rest/v1/nuancier_profiles`, {method:'POST', headers:sbHeaders({'Prefer':'return=representation'}), body:JSON.stringify(payload)});
-          if(!res.ok) throw new Error('http '+res.status);
-          closeSheet(); refreshProfileList();
-        }catch(e){ sheetError.textContent="Échec de l'enregistrement en ligne."; }
-      }
+  // -------- canvas markers (visual only, on-photo) --------
+  function renderMarkers(){
+    if(!hasPhoto) return;
+    viewCtx.drawImage(dataCanvas,0,0);
+    const w=viewCanvas.width, r=clamp(w*0.018,9,20);
+    Object.values(refPoints).forEach((obj,i)=>{
+      if(obj.x!==undefined) drawDotMarker(obj.x,obj.y,r,rgbCss(obj.rgb));
     });
-  });
+    if(samplePointRaw && pendingTarget===null){ /* sample marker optional, skipped to keep it light */ }
+  }
+  function drawDotMarker(x,y,r,color){
+    viewCtx.beginPath(); viewCtx.arc(x,y,r,0,Math.PI*2);
+    viewCtx.fillStyle=color; viewCtx.fill();
+    viewCtx.lineWidth=Math.max(2,r*0.14); viewCtx.strokeStyle='#FFFFFF'; viewCtx.stroke();
+  }
 
   // -------- compute + editable result + validate --------
   btnCompute.addEventListener('click', computeResult);
   function computeResult(){
     let sampleForMatch = samplePointRaw;
-    if(usingDefaults) sampleForMatch = whiteBalance(samplePointRaw, whitePoint);
+    if(calibMode==='fallback') sampleForMatch = whiteBalance(samplePointRaw, whitePoint);
 
     const entries = Object.entries(refPoints)
-      .filter(([v,rgb])=>!(rgb[0]===60&&rgb[1]===60&&rgb[2]===60))
-      .map(([v,rgb])=>({value:parseFloat(v), rgb, de:deltaE(rgb, sampleForMatch)}))
+      .map(([v,obj])=>({value:parseFloat(v), rgb:obj.rgb, de:deltaE(obj.rgb, sampleForMatch)}))
       .sort((a,b)=>a.de-b.de);
     const best=entries[0], second=entries[1];
     let resultValue;
@@ -1180,7 +1263,7 @@
     document.getElementById('readoutParam').textContent = isCustom ? (chartCustomLabel.value.trim()||'Autre') : p.label;
     const st=document.getElementById('readoutStatus'); st.className='status-pill '+meta.cls; st.textContent=meta.label;
     const conf=document.getElementById('confidenceText');
-    conf.textContent = manual ? 'Sélection manuelle (pastille choisie directement)' : `ΔE ${best.de.toFixed(1)} · ${confLabel}`;
+    conf.textContent = manual ? 'Sélection manuelle' : `ΔE ${best.de.toFixed(1)} · ${confLabel}`;
     conf.style.color = manual ? 'var(--text-dim)' : confColor;
     document.getElementById('cmpSample').style.background = rgbCss(sample);
     document.getElementById('cmpMatch').style.background = rgbCss(best.rgb);
