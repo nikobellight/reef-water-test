@@ -179,6 +179,10 @@
   .saved-note{text-align:center;font-size:0.85rem;margin-bottom:10px;min-height:1.2em;}
 
   .reading-row{display:flex;gap:10px;}
+  .sg-input-row{display:flex;align-items:center;background:var(--bg-panel-raised);border:1px solid var(--line);border-radius:8px;padding:0 12px;}
+  .sg-input-row .sg-prefix{font-family:'IBM Plex Mono',monospace;font-size:1rem;color:var(--text-dim);}
+  .sg-input-row input{border:none;background:transparent;padding:11px 0 11px 2px;flex:1;font-family:'IBM Plex Mono',monospace;font-size:1rem;color:var(--text);}
+  .sg-input-row input:focus{outline:none;}
   .toggle-row{display:flex;align-items:center;gap:8px;margin:12px 0 16px;font-size:0.85rem;color:var(--text-dim);}
   .toggle-row input{width:18px;height:18px;}
   .save-msg{display:none;font-size:0.85rem;margin-top:8px;text-align:center;}
@@ -226,7 +230,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v2.6</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v2.7</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -265,11 +269,11 @@
       </button>
       <button class="picker-btn" onclick="showView('direct')">
         <span class="ic">🌡️</span>
-        <span class="txt"><strong>Mesure directe</strong><span>Température · Salinité (densité)</span></span>
+        <span class="txt"><strong>Mesure directe</strong><span>Température · Densité</span></span>
       </button>
     </section>
 
-    <!-- ================= NUANCIER (v2.6) ================= -->
+    <!-- ================= NUANCIER (v2.7) ================= -->
     <section class="view" id="view-nuancier">
       <div class="sticky-banner" id="nuancierBanner"><span class="sp" id="nuancierBannerParam"></span><span class="sv" id="nuancierBannerValue"></span></div>
 
@@ -385,8 +389,22 @@
         <p class="save-msg" id="tempSaveMsg"></p>
       </div>
       <div class="card">
-        <p class="step-label active"><span class="dot"></span>Salinité</p>
-        <div class="field"><label class="field-label">Densité — Specific Gravity (ex. 1.025)</label><input type="number" id="salInput" step="0.001" placeholder="ex. 1.025"></div>
+        <p class="step-label active"><span class="dot"></span>Densité</p>
+        <div class="mode-toggle" id="salUnitToggle">
+          <button data-unit="sg" class="active" type="button">SG</button>
+          <button data-unit="ppt" type="button">ppt</button>
+        </div>
+        <div class="field" id="salSgField">
+          <label class="field-label">Densité (SG) — jamais moins de 1, jamais plus de 2</label>
+          <div class="sg-input-row">
+            <span class="sg-prefix">1.</span>
+            <input type="text" inputmode="numeric" id="salInputSg" maxlength="3" placeholder="025">
+          </div>
+        </div>
+        <div class="field" id="salPptField" style="display:none;">
+          <label class="field-label">Salinité (ppt)</label>
+          <input type="number" id="salInputPpt" step="0.1" placeholder="ex. 35">
+        </div>
         <button class="primary" id="btnSaveSal">Enregistrer</button>
         <p class="save-msg" id="salSaveMsg"></p>
       </div>
@@ -396,6 +414,7 @@
       <div class="card">
         <p class="step-label active"><span class="dot"></span>Historique</p>
         <div class="chip-row" id="historyChips"></div>
+        <div id="historyGauge"></div>
         <div class="chart-wrap" id="chartWrap"><canvas id="historyChart"></canvas></div>
         <div class="empty-note" id="historyEmpty" style="display:none;margin-bottom:10px;color:var(--text-dim);font-size:0.85rem;">Aucune mesure pour ce filtre.</div>
         <div class="hist-list" id="historyList"></div>
@@ -530,7 +549,7 @@
     ca:   {label:'Calcium',                unit:'ppm', group:'titration', decimals:0, ideal:[380,450],    acceptable:[350,480], optimal:420, color:'#FF6B9D', calc:r=>(1-r)*500},
     mg:   {label:'Magnésium',              unit:'ppm', group:'titration', decimals:0, ideal:[1250,1350],  acceptable:[1200,1400], optimal:1300, color:'#4CD787', calc:r=>(1-r)*1500},
     temp: {label:'Température',            unit:'°C',  group:'direct',    decimals:1, ideal:[24,27],      acceptable:[23,28], optimal:25.5, color:'#6B8FFF'},
-    sal:  {label:'Salinité (densité)',     unit:'SG',  group:'direct',    decimals:3, ideal:[1.023,1.026],acceptable:[1.020,1.028], optimal:1.0245, color:'#4DD9E8'},
+    sal:  {label:'Densité',                unit:'SG',  group:'direct',    decimals:3, ideal:[1.023,1.026],acceptable:[1.020,1.028], optimal:1.0245, color:'#4DD9E8'},
     autre:{label:'Autre',                  unit:'',    group:'chart',     decimals:2, ideal:null,         acceptable:null}
   };
 
@@ -750,6 +769,15 @@
     let entries = historyData.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
     if(filter) entries = entries.filter(e=>e.param===filter);
     document.getElementById('historyEmpty').style.display = entries.length?'none':'block';
+
+    const gaugeEl = document.getElementById('historyGauge');
+    if(filter && filter!=='autre' && PARAMS[filter] && PARAMS[filter].ideal){
+      const latest = latestFor(filter);
+      renderGauge(gaugeEl, filter, latest ? Number(latest.value) : PARAMS[filter].optimal);
+    } else {
+      gaugeEl.innerHTML = '';
+    }
+
     entries.forEach(e=>{
       const p=PARAMS[e.param]||{label:'Autre',unit:'',decimals:2};
       const label = e.param==='autre'?(e.customLabel||'Autre'):p.label;
@@ -958,11 +986,34 @@
     msg.style.color = saved? 'var(--good)':'var(--bad)';
     msg.style.display='block'; setTimeout(()=>msg.style.display='none', saved?1800:4000);
   });
+  let salUnit = 'sg';
+  document.querySelectorAll('#salUnitToggle button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('#salUnitToggle button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      salUnit = b.dataset.unit;
+      document.getElementById('salSgField').style.display = salUnit==='sg' ? 'block' : 'none';
+      document.getElementById('salPptField').style.display = salUnit==='ppt' ? 'block' : 'none';
+    });
+  });
   document.getElementById('btnSaveSal').addEventListener('click', async ()=>{
-    const raw=document.getElementById('salInput').value.trim().replace(',','.'); const v=parseFloat(raw);
-    if(!raw||isNaN(v)) return;
-    const saved=await addHistoryEntry({param:'sal',value:v,status:statusOf('sal',v),source:'direct'});
-    if(saved) document.getElementById('salInput').value='';
+    let v, note;
+    if(salUnit==='sg'){
+      const raw = document.getElementById('salInputSg').value.trim();
+      if(!raw) return;
+      const frac = parseInt(raw, 10);
+      if(isNaN(frac)) return;
+      v = Math.round((1 + frac/1000) * 1000) / 1000;
+    } else {
+      const raw = document.getElementById('salInputPpt').value.trim().replace(',','.');
+      const ppt = parseFloat(raw);
+      if(!raw || isNaN(ppt)) return;
+      // Approximation pratique du hobby récifal : SG = 1 + ppt/1340
+      v = Math.round((1 + ppt/1340) * 1000) / 1000;
+      note = `converti depuis ${ppt} ppt`;
+    }
+    const saved = await addHistoryEntry({param:'sal', value:v, status:statusOf('sal',v), source:'direct', note});
+    if(saved){ document.getElementById('salInputSg').value=''; document.getElementById('salInputPpt').value=''; }
     const msg=document.getElementById('salSaveMsg');
     msg.textContent = saved? "✅ Enregistré dans l'historique" : '⚠️ Échec Supabase';
     msg.style.color = saved? 'var(--good)':'var(--bad)';
@@ -1026,7 +1077,7 @@
     document.getElementById('timerStop').addEventListener('click', ()=>stopTimer(false));
   })();
 
-  // ================= NUANCIER v2.6 =================
+  // ================= NUANCIER v2.7 =================
   let dataCanvas=document.createElement('canvas');
   let dataCtx=dataCanvas.getContext('2d',{willReadFrequently:true});
   const viewCanvas=document.getElementById('viewCanvas');
