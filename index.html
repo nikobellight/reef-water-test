@@ -48,7 +48,7 @@
   .ref-rect-list{display:flex;flex-direction:column;gap:6px;}
   .ref-rect{display:flex;align-items:center;gap:12px;background:var(--bg-panel-raised);border-radius:10px;padding:8px 12px;border:none;width:100%;text-align:left;color:var(--text);}
   .ref-rect.disabled{opacity:0.7;}
-  .ref-rect .swatch{width:44px;height:34px;border-radius:6px;border:1px solid rgba(255,255,255,0.25);flex:none;}
+  .ref-rect .swatch{width:44px;height:34px;border-radius:6px;border:1px solid rgba(255,255,255,0.25);flex:none;padding:0;}
   .ref-rect .val{font-family:'IBM Plex Mono',monospace;font-size:0.92rem;flex:1;}
   .ref-rect .edit-ic{color:var(--text-dim);font-size:0.9rem;}
   .ref-rect-actions{margin-left:auto;display:flex;gap:2px;flex:none;}
@@ -57,6 +57,8 @@
   .palette-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
   .palette-cell{aspect-ratio:1;border-radius:8px;border:2px solid transparent;padding:0;min-height:44px;}
   .palette-cell.selected{border-color:var(--actinic);box-shadow:0 0 0 2px rgba(47,128,255,0.35);}
+  .photo-thumb-wrap{border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#000;margin-bottom:12px;display:flex;justify-content:center;max-height:170px;}
+  .photo-thumb-wrap canvas{max-width:100%;max-height:170px;width:auto;height:auto;display:block;}
   details.card summary{cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:0.78rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-dim);list-style:none;}
   details.card summary::-webkit-details-marker{display:none;}
   details.card summary::before{content:'▸ '; }
@@ -238,7 +240,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v3.0</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v3.1</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -310,6 +312,7 @@
 
         <div class="card">
           <p class="step-label active"><span class="dot"></span>Cibler sur la photo</p>
+          <div class="photo-thumb-wrap" id="photoThumbWrap" style="display:none;"><canvas id="photoThumbTop"></canvas></div>
           <p class="mode-help" id="refModeHelp"></p>
           <div class="wb-row" id="wbRow" style="display:none;">
             <div class="wb-item"><div class="swatch" id="wbWhiteSwatch" style="background:#1a2332;"></div><div class="lbl">FOND BLANC</div></div>
@@ -351,6 +354,7 @@
           </div>
           <div id="readoutGauge"></div>
           <div class="confidence" id="confidenceText"></div>
+          <div class="photo-thumb-wrap" id="photoThumbWrapResult" style="display:none;"><canvas id="photoThumbResult"></canvas></div>
           <div class="compare-row">
             <div class="compare-item"><div class="swatch" id="cmpSample"></div><div class="lbl">ÉCHANTILLON</div></div>
             <div class="compare-item"><div class="swatch" id="cmpMatch"></div><div class="lbl">CORRESPONDANCE</div></div>
@@ -476,9 +480,13 @@
   <div id="paletteSheet" style="position:fixed;left:0;right:0;bottom:0;background:var(--bg-panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 20px 26px;z-index:63;display:none;max-width:640px;margin:0 auto;max-height:80vh;overflow-y:auto;">
     <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 2px;">Choisir une nuance proche</h3>
     <p style="font-size:0.8rem;color:var(--text-dim);margin:0 0 14px;" id="paletteTitle2"></p>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
       <div id="paletteCurrentSwatch" style="width:40px;height:40px;border-radius:8px;border:1px solid var(--line);flex:none;"></div>
-      <span style="font-size:0.78rem;color:var(--text-dim);">Couleur détectée actuellement</span>
+      <span style="font-size:0.78rem;color:var(--text-dim);">Détectée sur ta photo</span>
+    </div>
+    <div id="paletteRefRow" style="display:none;align-items:center;gap:10px;margin-bottom:14px;">
+      <div id="paletteRefSwatch" style="width:40px;height:40px;border-radius:8px;border:1px solid var(--line);flex:none;"></div>
+      <span style="font-size:0.78rem;color:var(--text-dim);">Référence du nuancier — la palette part de là</span>
     </div>
     <div class="palette-grid" id="paletteGrid"></div>
     <div class="btn-row" style="margin-top:16px;">
@@ -1348,38 +1356,69 @@
       const rect=document.createElement('div');
       rect.className='ref-rect' + (canRecalibrate ? '' : ' disabled');
       if(isBad) rect.style.border='2px solid var(--bad)';
-      rect.innerHTML = `<span class="swatch" style="background:${rgbCss(obj.rgb)}"></span><span class="val">${val}${unitTxt}${isBad?' ⚠️':''}</span>`;
-      const actions=document.createElement('span'); actions.className='ref-rect-actions';
+
+      const swatchBtn=document.createElement('button');
+      swatchBtn.type='button'; swatchBtn.className='swatch'; swatchBtn.style.background=rgbCss(obj.rgb);
+      swatchBtn.title='Choisir une nuance proche';
+      swatchBtn.addEventListener('click', ()=>openPalettePicker(val, obj.rgb, unitTxt));
+      rect.appendChild(swatchBtn);
+
+      const valSpan=document.createElement('span'); valSpan.className='val'; valSpan.textContent=`${val}${unitTxt}${isBad?' ⚠️':''}`;
+      rect.appendChild(valSpan);
+
       if(canRecalibrate){
+        const actions=document.createElement('span'); actions.className='ref-rect-actions';
         const bPhoto=document.createElement('button');
         bPhoto.type='button'; bPhoto.className='ref-rect-action'; bPhoto.title='Revisiter sur la photo'; bPhoto.textContent='✏️';
         bPhoto.addEventListener('click', ()=>armAim({chip:val}, `Pastille ${val}${unitTxt}`));
         actions.appendChild(bPhoto);
+        rect.appendChild(actions);
       }
-      const bPalette=document.createElement('button');
-      bPalette.type='button'; bPalette.className='ref-rect-action'; bPalette.title='Choisir une nuance proche'; bPalette.textContent='🎨';
-      bPalette.addEventListener('click', ()=>openPalettePicker(val, obj.rgb, unitTxt));
-      actions.appendChild(bPalette);
-      rect.appendChild(actions);
       refRectList.appendChild(rect);
     });
     renderMarkers();
+  }
+
+  // Direction de teinte propre au paramètre : vecteur (a,b) en espace Lab entre la
+  // pastille la plus faible et la plus forte du VRAI nuancier scanné. Sert à faire
+  // varier la palette le long de la teinte réelle du réactif (ex. violet pour NO2/NO3)
+  // même quand la pastille de référence est elle-même proche du gris/blanc — une simple
+  // mise à l'échelle radiale depuis un point quasi neutre resterait quasi neutre.
+  function paramColorAxis(p){
+    if(!p.swatches) return {ua:1, ub:0, stepMag:6};
+    const keys=Object.keys(p.swatches).map(Number).sort((a,b)=>a-b);
+    if(keys.length<2) return {ua:1, ub:0, stepMag:6};
+    const l1=rgbToLab(p.swatches[keys[0]]), l2=rgbToLab(p.swatches[keys[keys.length-1]]);
+    const da=l2[1]-l1[1], db=l2[2]-l1[2];
+    const mag=Math.sqrt(da*da+db*db);
+    if(mag<0.5) return {ua:1, ub:0, stepMag:6};
+    return {ua:da/mag, ub:db/mag, stepMag: Math.max(mag/(keys.length-1), 4)};
   }
 
   // -------- palette de nuances proches (correction manuelle d'une pastille) --------
   let paletteTargetVal=null, paletteSelectedRgb=null;
   const paletteOverlay=document.getElementById('paletteOverlay'), paletteSheet=document.getElementById('paletteSheet');
   const paletteGrid=document.getElementById('paletteGrid');
-  function openPalettePicker(val, baseRgb, unitTxt){
+  function openPalettePicker(val, detectedRgb, unitTxt){
     paletteTargetVal=val; paletteSelectedRgb=null;
-    document.getElementById('paletteCurrentSwatch').style.background=rgbCss(baseRgb);
+    const p=PARAMS[refParam];
+    const hasRef = p.swatches && p.swatches[val]!==undefined;
+    const refRgb = hasRef ? p.swatches[val] : detectedRgb;
+
+    document.getElementById('paletteCurrentSwatch').style.background=rgbCss(detectedRgb);
+    document.getElementById('paletteRefRow').style.display = hasRef ? 'flex' : 'none';
+    if(hasRef) document.getElementById('paletteRefSwatch').style.background=rgbCss(refRgb);
     document.getElementById('paletteTitle2').textContent = `Pastille ${val}${unitTxt||''}`;
+
     paletteGrid.innerHTML='';
-    const lab=rgbToLab(baseRgb);
-    const L_DELTAS=[16,6,-6,-16], C_MULTS=[0.55,0.85,1.2,1.65];
+    const lab=rgbToLab(refRgb);
+    const axis=paramColorAxis(p);
+    const L_DELTAS=[12,4,-4,-12];
+    const PUSH_STEPS=[-1.4,-0.4,0.6,1.6];
     L_DELTAS.forEach(dl=>{
-      C_MULTS.forEach(cm=>{
-        const newLab=[clamp(lab[0]+dl,4,97), lab[1]*cm, lab[2]*cm];
+      PUSH_STEPS.forEach(ps=>{
+        const push=ps*axis.stepMag;
+        const newLab=[clamp(lab[0]+dl,4,97), lab[1]+axis.ua*push, lab[2]+axis.ub*push];
         const rgb=labToRgb(newLab);
         const cell=document.createElement('button');
         cell.type='button'; cell.className='palette-cell';
@@ -1520,6 +1559,23 @@
     captureSection.style.display='none'; workspace.style.display='block';
     refreshProfileList();
     renderTargetButtons();
+    renderPhotoThumbs();
+  }
+  // Vignette persistante de la photo prise, affichée en dehors de la fenêtre plein
+  // écran de ciblage — pour ne plus jamais "perdre" la photo une fois la calibration
+  // faite (elle vivait auparavant uniquement dans #targetFullscreen).
+  function drawPhotoThumb(canvasEl, wrapEl){
+    if(!hasPhoto || !canvasEl || !wrapEl){ if(wrapEl) wrapEl.style.display='none'; return; }
+    wrapEl.style.display='flex';
+    const maxW=500;
+    const scale=Math.min(1, maxW/dataCanvas.width);
+    canvasEl.width=Math.round(dataCanvas.width*scale);
+    canvasEl.height=Math.round(dataCanvas.height*scale);
+    canvasEl.getContext('2d').drawImage(dataCanvas,0,0,canvasEl.width,canvasEl.height);
+  }
+  function renderPhotoThumbs(){
+    drawPhotoThumb(document.getElementById('photoThumbTop'), document.getElementById('photoThumbWrap'));
+    drawPhotoThumb(document.getElementById('photoThumbResult'), document.getElementById('photoThumbWrapResult'));
   }
   function loadViaImageElement(file){
     return new Promise((resolve,reject)=>{
@@ -1531,6 +1587,7 @@
     workspace.style.display='none'; captureSection.style.display='block';
     fileCamera.value=''; fileGallery.value=''; hasPhoto=false;
     resetRefState();
+    renderPhotoThumbs();
   });
 
   // -------- aiming / fullscreen targeting window --------
@@ -1743,6 +1800,7 @@
       ? "Comparaison avec des couleurs enregistrées ailleurs (profil/scanner) — moins précis qu'une calibration sur cette photo, car appareil et éclairage diffèrent."
       : "Résultat basé sur une comparaison colorimétrique entre pastilles et échantillon pris sur la même photo. Tu peux corriger la valeur ci-dessus avant de valider.";
     nuancierBannerValue.textContent = value+' '+p.unit;
+    renderPhotoThumbs();
     resultPanel.style.display='block';
     resultPanel.scrollIntoView({behavior:'smooth', block:'start'});
   }
@@ -1752,10 +1810,27 @@
     const v = parseFloat(document.getElementById('readoutValue').value.replace(',','.'));
     if(!isNaN(v)) renderGauge(document.getElementById('readoutGauge'), refParam, v);
   });
+  // Sauvegarde auto de la photo, déclenchée par la validation elle-même — pas de bouton
+  // en plus. Comportement navigateur : Android/Chrome télécharge silencieusement dans
+  // Téléchargements ; iOS/Safari peut ouvrir un aperçu selon la version.
+  function downloadPhoto(paramKey){
+    if(!hasPhoto) return;
+    dataCanvas.toBlob(blob=>{
+      if(!blob) return;
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      const stamp=new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+      a.href=url; a.download=`nuancier-${paramKey}-${stamp}.jpg`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    }, 'image/jpeg', 0.9);
+  }
+
   document.getElementById('btnValidateResult').addEventListener('click', async ()=>{
     const p=PARAMS[refParam]; const isCustom=refParam==='autre';
     const val=parseFloat(document.getElementById('readoutValue').value.replace(',','.'));
     if(isNaN(val)) return;
+    downloadPhoto(refParam);
     const status = isCustom ? null : statusOf(refParam, val);
     const saved = await addHistoryEntry({
       param: refParam, value: val, status, source:'nuancier',
