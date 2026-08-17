@@ -240,7 +240,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v3.2</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v3.3</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -1394,6 +1394,47 @@
   // + loupe au doigt déjà utilisées pour l'échantillonnage) --------
   let fsPaletteVal=null, fsPaletteSelectedRgb=null;
   const fsPaletteFooter=document.getElementById('fsPaletteFooter'), fsPaletteGrid=document.getElementById('fsPaletteGrid');
+  // -------- pincer-zoomer / déplacer la photo (mode palette uniquement) --------
+  const fsCanvasArea=document.querySelector('.fs-canvas-area');
+  let pzScale=1, pzX=0, pzY=0, pzGesture=null;
+  function resetPanZoom(){
+    pzScale=1; pzX=0; pzY=0; pzGesture=null;
+    canvasWrap.style.transformOrigin='0 0';
+    canvasWrap.style.transform='';
+  }
+  function applyPanZoom(){
+    canvasWrap.style.transform = `translate(${pzX}px, ${pzY}px) scale(${pzScale})`;
+  }
+  function inPaletteMode(){ return !!(aimTarget && aimTarget.paletteChip!==undefined); }
+  canvasWrap.addEventListener('touchstart', e=>{
+    if(!inPaletteMode()) return;
+    e.preventDefault();
+    if(e.touches.length===2){
+      const [t1,t2]=e.touches;
+      const dist=Math.hypot(t2.clientX-t1.clientX, t2.clientY-t1.clientY);
+      pzGesture={mode:'pinch', dist, scale:pzScale, x:pzX, y:pzY};
+    } else if(e.touches.length===1){
+      pzGesture={mode:'pan', startX:e.touches[0].clientX, startY:e.touches[0].clientY, x:pzX, y:pzY};
+    }
+  }, {passive:false});
+  canvasWrap.addEventListener('touchmove', e=>{
+    if(!inPaletteMode() || !pzGesture) return;
+    e.preventDefault();
+    if(pzGesture.mode==='pinch' && e.touches.length===2){
+      const [t1,t2]=e.touches;
+      const dist=Math.hypot(t2.clientX-t1.clientX, t2.clientY-t1.clientY);
+      pzScale=clamp(pzGesture.scale*(dist/pzGesture.dist), 1, 5);
+      applyPanZoom();
+    } else if(pzGesture.mode==='pan' && e.touches.length===1){
+      pzX = pzGesture.x + (e.touches[0].clientX - pzGesture.startX);
+      pzY = pzGesture.y + (e.touches[0].clientY - pzGesture.startY);
+      applyPanZoom();
+    }
+  }, {passive:false});
+  canvasWrap.addEventListener('touchend', e=>{
+    if(e.touches.length===0) pzGesture=null;
+  }, {passive:false});
+
   function openPaletteFullscreen(val, detectedRgb, unitTxt){
     fsPaletteVal=val; fsPaletteSelectedRgb=null;
     const p=PARAMS[refParam];
@@ -1401,6 +1442,9 @@
     const refRgb = hasRef ? p.swatches[val] : detectedRgb;
 
     armAim({paletteChip:val}, `Pastille ${val}${unitTxt||''} — compare et choisis`);
+    targetPreview.classList.remove('show'); // pas de loupe en mode palette : la vraie photo (zoomable) suffit
+    fsCanvasArea.style.overflow='hidden'; // le pan/zoom manuel remplace le scroll natif
+    resetPanZoom();
     fsPaletteFooter.style.display='block';
 
     document.getElementById('fsPaletteCurrentSwatch').style.background=rgbCss(detectedRgb);
@@ -1605,6 +1649,8 @@
     targetPreview.classList.remove('show'); targetConfirm.classList.remove('show');
     fsPaletteFooter.style.display='none';
     fsPaletteVal=null; fsPaletteSelectedRgb=null;
+    fsCanvasArea.style.overflow='';
+    resetPanZoom();
   }
   document.getElementById('btnAimCancel').addEventListener('click', disarmAim);
   document.getElementById('targetRedo').addEventListener('click', ()=>{ pendingTarget=null; targetConfirm.classList.remove('show'); });
@@ -1655,20 +1701,20 @@
   }
   let activePointerId=null;
   viewCanvas.addEventListener('pointerdown', e=>{
-    if(!aimTarget) return;
+    if(!aimTarget || inPaletteMode()) return;
     e.preventDefault(); activePointerId=e.pointerId;
     targetPreview.classList.add('show');
     const [x,y]=getCanvasCoords(e.clientX,e.clientY); updateTargetPreview(x,y);
   });
   window.addEventListener('pointermove', e=>{
-    if(!aimTarget || e.pointerId!==activePointerId) return;
+    if(!aimTarget || inPaletteMode() || e.pointerId!==activePointerId) return;
     e.preventDefault();
     const [x,y]=getCanvasCoords(e.clientX,e.clientY); updateTargetPreview(x,y);
   }, {passive:false});
   window.addEventListener('pointerup', e=>{
     if(!aimTarget || e.pointerId!==activePointerId) return;
     activePointerId=null;
-    if(aimTarget && aimTarget.paletteChip!==undefined) return; // mode palette : le doigt sert à zoomer/déplacer, pas à confirmer un pixel
+    if(inPaletteMode()) return; // mode palette : le doigt sert à zoomer/déplacer, pas à confirmer un pixel
     const [x,y]=getCanvasCoords(e.clientX,e.clientY);
     const s=robustSampleAt(x,y,6);
     pendingTarget={x,y,rgb:s.rgb,homogeneity:s.homogeneity};
