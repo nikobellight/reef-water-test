@@ -240,7 +240,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v3.4</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v3.5</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -817,17 +817,22 @@
       } else {
         trackHtml = `<div class="bar-track"><div class="bar-fill" style="height:${heightPct}%;background:${p.color||'#6E93BE'}"></div>${idealTicksHtml}</div>`;
       }
-      // Repère de départ d'échelle : 0 la plupart du temps, mais pas toujours (ex. pH
-      // démarre à 7.4 sur son nuancier) — placé sans impact sur la hauteur de colonne
-      // (superposé), en haut pour les barres "carte", en bas pour thermomètre/plein.
+      // Deux repères superposés sur la barre, aux deux extrémités opposées de l'échelle
+      // (zéro impact sur la hauteur de colonne) : un badge ROND pour le départ d'échelle
+      // (0 la plupart du temps, mais pas toujours — ex. pH démarre à 7.4), et un badge
+      // CARRÉ pour le résultat actuel, coloré par statut. Les mettre aux deux bouts
+      // opposés évite le paquet illisible qui se formait quand tout était entassé du
+      // même côté (notamment en bas, pour les barres thermomètre/plein).
       const startAtTop = !!cardGrad;
-      const startVal = parseFloat(dMin.toFixed(2));
-      const startLabelHtml = `<div style="position:absolute;left:50%;top:${startAtTop?0:110}px;transform:translate(-50%,-50%);font-size:0.5rem;line-height:1;color:var(--text-dim);background:var(--bg-deep);padding:1px 3px;border-radius:4px;white-space:nowrap;pointer-events:none;">${startVal}</div>`;
       const meta = statusMeta(latest ? latest.status : null);
+      const startVal = parseFloat(dMin.toFixed(2));
+      const resultColor = {good:'var(--good)', warn:'var(--amber)', bad:'var(--bad)', none:'var(--text)'}[meta.cls] || 'var(--text)';
+      const resultText = val!==null ? val.toFixed(p.decimals) : '—';
+      const startBadge = `<div style="position:absolute;left:50%;top:${startAtTop?0:110}px;transform:translate(-50%,-50%);font-size:0.48rem;line-height:1;color:var(--text-dim);background:var(--bg-panel-raised);border:1px solid var(--line);padding:2px 4px;border-radius:999px;white-space:nowrap;pointer-events:none;">${startVal}</div>`;
+      const resultBadge = `<div style="position:absolute;left:50%;top:${startAtTop?110:0}px;transform:translate(-50%,-50%);font-family:'IBM Plex Mono',monospace;font-size:0.52rem;font-weight:600;line-height:1.1;color:${resultColor};background:var(--bg-panel-raised);border:1px solid ${resultColor};padding:2px 4px;border-radius:4px;white-space:nowrap;pointer-events:none;">${resultText}</div>`;
       col.innerHTML = `
-        <div style="position:relative;">${trackHtml}${startLabelHtml}</div>
-        <div class="bl">${SHORT_LABEL[k]||k}</div>
-        <div class="bv bv-${meta.cls}">${val!==null?val.toFixed(p.decimals):'—'}${p.unit?`<span class="bu">${p.unit}</span>`:''}</div>`;
+        <div style="position:relative;">${trackHtml}${startBadge}${resultBadge}</div>
+        <div class="bl">${SHORT_LABEL[k]||k}</div>`;
       col.addEventListener('click', ()=>{ showView('history'); historyFilterParam=k; renderHistory(); });
       barRow.appendChild(col);
     });
@@ -1783,14 +1788,22 @@
     });
     if(samplePointRaw && pendingTarget===null){ /* sample marker optional, skipped to keep it light */ }
     // Aperçu live de la nuance en cours d'essai dans le sélecteur de palette : un carré
-    // de la même taille que le repère, collé juste à côté de la pastille réelle sur la
-    // photo (pas dessus, pour ne pas la cacher) — mis à jour à chaque nuance testée.
+    // collé juste à côté de la pastille réelle sur la photo (pas dessus, pour ne pas la
+    // cacher). Taille visée : ~2/3 d'une pastille réelle, estimée à partir de l'écart
+    // entre les 2 pastilles extrêmes calibrées, divisé par le nombre de pas — plus fiable
+    // que de partir d'un rayon fixe qui n'a aucun rapport avec la taille réelle du carton.
     if(fsPaletteVal!==null && fsPaletteSelectedRgb){
       const pt=refPoints[fsPaletteVal];
       if(pt && pt.x!==undefined){
-        const side=r*2.1;
-        let sx = pt.x + r*1.6;
-        if(sx + side > w) sx = pt.x - r*1.6 - side;
+        let side=r*2.1;
+        const preset=PARAMS[refParam].presetValues;
+        if(firstSwatchPos && lastSwatchPos && preset && preset.length>1){
+          const totalDist=Math.hypot(lastSwatchPos.x-firstSwatchPos.x, lastSwatchPos.y-firstSwatchPos.y);
+          const spacing=totalDist/(preset.length-1);
+          side=Math.max(side, spacing*0.67);
+        }
+        let sx = pt.x + side*0.75;
+        if(sx + side > w) sx = pt.x - side*0.75 - side;
         const sy = pt.y - side/2;
         drawSquareMarker(sx, sy, side, rgbCss(fsPaletteSelectedRgb));
       }
