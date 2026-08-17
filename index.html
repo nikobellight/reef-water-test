@@ -240,7 +240,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v3.1</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v3.2</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -476,25 +476,6 @@
     </div>
   </div>
 
-  <div id="paletteOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:62;display:none;"></div>
-  <div id="paletteSheet" style="position:fixed;left:0;right:0;bottom:0;background:var(--bg-panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 20px 26px;z-index:63;display:none;max-width:640px;margin:0 auto;max-height:80vh;overflow-y:auto;">
-    <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 2px;">Choisir une nuance proche</h3>
-    <p style="font-size:0.8rem;color:var(--text-dim);margin:0 0 14px;" id="paletteTitle2"></p>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-      <div id="paletteCurrentSwatch" style="width:40px;height:40px;border-radius:8px;border:1px solid var(--line);flex:none;"></div>
-      <span style="font-size:0.78rem;color:var(--text-dim);">Détectée sur ta photo</span>
-    </div>
-    <div id="paletteRefRow" style="display:none;align-items:center;gap:10px;margin-bottom:14px;">
-      <div id="paletteRefSwatch" style="width:40px;height:40px;border-radius:8px;border:1px solid var(--line);flex:none;"></div>
-      <span style="font-size:0.78rem;color:var(--text-dim);">Référence du nuancier — la palette part de là</span>
-    </div>
-    <div class="palette-grid" id="paletteGrid"></div>
-    <div class="btn-row" style="margin-top:16px;">
-      <button class="secondary" id="paletteCancel">Annuler</button>
-      <button class="primary" id="paletteConfirm">Utiliser cette nuance</button>
-    </div>
-  </div>
-
   <div id="timerOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:70;display:none;"></div>
   <div id="timerSheet" style="position:fixed;left:0;right:0;bottom:0;background:var(--bg-panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 20px 26px;z-index:71;display:none;max-width:640px;margin:0 auto;">
     <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 14px;">Minuteur</h3>
@@ -535,6 +516,20 @@
           <button class="secondary" id="targetRedo">Recommencer</button>
           <button class="primary" id="targetValidate">✅ Valider ce point</button>
         </div>
+      </div>
+      <div id="fsPaletteFooter" style="display:none;">
+        <div style="display:flex;gap:16px;margin-bottom:10px;">
+          <div style="text-align:center;">
+            <div id="fsPaletteCurrentSwatch" style="width:38px;height:38px;border-radius:8px;border:1px solid var(--line);margin:0 auto 4px;"></div>
+            <div style="font-size:0.66rem;color:var(--text-dim);">Détectée</div>
+          </div>
+          <div style="text-align:center;">
+            <div id="fsPaletteRefSwatch" style="width:38px;height:38px;border-radius:8px;border:1px solid var(--line);margin:0 auto 4px;"></div>
+            <div style="font-size:0.66rem;color:var(--text-dim);">Référence</div>
+          </div>
+        </div>
+        <div class="palette-grid" id="fsPaletteGrid" style="margin-bottom:10px;"></div>
+        <button class="primary" id="fsPaletteConfirm" style="width:100%;">Utiliser cette nuance</button>
       </div>
     </div>
   </div>
@@ -1360,7 +1355,7 @@
       const swatchBtn=document.createElement('button');
       swatchBtn.type='button'; swatchBtn.className='swatch'; swatchBtn.style.background=rgbCss(obj.rgb);
       swatchBtn.title='Choisir une nuance proche';
-      swatchBtn.addEventListener('click', ()=>openPalettePicker(val, obj.rgb, unitTxt));
+      swatchBtn.addEventListener('click', ()=>openPaletteFullscreen(val, obj.rgb, unitTxt));
       rect.appendChild(swatchBtn);
 
       const valSpan=document.createElement('span'); valSpan.className='val'; valSpan.textContent=`${val}${unitTxt}${isBad?' ⚠️':''}`;
@@ -1395,55 +1390,55 @@
     return {ua:da/mag, ub:db/mag, stepMag: Math.max(mag/(keys.length-1), 4)};
   }
 
-  // -------- palette de nuances proches (correction manuelle d'une pastille) --------
-  let paletteTargetVal=null, paletteSelectedRgb=null;
-  const paletteOverlay=document.getElementById('paletteOverlay'), paletteSheet=document.getElementById('paletteSheet');
-  const paletteGrid=document.getElementById('paletteGrid');
-  function openPalettePicker(val, detectedRgb, unitTxt){
-    paletteTargetVal=val; paletteSelectedRgb=null;
+  // -------- palette de nuances proches, dans la fenêtre plein écran (photo scrollable
+  // + loupe au doigt déjà utilisées pour l'échantillonnage) --------
+  let fsPaletteVal=null, fsPaletteSelectedRgb=null;
+  const fsPaletteFooter=document.getElementById('fsPaletteFooter'), fsPaletteGrid=document.getElementById('fsPaletteGrid');
+  function openPaletteFullscreen(val, detectedRgb, unitTxt){
+    fsPaletteVal=val; fsPaletteSelectedRgb=null;
     const p=PARAMS[refParam];
     const hasRef = p.swatches && p.swatches[val]!==undefined;
     const refRgb = hasRef ? p.swatches[val] : detectedRgb;
 
-    document.getElementById('paletteCurrentSwatch').style.background=rgbCss(detectedRgb);
-    document.getElementById('paletteRefRow').style.display = hasRef ? 'flex' : 'none';
-    if(hasRef) document.getElementById('paletteRefSwatch').style.background=rgbCss(refRgb);
-    document.getElementById('paletteTitle2').textContent = `Pastille ${val}${unitTxt||''}`;
+    armAim({paletteChip:val}, `Pastille ${val}${unitTxt||''} — compare et choisis`);
+    fsPaletteFooter.style.display='block';
 
-    paletteGrid.innerHTML='';
+    document.getElementById('fsPaletteCurrentSwatch').style.background=rgbCss(detectedRgb);
+    document.getElementById('fsPaletteRefSwatch').style.background=rgbCss(refRgb);
+
+    fsPaletteGrid.innerHTML='';
     const lab=rgbToLab(refRgb);
     const axis=paramColorAxis(p);
+    // Chroma actuelle de la référence le long de l'axe (jamais négative) : borne dure
+    // pour empêcher un pas "moins concentré" de dépasser le neutre et de retomber dans
+    // la teinte opposée (ex. vert pour un réactif dont l'axe va vers le rose).
+    const refProj = Math.max(0, lab[1]*axis.ua + lab[2]*axis.ub);
     const L_DELTAS=[12,4,-4,-12];
     const PUSH_STEPS=[-1.4,-0.4,0.6,1.6];
     L_DELTAS.forEach(dl=>{
       PUSH_STEPS.forEach(ps=>{
-        const push=ps*axis.stepMag;
+        let push=ps*axis.stepMag;
+        if(push<0 && -push>refProj) push=-refProj;
         const newLab=[clamp(lab[0]+dl,4,97), lab[1]+axis.ua*push, lab[2]+axis.ub*push];
         const rgb=labToRgb(newLab);
         const cell=document.createElement('button');
         cell.type='button'; cell.className='palette-cell';
         cell.style.background=rgbCss(rgb);
         cell.addEventListener('click', ()=>{
-          paletteSelectedRgb=rgb;
-          paletteGrid.querySelectorAll('.palette-cell').forEach(c=>c.classList.remove('selected'));
+          fsPaletteSelectedRgb=rgb;
+          fsPaletteGrid.querySelectorAll('.palette-cell').forEach(c=>c.classList.remove('selected'));
           cell.classList.add('selected');
         });
-        paletteGrid.appendChild(cell);
+        fsPaletteGrid.appendChild(cell);
       });
     });
-    paletteOverlay.style.display='block'; paletteSheet.style.display='block';
   }
-  function closePalettePicker(){
-    paletteOverlay.style.display='none'; paletteSheet.style.display='none';
-    paletteTargetVal=null; paletteSelectedRgb=null;
-  }
-  document.getElementById('paletteCancel').addEventListener('click', closePalettePicker);
-  paletteOverlay.addEventListener('click', closePalettePicker);
-  document.getElementById('paletteConfirm').addEventListener('click', ()=>{
-    if(paletteTargetVal===null || !paletteSelectedRgb) return;
-    const prev=refPoints[paletteTargetVal]||{};
-    refPoints[paletteTargetVal]={...prev, rgb:paletteSelectedRgb, homogeneity:1};
-    closePalettePicker();
+  document.getElementById('fsPaletteConfirm').addEventListener('click', ()=>{
+    if(fsPaletteVal===null || !fsPaletteSelectedRgb) return;
+    const prev=refPoints[fsPaletteVal]||{};
+    refPoints[fsPaletteVal]={...prev, rgb:fsPaletteSelectedRgb, homogeneity:1};
+    fsPaletteVal=null; fsPaletteSelectedRgb=null;
+    disarmAim();
     renderVerifyStrip();
     renderMarkers();
     updateComputeBtn();
@@ -1608,6 +1603,8 @@
     aimTarget=null; pendingTarget=null;
     targetFullscreen.classList.remove('show');
     targetPreview.classList.remove('show'); targetConfirm.classList.remove('show');
+    fsPaletteFooter.style.display='none';
+    fsPaletteVal=null; fsPaletteSelectedRgb=null;
   }
   document.getElementById('btnAimCancel').addEventListener('click', disarmAim);
   document.getElementById('targetRedo').addEventListener('click', ()=>{ pendingTarget=null; targetConfirm.classList.remove('show'); });
@@ -1671,6 +1668,7 @@
   window.addEventListener('pointerup', e=>{
     if(!aimTarget || e.pointerId!==activePointerId) return;
     activePointerId=null;
+    if(aimTarget && aimTarget.paletteChip!==undefined) return; // mode palette : le doigt sert à zoomer/déplacer, pas à confirmer un pixel
     const [x,y]=getCanvasCoords(e.clientX,e.clientY);
     const s=robustSampleAt(x,y,6);
     pendingTarget={x,y,rgb:s.rgb,homogeneity:s.homogeneity};
