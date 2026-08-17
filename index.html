@@ -195,11 +195,15 @@
   .hist-row .hr-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .hist-row .hr-value{font-weight:600;white-space:nowrap;}
   .hist-row .del{background:none;border:none;color:var(--text-dim);font-size:1rem;padding:0 2px;flex:none;}
-  .bar-dot{width:6px;height:6px;border-radius:50%;margin-top:7px;flex:none;}
+  .bar-dot{width:6px;height:6px;border-radius:50%;flex:none;}
   .bar-dot.good{background:var(--good);}
   .bar-dot.warn{background:var(--amber);}
   .bar-dot.bad{background:var(--bad);}
   .bar-dot.none{background:var(--text-dim);opacity:0.4;}
+  .bv-good{color:var(--good);}
+  .bv-warn{color:var(--amber);}
+  .bv-bad{color:var(--bad);}
+  .bv-none{color:var(--text);}
   .chart-wrap{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:16px;background:var(--bg-deep);display:none;}
   #historyChart{width:100%;height:180px;display:block;}
   .report-box{width:100%;min-height:280px;background:var(--bg-deep);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:14px;font-family:'IBM Plex Mono',monospace;font-size:0.76rem;line-height:1.55;white-space:pre-wrap;resize:vertical;margin-bottom:14px;}
@@ -222,7 +226,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v2.5</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v2.6</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -265,7 +269,7 @@
       </button>
     </section>
 
-    <!-- ================= NUANCIER (v2.5) ================= -->
+    <!-- ================= NUANCIER (v2.6) ================= -->
     <section class="view" id="view-nuancier">
       <div class="sticky-banner" id="nuancierBanner"><span class="sp" id="nuancierBannerParam"></span><span class="sv" id="nuancierBannerValue"></span></div>
 
@@ -644,6 +648,7 @@
     ctx.beginPath(); ctx.arc(lx,ly,2.2,0,Math.PI*2); ctx.fillStyle='#2ED9C3'; ctx.fill();
   }
   const SHORT_LABEL = {ph:'pH', nh3:'NH3', no2:'NO2', no3:'NO3', po4:'PO4', kh:'KH', ca:'Ca', mg:'Mg', temp:'Temp', sal:'Sal'};
+  const DASH_ORDER = ['temp','sal','ph','nh3','no2','no3','po4','kh','ca','mg'];
   // Dégradé simplifié à 3 couleurs clés (bas / milieu / haut du nuancier) pour un
   // contraste net et lisible, orienté comme la carte physique : valeur faible en haut,
   // valeur forte en bas.
@@ -691,7 +696,7 @@
     const barRow = document.getElementById('barRow');
     barRow.innerHTML = '';
     let any = false;
-    Object.keys(PARAMS).filter(k=>k!=='autre').forEach(k=>{
+    DASH_ORDER.forEach(k=>{
       const p=PARAMS[k], latest=latestFor(k);
       if(latest) any = true;
       const [dMin,dMax] = gaugeRange(p);
@@ -713,9 +718,8 @@
       const meta = statusMeta(latest ? latest.status : null);
       col.innerHTML = `
         ${trackHtml}
-        <div class="bar-dot ${meta.cls}"></div>
         <div class="bl">${SHORT_LABEL[k]||k}</div>
-        <div class="bv">${val!==null?val.toFixed(p.decimals):'—'}${p.unit?`<span class="bu">${p.unit}</span>`:''}</div>`;
+        <div class="bv bv-${meta.cls}">${val!==null?val.toFixed(p.decimals):'—'}${p.unit?`<span class="bu">${p.unit}</span>`:''}</div>`;
       col.addEventListener('click', ()=>{ showView('history'); historyFilterParam=k; renderHistory(); });
       barRow.appendChild(col);
     });
@@ -1022,7 +1026,7 @@
     document.getElementById('timerStop').addEventListener('click', ()=>stopTimer(false));
   })();
 
-  // ================= NUANCIER v2.5 =================
+  // ================= NUANCIER v2.6 =================
   let dataCanvas=document.createElement('canvas');
   let dataCtx=dataCanvas.getContext('2d',{willReadFrequently:true});
   const viewCanvas=document.getElementById('viewCanvas');
