@@ -240,7 +240,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v3.3</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v3.4</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -528,7 +528,14 @@
             <div style="font-size:0.66rem;color:var(--text-dim);">Référence</div>
           </div>
         </div>
-        <div class="palette-grid" id="fsPaletteGrid" style="margin-bottom:10px;"></div>
+        <div style="font-size:0.66rem;color:var(--text-dim);text-align:center;margin-bottom:6px;">← moins concentré&nbsp;&nbsp;·&nbsp;&nbsp;plus concentré →</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <div style="display:flex;flex-direction:column;justify-content:space-between;font-size:0.62rem;color:var(--text-dim);width:34px;text-align:center;line-height:1.15;flex:none;">
+            <span>↑<br>clair</span>
+            <span>foncé<br>↓</span>
+          </div>
+          <div class="palette-grid" id="fsPaletteGrid" style="flex:1;"></div>
+        </div>
         <button class="primary" id="fsPaletteConfirm" style="width:100%;">Utiliser cette nuance</button>
       </div>
     </div>
@@ -810,9 +817,15 @@
       } else {
         trackHtml = `<div class="bar-track"><div class="bar-fill" style="height:${heightPct}%;background:${p.color||'#6E93BE'}"></div>${idealTicksHtml}</div>`;
       }
+      // Repère de départ d'échelle : 0 la plupart du temps, mais pas toujours (ex. pH
+      // démarre à 7.4 sur son nuancier) — placé sans impact sur la hauteur de colonne
+      // (superposé), en haut pour les barres "carte", en bas pour thermomètre/plein.
+      const startAtTop = !!cardGrad;
+      const startVal = parseFloat(dMin.toFixed(2));
+      const startLabelHtml = `<div style="position:absolute;left:50%;top:${startAtTop?0:110}px;transform:translate(-50%,-50%);font-size:0.5rem;line-height:1;color:var(--text-dim);background:var(--bg-deep);padding:1px 3px;border-radius:4px;white-space:nowrap;pointer-events:none;">${startVal}</div>`;
       const meta = statusMeta(latest ? latest.status : null);
       col.innerHTML = `
-        ${trackHtml}
+        <div style="position:relative;">${trackHtml}${startLabelHtml}</div>
         <div class="bl">${SHORT_LABEL[k]||k}</div>
         <div class="bv bv-${meta.cls}">${val!==null?val.toFixed(p.decimals):'—'}${p.unit?`<span class="bu">${p.unit}</span>`:''}</div>`;
       col.addEventListener('click', ()=>{ showView('history'); historyFilterParam=k; renderHistory(); });
@@ -1472,6 +1485,7 @@
           fsPaletteSelectedRgb=rgb;
           fsPaletteGrid.querySelectorAll('.palette-cell').forEach(c=>c.classList.remove('selected'));
           cell.classList.add('selected');
+          renderMarkers();
         });
         fsPaletteGrid.appendChild(cell);
       });
@@ -1768,11 +1782,28 @@
       if(obj.x!==undefined) drawDotMarker(obj.x,obj.y,r,rgbCss(obj.rgb));
     });
     if(samplePointRaw && pendingTarget===null){ /* sample marker optional, skipped to keep it light */ }
+    // Aperçu live de la nuance en cours d'essai dans le sélecteur de palette : un carré
+    // de la même taille que le repère, collé juste à côté de la pastille réelle sur la
+    // photo (pas dessus, pour ne pas la cacher) — mis à jour à chaque nuance testée.
+    if(fsPaletteVal!==null && fsPaletteSelectedRgb){
+      const pt=refPoints[fsPaletteVal];
+      if(pt && pt.x!==undefined){
+        const side=r*2.1;
+        let sx = pt.x + r*1.6;
+        if(sx + side > w) sx = pt.x - r*1.6 - side;
+        const sy = pt.y - side/2;
+        drawSquareMarker(sx, sy, side, rgbCss(fsPaletteSelectedRgb));
+      }
+    }
   }
   function drawDotMarker(x,y,r,color){
     viewCtx.beginPath(); viewCtx.arc(x,y,r,0,Math.PI*2);
     viewCtx.fillStyle=color; viewCtx.fill();
     viewCtx.lineWidth=Math.max(2,r*0.14); viewCtx.strokeStyle='#FFFFFF'; viewCtx.stroke();
+  }
+  function drawSquareMarker(x,y,side,color){
+    viewCtx.fillStyle=color; viewCtx.fillRect(x,y,side,side);
+    viewCtx.lineWidth=Math.max(2,side*0.08); viewCtx.strokeStyle='#2F80FF'; viewCtx.strokeRect(x,y,side,side);
   }
 
   // -------- compute + editable result + validate --------
