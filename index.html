@@ -51,6 +51,12 @@
   .ref-rect .swatch{width:44px;height:34px;border-radius:6px;border:1px solid rgba(255,255,255,0.25);flex:none;}
   .ref-rect .val{font-family:'IBM Plex Mono',monospace;font-size:0.92rem;flex:1;}
   .ref-rect .edit-ic{color:var(--text-dim);font-size:0.9rem;}
+  .ref-rect-actions{margin-left:auto;display:flex;gap:2px;flex:none;}
+  .ref-rect-action{background:transparent;border:none;padding:8px;border-radius:8px;font-size:1rem;line-height:1;color:var(--text-dim);}
+  .ref-rect-action:active{background:rgba(255,255,255,0.08);}
+  .palette-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .palette-cell{aspect-ratio:1;border-radius:8px;border:2px solid transparent;padding:0;min-height:44px;}
+  .palette-cell.selected{border-color:var(--actinic);box-shadow:0 0 0 2px rgba(47,128,255,0.35);}
   details.card summary{cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:0.78rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-dim);list-style:none;}
   details.card summary::-webkit-details-marker{display:none;}
   details.card summary::before{content:'▸ '; }
@@ -101,6 +107,7 @@
   .bar-track{width:10px;height:110px;background:var(--bg-panel-raised);border-radius:8px;display:flex;align-items:flex-end;overflow:hidden;position:relative;}
   .bar-fill{width:100%;border-radius:8px;min-height:5px;transition:height .25s ease;}
   .bar-dim{position:absolute;bottom:0;left:0;right:0;background:rgba(5,11,20,0.8);border-radius:0 0 8px 8px;transition:height .25s ease;}
+  .ideal-tick{position:absolute;left:-2px;right:-2px;height:2px;background:rgba(255,255,255,0.9);box-shadow:0 0 3px rgba(0,0,0,0.7);pointer-events:none;z-index:2;transform:translateY(-50%);}
   .bar-col .bl{font-family:'IBM Plex Mono',monospace;font-size:0.58rem;color:var(--text-dim);margin-top:7px;white-space:nowrap;}
   .bar-col.stagger .bl{margin-top:16px;}
   .bar-col .bv{font-family:'IBM Plex Mono',monospace;font-size:0.56rem;font-weight:600;margin-top:1px;text-align:center;line-height:1.15;white-space:nowrap;}
@@ -120,9 +127,9 @@
   #targetFullscreen.show{display:flex;}
   .fs-header{flex:none;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);}
   .fs-header .lbl{font-family:'IBM Plex Mono',monospace;font-size:0.9rem;color:var(--text);font-weight:600;}
-  .fs-canvas-area{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:12px 16px;overflow:auto;}
-  .fs-canvas-area .canvas-wrap{max-width:100%;max-height:100%;}
-  .fs-canvas-area #viewCanvas{max-width:100%;max-height:75vh;width:auto;height:auto;display:block;touch-action:none;cursor:crosshair;}
+  .fs-canvas-area{flex:1;min-height:0;padding:12px 16px;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
+  .fs-canvas-area .canvas-wrap{max-width:100%;margin:0 auto;}
+  .fs-canvas-area #viewCanvas{max-width:100%;width:100%;height:auto;display:block;touch-action:none;cursor:crosshair;}
   .fs-footer{flex:none;padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);}
   .canvas-wrap{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#000;line-height:0;}
   #viewCanvas{width:100%;height:auto;display:block;}
@@ -231,7 +238,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v2.9</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v3.0</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -373,9 +380,10 @@
         <p class="mode-help" style="margin-top:12px;">Vérifie ces formules par rapport à la notice papier de ta boîte Salifert (SALCORE).</p>
       </div>
       <div class="card" id="titrationResultPanel" style="display:none;">
-        <p class="step-label done"><span class="dot"></span>Résultat</p>
-        <div class="readout"><div class="value" style="font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:2.4rem;color:var(--aqua);"><span id="titrationResultValue">—</span><span class="u" id="titrationResultUnit"></span></div></div>
+        <p class="step-label done"><span class="dot"></span>Résultat — modifiable avant validation</p>
+        <div class="readout"><div><input type="text" inputmode="decimal" class="value-edit" id="titrationResultValue"><span class="u" id="titrationResultUnit"></span></div></div>
         <div id="titrationGauge"></div>
+        <button class="primary" id="btnValidateTitration" style="margin-top:16px;">✅ Valider cette mesure</button>
         <p class="saved-note" id="titrationSavedNote" style="margin-top:10px;"></p>
         <button class="secondary" style="width:100%;margin-top:12px;" onclick="showView('dashboard')">Voir le tableau de bord</button>
       </div>
@@ -464,6 +472,21 @@
     </div>
   </div>
 
+  <div id="paletteOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:62;display:none;"></div>
+  <div id="paletteSheet" style="position:fixed;left:0;right:0;bottom:0;background:var(--bg-panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 20px 26px;z-index:63;display:none;max-width:640px;margin:0 auto;max-height:80vh;overflow-y:auto;">
+    <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 2px;">Choisir une nuance proche</h3>
+    <p style="font-size:0.8rem;color:var(--text-dim);margin:0 0 14px;" id="paletteTitle2"></p>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+      <div id="paletteCurrentSwatch" style="width:40px;height:40px;border-radius:8px;border:1px solid var(--line);flex:none;"></div>
+      <span style="font-size:0.78rem;color:var(--text-dim);">Couleur détectée actuellement</span>
+    </div>
+    <div class="palette-grid" id="paletteGrid"></div>
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="secondary" id="paletteCancel">Annuler</button>
+      <button class="primary" id="paletteConfirm">Utiliser cette nuance</button>
+    </div>
+  </div>
+
   <div id="timerOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:70;display:none;"></div>
   <div id="timerSheet" style="position:fixed;left:0;right:0;bottom:0;background:var(--bg-panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 20px 26px;z-index:71;display:none;max-width:640px;margin:0 auto;">
     <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 14px;">Minuteur</h3>
@@ -529,6 +552,33 @@
     catch(e){ return `${res.status}`+(text?' — '+text.slice(0,200):''); }
   }
 
+  // ================= KH conversion (table réelle Salifert, pas une formule linéaire) =================
+  // La relation lecture→dKH de la notice papier SALCORE n'est pas parfaitement linéaire
+  // (paliers de 0.3 à 0.4 dKH selon la zone) — la formule (1-r)*16 dérape sous 0.50 ml.
+  // Table recopiée de la notice papier + recoupée avec des sources indépendantes.
+  const KH_TABLE = [
+    [0.00,15.7],[0.02,15.3],[0.04,15.0],[0.06,14.7],[0.08,14.4],[0.10,14.1],[0.12,13.7],[0.14,13.4],
+    [0.16,13.1],[0.18,12.8],[0.20,12.5],[0.22,12.1],[0.24,11.8],[0.26,11.5],[0.28,11.2],[0.30,10.9],
+    [0.32,10.5],[0.34,10.2],[0.36,9.9],[0.38,9.6],[0.40,9.3],[0.42,8.9],[0.44,8.6],[0.46,8.3],
+    [0.48,8.0],[0.50,7.7],[0.52,7.3],[0.54,7.0],[0.56,6.7],[0.58,6.4],[0.60,6.1],[0.62,5.7],
+    [0.64,5.4],[0.66,5.1],[0.68,4.8],[0.70,4.5],[0.72,4.1],[0.74,3.8],[0.76,3.5],[0.78,3.2],
+    [0.80,2.8],[0.82,2.5],[0.84,2.2],[0.86,1.9],[0.88,1.6],[0.90,1.2],[0.92,0.9],[0.94,0.6],
+    [0.96,0.3],[0.98,0.0]
+  ];
+  function khFromReading(reading){
+    const t = KH_TABLE;
+    if(reading<=t[0][0]) return t[0][1];
+    if(reading>=t[t.length-1][0]) return t[t.length-1][1];
+    for(let i=0;i<t.length-1;i++){
+      const [x0,y0]=t[i], [x1,y1]=t[i+1];
+      if(reading>=x0 && reading<=x1){
+        const f=(reading-x0)/(x1-x0);
+        return y0 + (y1-y0)*f;
+      }
+    }
+    return t[t.length-1][1];
+  }
+
   // ================= parameter registry =================
   const PARAMS = {
     ph:   {label:'pH',                     unit:'',    group:'chart',     decimals:2, ideal:[8.1,8.4],    acceptable:[7.8,8.6], optimal:8.25, color:'#DD5099',
@@ -546,7 +596,7 @@
     po4:  {label:'Phosphate (PO4³⁻)',      unit:'ppm', group:'chart',     decimals:2, ideal:[0.03,0.10],  acceptable:[0,0.15], optimal:0.06, color:'#4FA37A',
            presetValues:[0,0.25,0.5,1,2,4,10],
            swatches:{0:[243,232,137],0.25:[227,228,149],0.5:[211,223,145],1:[186,214,141],2:[131,190,133],4:[98,164,128],10:[48,134,120]}},
-    kh:   {label:'KH / Alcalinité',        unit:'dKH', group:'titration', decimals:1, ideal:[8,12],       acceptable:[7,13], optimal:10, color:'#A66BD1', calc:r=>(1-r)*16},
+    kh:   {label:'KH / Alcalinité',        unit:'dKH', group:'titration', decimals:1, ideal:[8,12],       acceptable:[7,13], optimal:10, color:'#A66BD1', calc:r=>khFromReading(r)},
     ca:   {label:'Calcium',                unit:'ppm', group:'titration', decimals:0, ideal:[380,450],    acceptable:[350,480], optimal:420, color:'#FF6B9D', calc:r=>(1-r)*500},
     mg:   {label:'Magnésium',              unit:'ppm', group:'titration', decimals:0, ideal:[1250,1350],  acceptable:[1200,1400], optimal:1300, color:'#4CD787', calc:r=>(1-r)*1500},
     temp: {label:'Température',            unit:'°C',  group:'direct',    decimals:1, ideal:[24,27],      acceptable:[23,28], optimal:25.5, color:'#6B8FFF'},
@@ -736,15 +786,26 @@
       const col = document.createElement('button');
       col.className='bar-col' + (i%2===1 ? ' stagger' : ''); col.type='button';
       const cardGrad = buildSwatchGradient(p);
+      // Repère de plage idéale : 2 traits blancs, sans label. Pour les barres "carte"
+      // (faible en haut), le repère suit la même échelle que le remplissage ; pour les
+      // barres thermomètre/pleines (remplissage bas→haut), c'est l'inverse.
+      let idealTicksHtml = '';
+      if(p.ideal){
+        const pctFromTop = v => {
+          const raw = clamp(((v-dMin)/(dMax-dMin))*100, 0, 100);
+          return cardGrad ? raw : (100-raw);
+        };
+        idealTicksHtml = `<div class="ideal-tick" style="top:${pctFromTop(p.ideal[0]).toFixed(1)}%"></div><div class="ideal-tick" style="top:${pctFromTop(p.ideal[1]).toFixed(1)}%"></div>`;
+      }
       let trackHtml;
       if(cardGrad){
         // Mode carte du nuancier : faible en haut, fort en bas — on assombrit le bas.
-        trackHtml = `<div class="bar-track" style="background:${cardGrad}"><div class="bar-dim" style="height:${100-heightPct}%;bottom:0;top:auto;border-radius:0 0 8px 8px;"></div></div>`;
+        trackHtml = `<div class="bar-track" style="background:${cardGrad}"><div class="bar-dim" style="height:${100-heightPct}%;bottom:0;top:auto;border-radius:0 0 8px 8px;"></div>${idealTicksHtml}</div>`;
       } else if(k==='temp'){
         // Mode thermomètre : froid en bas, chaud en haut — on assombrit le haut.
-        trackHtml = `<div class="bar-track" style="background:${TEMP_GRADIENT}"><div class="bar-dim" style="height:${100-heightPct}%;top:0;bottom:auto;border-radius:8px 8px 0 0;"></div></div>`;
+        trackHtml = `<div class="bar-track" style="background:${TEMP_GRADIENT}"><div class="bar-dim" style="height:${100-heightPct}%;top:0;bottom:auto;border-radius:8px 8px 0 0;"></div>${idealTicksHtml}</div>`;
       } else {
-        trackHtml = `<div class="bar-track"><div class="bar-fill" style="height:${heightPct}%;background:${p.color||'#6E93BE'}"></div></div>`;
+        trackHtml = `<div class="bar-track"><div class="bar-fill" style="height:${heightPct}%;background:${p.color||'#6E93BE'}"></div>${idealTicksHtml}</div>`;
       }
       const meta = statusMeta(latest ? latest.status : null);
       col.innerHTML = `
@@ -864,6 +925,22 @@
     lines.push(`Généré le ${new Date().toLocaleString('fr-FR')}`);
     lines.push(`Période : ${periodLabelText(reportPeriod)}`);
     lines.push('');
+
+    const allSortedDesc = historyData.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
+    if(allSortedDesc.length){
+      const lastDate = new Date(allSortedDesc[0].date);
+      const batch = allSortedDesc.filter(e => Math.abs(new Date(e.date)-lastDate) <= 60*60000)
+        .sort((a,b)=>new Date(a.date)-new Date(b.date));
+      lines.push(`DERNIER TEST (${lastDate.toLocaleString('fr-FR')}, ± 1h) :`);
+      batch.forEach(e=>{
+        const label = e.param==='autre' ? (e.customLabel||'Autre') : PARAMS[e.param].label;
+        const unit = e.param==='autre' ? '' : PARAMS[e.param].unit;
+        const meta = statusMeta(e.status);
+        lines.push(`- ${label} : ${e.value}${unit?' '+unit:''} (${meta.label.toLowerCase()})`);
+      });
+      lines.push('');
+    }
+
     lines.push('PLAGES DE RÉFÉRENCE (consensus récifal) :');
     Object.keys(PARAMS).filter(k=>k!=='autre'&&PARAMS[k].ideal).forEach(k=>{
       const p=PARAMS[k];
@@ -961,7 +1038,8 @@
     }
     sel.addEventListener('change', updateBanner); updateBanner();
 
-    document.getElementById('btnCalcTitration').addEventListener('click', async ()=>{
+    let currentTitrationKey=null;
+    document.getElementById('btnCalcTitration').addEventListener('click', ()=>{
       const key=sel.value;
       const raw=document.getElementById('titrationReading').value.trim().replace(',','.');
       const reading=parseFloat(raw);
@@ -971,19 +1049,29 @@
       const lowRes=document.getElementById('titrationLowRes').checked;
       const p=PARAMS[key]; let value=p.calc(reading); if(lowRes) value*=2;
       const factor=Math.pow(10,p.decimals); value=Math.round(value*factor)/factor;
-      const status=statusOf(key,value); const meta=statusMeta(status);
 
+      currentTitrationKey=key;
       document.getElementById('titrationResultPanel').style.display='block';
-      document.getElementById('titrationResultValue').textContent=value.toFixed(p.decimals);
+      document.getElementById('titrationResultValue').value=value.toFixed(p.decimals);
       document.getElementById('titrationResultUnit').textContent=p.unit;
       renderGauge(document.getElementById('titrationGauge'), key, value);
       document.getElementById('titrationBannerValue').textContent = value.toFixed(p.decimals)+' '+p.unit;
+      document.getElementById('titrationSavedNote').textContent='';
+      document.getElementById('titrationResultPanel').scrollIntoView({behavior:'smooth'});
+    });
 
-      const saved=await addHistoryEntry({param:key,value,status,source:'titration'});
+    document.getElementById('btnValidateTitration').addEventListener('click', async ()=>{
+      if(!currentTitrationKey) return;
+      const key=currentTitrationKey, p=PARAMS[key];
+      const raw=document.getElementById('titrationResultValue').value.trim().replace(',','.');
+      const value=parseFloat(raw);
       const savedEl=document.getElementById('titrationSavedNote');
+      if(!raw||isNaN(value)){ savedEl.textContent='Valeur invalide.'; savedEl.style.color='var(--bad)'; return; }
+      const status=statusOf(key,value);
+      renderGauge(document.getElementById('titrationGauge'), key, value);
+      const saved=await addHistoryEntry({param:key,value,status,source:'titration'});
       savedEl.textContent = saved? "✅ Enregistré dans l'historique" : '⚠️ Non enregistré — échec Supabase';
       savedEl.style.color = saved? 'var(--good)' : 'var(--bad)';
-      document.getElementById('titrationResultPanel').scrollIntoView({behavior:'smooth'});
     });
   })();
 
@@ -1141,6 +1229,19 @@
     return [116*fy-16, 500*(fx-fy), 200*(fy-fz)];
   }
   function deltaE(a,b){ const l1=rgbToLab(a),l2=rgbToLab(b); return Math.sqrt((l1[0]-l2[0])**2+(l1[1]-l2[1])**2+(l1[2]-l2[2])**2); }
+  function linearToSrgb(c){ c=clamp(c,0,1); return c<=0.0031308 ? c*12.92 : 1.055*Math.pow(c,1/2.4)-0.055; }
+  function labToRgb(lab){
+    const [L,a,b]=lab;
+    const fy=(L+16)/116, fx=fy+a/500, fz=fy-b/200;
+    const finv=t=> (t*t*t>0.008856) ? t*t*t : (t-16/116)/7.787;
+    const x=finv(fx)*95.047, y=finv(fy)*100.0, z=finv(fz)*108.883;
+    const X=x/100, Y=y/100, Z=z/100;
+    let r = X* 3.2404542 + Y*-1.5371385 + Z*-0.4985314;
+    let g = X*-0.9692660 + Y* 1.8760108 + Z* 0.0415560;
+    let bl= X* 0.0556434 + Y*-0.2040259 + Z* 1.0572252;
+    r=linearToSrgb(r); g=linearToSrgb(g); bl=linearToSrgb(bl);
+    return [clamp(Math.round(r*255),0,255), clamp(Math.round(g*255),0,255), clamp(Math.round(bl*255),0,255)];
+  }
   function whiteBalance(sample, white){
     const scale=[255/Math.max(white[0],1),255/Math.max(white[1],1),255/Math.max(white[2],1)];
     return [clamp(Math.round(sample[0]*scale[0]),0,255), clamp(Math.round(sample[1]*scale[1]),0,255), clamp(Math.round(sample[2]*scale[2]),0,255)];
@@ -1242,19 +1343,72 @@
     keys.forEach(val=>{
       const obj=refPoints[val];
       const isBad = bad.includes(val);
-      const rect=document.createElement('button');
+      const unitTxt = p.unit?(' '+p.unit):'';
       const canRecalibrate = calibMode==='photo' && obj.x!==undefined;
+      const rect=document.createElement('div');
       rect.className='ref-rect' + (canRecalibrate ? '' : ' disabled');
-      rect.type='button';
       if(isBad) rect.style.border='2px solid var(--bad)';
-      rect.innerHTML = `<span class="swatch" style="background:${rgbCss(obj.rgb)}"></span><span class="val">${val}${p.unit?(' '+p.unit):''}${isBad?' ⚠️':''}</span>${canRecalibrate?'<span class="edit-ic">✏️</span>':''}`;
+      rect.innerHTML = `<span class="swatch" style="background:${rgbCss(obj.rgb)}"></span><span class="val">${val}${unitTxt}${isBad?' ⚠️':''}</span>`;
+      const actions=document.createElement('span'); actions.className='ref-rect-actions';
       if(canRecalibrate){
-        rect.addEventListener('click', ()=>armAim({chip:val}, `Pastille ${val}${p.unit?(' '+p.unit):''}`));
+        const bPhoto=document.createElement('button');
+        bPhoto.type='button'; bPhoto.className='ref-rect-action'; bPhoto.title='Revisiter sur la photo'; bPhoto.textContent='✏️';
+        bPhoto.addEventListener('click', ()=>armAim({chip:val}, `Pastille ${val}${unitTxt}`));
+        actions.appendChild(bPhoto);
       }
+      const bPalette=document.createElement('button');
+      bPalette.type='button'; bPalette.className='ref-rect-action'; bPalette.title='Choisir une nuance proche'; bPalette.textContent='🎨';
+      bPalette.addEventListener('click', ()=>openPalettePicker(val, obj.rgb, unitTxt));
+      actions.appendChild(bPalette);
+      rect.appendChild(actions);
       refRectList.appendChild(rect);
     });
     renderMarkers();
   }
+
+  // -------- palette de nuances proches (correction manuelle d'une pastille) --------
+  let paletteTargetVal=null, paletteSelectedRgb=null;
+  const paletteOverlay=document.getElementById('paletteOverlay'), paletteSheet=document.getElementById('paletteSheet');
+  const paletteGrid=document.getElementById('paletteGrid');
+  function openPalettePicker(val, baseRgb, unitTxt){
+    paletteTargetVal=val; paletteSelectedRgb=null;
+    document.getElementById('paletteCurrentSwatch').style.background=rgbCss(baseRgb);
+    document.getElementById('paletteTitle2').textContent = `Pastille ${val}${unitTxt||''}`;
+    paletteGrid.innerHTML='';
+    const lab=rgbToLab(baseRgb);
+    const L_DELTAS=[16,6,-6,-16], C_MULTS=[0.55,0.85,1.2,1.65];
+    L_DELTAS.forEach(dl=>{
+      C_MULTS.forEach(cm=>{
+        const newLab=[clamp(lab[0]+dl,4,97), lab[1]*cm, lab[2]*cm];
+        const rgb=labToRgb(newLab);
+        const cell=document.createElement('button');
+        cell.type='button'; cell.className='palette-cell';
+        cell.style.background=rgbCss(rgb);
+        cell.addEventListener('click', ()=>{
+          paletteSelectedRgb=rgb;
+          paletteGrid.querySelectorAll('.palette-cell').forEach(c=>c.classList.remove('selected'));
+          cell.classList.add('selected');
+        });
+        paletteGrid.appendChild(cell);
+      });
+    });
+    paletteOverlay.style.display='block'; paletteSheet.style.display='block';
+  }
+  function closePalettePicker(){
+    paletteOverlay.style.display='none'; paletteSheet.style.display='none';
+    paletteTargetVal=null; paletteSelectedRgb=null;
+  }
+  document.getElementById('paletteCancel').addEventListener('click', closePalettePicker);
+  paletteOverlay.addEventListener('click', closePalettePicker);
+  document.getElementById('paletteConfirm').addEventListener('click', ()=>{
+    if(paletteTargetVal===null || !paletteSelectedRgb) return;
+    const prev=refPoints[paletteTargetVal]||{};
+    refPoints[paletteTargetVal]={...prev, rgb:paletteSelectedRgb, homogeneity:1};
+    closePalettePicker();
+    renderVerifyStrip();
+    renderMarkers();
+    updateComputeBtn();
+  });
 
   function addCustomChip(){
     openSheet({
