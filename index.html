@@ -231,7 +231,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v2.8</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v2.9</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -274,7 +274,7 @@
       </button>
     </section>
 
-    <!-- ================= NUANCIER (v2.8) ================= -->
+    <!-- ================= NUANCIER (v2.9) ================= -->
     <section class="view" id="view-nuancier">
       <div class="sticky-banner" id="nuancierBanner"><span class="sp" id="nuancierBannerParam"></span><span class="sv" id="nuancierBannerValue"></span></div>
 
@@ -690,6 +690,17 @@
     const [aMin,aMax]=p.acceptable, span=(aMax-aMin)||1, pad=span*0.2;
     return [aMin-pad, aMax+pad];
   }
+  // Pour les paramètres avec un vrai nuancier (pH, NH3, NO2, NO3, PO4), la barre du
+  // tableau de bord doit se remplir sur l'échelle COMPLÈTE du nuancier (ex. 0-8 ppm pour
+  // l'ammoniac), pas sur la plage acceptable — sinon tout ce qui dépasse la plage sature
+  // à 100% sans distinction, quelle que soit l'ampleur du dépassement.
+  function barRange(p){
+    if(p.swatches){
+      const keys = Object.keys(p.swatches).map(Number);
+      return [Math.min(...keys), Math.max(...keys)];
+    }
+    return gaugeRange(p);
+  }
   function renderDashboard(){
     const allSorted = historyData.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
     const mostRecent = allSorted[0];
@@ -719,7 +730,7 @@
     DASH_ORDER.forEach((k,i)=>{
       const p=PARAMS[k], latest=latestFor(k);
       if(latest) any = true;
-      const [dMin,dMax] = gaugeRange(p);
+      const [dMin,dMax] = barRange(p);
       const val = latest ? Number(latest.value) : null;
       const heightPct = val!==null ? Math.max(5, Math.min(100, ((val-dMin)/(dMax-dMin))*100)) : 4;
       const col = document.createElement('button');
@@ -1078,7 +1089,7 @@
     document.getElementById('timerStop').addEventListener('click', ()=>stopTimer(false));
   })();
 
-  // ================= NUANCIER v2.8 =================
+  // ================= NUANCIER v2.9 =================
   let dataCanvas=document.createElement('canvas');
   let dataCtx=dataCanvas.getContext('2d',{willReadFrequently:true});
   const viewCanvas=document.getElementById('viewCanvas');
