@@ -102,6 +102,7 @@
   .bar-fill{width:100%;border-radius:8px;min-height:5px;transition:height .25s ease;}
   .bar-dim{position:absolute;bottom:0;left:0;right:0;background:rgba(5,11,20,0.8);border-radius:0 0 8px 8px;transition:height .25s ease;}
   .bar-col .bl{font-family:'IBM Plex Mono',monospace;font-size:0.58rem;color:var(--text-dim);margin-top:7px;white-space:nowrap;}
+  .bar-col.stagger .bl{margin-top:16px;}
   .bar-col .bv{font-family:'IBM Plex Mono',monospace;font-size:0.56rem;font-weight:600;margin-top:1px;text-align:center;line-height:1.15;white-space:nowrap;}
   .bar-col .bu{display:block;font-size:0.5rem;color:var(--text-dim);font-weight:500;}
   .empty-state{text-align:center;padding:34px 10px;color:var(--text-dim);}
@@ -230,7 +231,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v2.7</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v2.8</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -273,7 +274,7 @@
       </button>
     </section>
 
-    <!-- ================= NUANCIER (v2.7) ================= -->
+    <!-- ================= NUANCIER (v2.8) ================= -->
     <section class="view" id="view-nuancier">
       <div class="sticky-banner" id="nuancierBanner"><span class="sp" id="nuancierBannerParam"></span><span class="sv" id="nuancierBannerValue"></span></div>
 
@@ -666,7 +667,7 @@
     const lx=xAt(values.length-1), ly=yAt(values[values.length-1]);
     ctx.beginPath(); ctx.arc(lx,ly,2.2,0,Math.PI*2); ctx.fillStyle='#2ED9C3'; ctx.fill();
   }
-  const SHORT_LABEL = {ph:'pH', nh3:'NH3', no2:'NO2', no3:'NO3', po4:'PO4', kh:'KH', ca:'Ca', mg:'Mg', temp:'Temp', sal:'Sal'};
+  const SHORT_LABEL = {ph:'pH', nh3:'NH3', no2:'NO2', no3:'NO3', po4:'PO4', kh:'KH', ca:'Ca', mg:'Mg', temp:'Temp', sal:'SG'};
   const DASH_ORDER = ['temp','sal','ph','nh3','no2','no3','po4','kh','ca','mg'];
   // Dégradé simplifié à 3 couleurs clés (bas / milieu / haut du nuancier) pour un
   // contraste net et lisible, orienté comme la carte physique : valeur faible en haut,
@@ -715,14 +716,14 @@
     const barRow = document.getElementById('barRow');
     barRow.innerHTML = '';
     let any = false;
-    DASH_ORDER.forEach(k=>{
+    DASH_ORDER.forEach((k,i)=>{
       const p=PARAMS[k], latest=latestFor(k);
       if(latest) any = true;
       const [dMin,dMax] = gaugeRange(p);
       const val = latest ? Number(latest.value) : null;
       const heightPct = val!==null ? Math.max(5, Math.min(100, ((val-dMin)/(dMax-dMin))*100)) : 4;
       const col = document.createElement('button');
-      col.className='bar-col'; col.type='button';
+      col.className='bar-col' + (i%2===1 ? ' stagger' : ''); col.type='button';
       const cardGrad = buildSwatchGradient(p);
       let trackHtml;
       if(cardGrad){
@@ -1077,7 +1078,7 @@
     document.getElementById('timerStop').addEventListener('click', ()=>stopTimer(false));
   })();
 
-  // ================= NUANCIER v2.7 =================
+  // ================= NUANCIER v2.8 =================
   let dataCanvas=document.createElement('canvas');
   let dataCtx=dataCanvas.getContext('2d',{willReadFrequently:true});
   const viewCanvas=document.getElementById('viewCanvas');
