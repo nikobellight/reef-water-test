@@ -45,6 +45,11 @@
   .sticky-banner .sp{font-family:'IBM Plex Mono',monospace;font-size:0.82rem;color:#04101f;opacity:0.8;text-transform:uppercase;letter-spacing:0.04em;font-weight:600;}
   .sticky-banner .sv{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:1.5rem;color:#04101f;}
 
+  .brand-row{display:flex;flex-wrap:wrap;gap:6px;}
+  .brand-btn{background:var(--bg-panel-raised);border:1px solid var(--line);color:var(--text-dim);border-radius:999px;padding:7px 13px;font-size:0.82rem;font-weight:500;}
+  .brand-btn.active{background:var(--aqua);border-color:var(--aqua);color:#04222b;font-weight:600;}
+  .brand-note{font-size:0.76rem;color:var(--text-dim);margin:9px 0 0;line-height:1.45;}
+  .bar-unavailable{font-size:0.66rem;color:var(--text-dim);opacity:0.75;}
   .ref-rect-list{display:flex;flex-direction:column;gap:6px;}
   .ref-rect{display:flex;align-items:center;gap:12px;background:var(--bg-panel-raised);border-radius:10px;padding:8px 12px;border:none;width:100%;text-align:left;color:var(--text);}
   .ref-rect.disabled{opacity:0.7;}
@@ -252,7 +257,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v4.5</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v5.0</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -264,6 +269,12 @@
 
       <div class="card highlight-row-card">
         <div class="highlight-row" id="highlightRow"></div>
+      </div>
+
+      <div class="card" id="brandCard">
+        <p class="section-title">Nuancier utilisé</p>
+        <div class="brand-row" id="brandRow"></div>
+        <p class="brand-note" id="brandNote"></p>
       </div>
 
       <div class="card">
@@ -593,6 +604,96 @@
     return t[t.length-1][1];
   }
 
+  // ================= bibliothèque de nuanciers par marque =================
+  // Chaque marque définit ses propres pastilles ET sa propre échelle de valeurs :
+  // le NO3 va jusqu'à 160 chez API, 100 chez Salifert, 50 chez Red Sea, 25 chez Elos.
+  // Une entrée absente = ce paramètre n'existe pas en version nuancier chez cette marque
+  // (soit le test n'existe pas, soit il utilise un comparateur rotatif, soit la carte
+  // n'a pas de source couleur exploitable). L'app le signale au lieu de deviner.
+  const NUANCIERS = {
+    pawfly: {
+      label: 'Pawfly',
+      note: 'Scanné à 1200 DPI depuis la carte physique — référence la plus fiable.',
+      params: {
+        ph:  {7.4:[223,113,110],7.8:[218,84,142],8.0:[217,80,157],8.4:[194,85,151]},
+        nh3: {0:[235,229,26],0.25:[169,205,37],0.5:[124,193,51],1:[78,181,58],2:[36,171,84],4:[20,155,109],8:[14,145,105]},
+        no2: {0:[250,250,252],0.25:[247,241,243],0.5:[239,222,223],1:[223,182,199],2:[178,125,166],5:[177,101,155]},
+        no3: {0:[252,252,254],5:[252,250,251],10:[243,232,232],20:[233,212,219],40:[218,165,188],80:[186,131,173],160:[172,75,146]},
+        po4: {0:[243,232,137],0.25:[227,228,149],0.5:[211,223,145],1:[186,214,141],2:[131,190,133],4:[98,164,128],10:[48,134,120]}
+      }
+    },
+    salifert: {
+      label: 'Salifert',
+      note: 'Cartes officielles. Le pH saute du vert au bleu entre 8.3 et 8.6.',
+      params: {
+        ph:  {7.4:[246,240,80],7.7:[234,233,96],8.0:[204,219,133],8.15:[165,193,90],8.3:[92,152,67],8.6:[117,186,218]},
+        nh3: {0.15:[255,255,248],0.25:[253,255,243],0.5:[254,254,211],1:[255,251,148],1.5:[253,218,125],2:[248,174,122]},
+        no2: {0:[255,255,255],0.1:[253,253,253],0.25:[253,240,255],0.5:[251,225,250],1:[240,169,237],2:[233,89,198],4:[213,4,173]},
+        no3: {0:[255,255,255],2:[254,254,254],5:[253,240,255],10:[251,225,250],25:[242,176,237],50:[240,103,204],100:[213,4,173]},
+        po4: {0:[255,255,255],0.03:[249,255,253],0.1:[233,254,253],0.25:[215,246,255],0.5:[182,234,255],1:[100,207,254],3:[2,154,235]}
+      }
+    },
+    redsea: {
+      label: 'Red Sea',
+      note: 'pH et PO4 indisponibles : pH trop sombre sur la carte, PO4 en comparateur rotatif.',
+      params: {
+        nh3: {0:[232,230,99],0.2:[193,209,145],0.4:[172,207,131],0.8:[124,190,125],1.2:[2,176,134],2:[4,142,133]},
+        no2: {0:[250,248,246],0.05:[235,225,230],0.1:[236,221,228],0.2:[240,204,222],0.5:[219,82,148],1:[201,1,99]},
+        no3: {0:[255,255,255],2:[244,219,234],5:[236,158,194],10:[235,98,167],20:[219,14,132],50:[186,23,82]}
+      }
+    },
+    api: {
+      label: 'API',
+      note: 'Cartes eau de mer. Sources web compressées : couleurs approximatives.',
+      params: {
+        ph:  {7.4:[252,222,83],7.8:[193,126,97],8.0:[116,42,61],8.2:[124,67,94],8.4:[173,70,136],8.8:[125,56,152]},
+        nh3: {0:[237,243,73],0.25:[193,231,31],0.5:[202,253,76],1:[150,214,96],2:[22,131,60],4:[52,134,72],8:[50,85,81]},
+        no2: {0:[149,225,243],0.25:[204,175,244],0.5:[193,171,248],1:[205,135,245],2:[233,106,235],5:[188,89,175]},
+        no3: {0:[255,254,103],5:[255,216,101],10:[255,216,99],20:[254,114,69],40:[251,52,52],80:[249,48,59],160:[204,43,53]},
+        po4: {0:[236,255,173],0.25:[233,253,179],0.5:[200,249,161],1:[155,235,189],2:[107,219,208],5:[49,128,153],10:[36,76,103]}
+      }
+    },
+    elos: {
+      label: 'Elos',
+      note: 'Ammoniac indisponible. La carte pH est la version eau douce (5.8–8.3).',
+      params: {
+        ph:  {5.8:[255,254,2],6.3:[255,220,10],6.6:[253,184,17],6.9:[250,153,27],7.2:[241,108,50],7.5:[239,97,124],7.8:[235,72,143],8.3:[233,50,149]},
+        no2: {0:[255,240,188],0.02:[255,210,180],0.05:[255,218,226],0.1:[255,205,218],0.2:[250,134,180],0.5:[236,49,142],1:[229,30,79],2:[223,28,83]},
+        no3: {0:[255,254,254],1:[255,210,229],2.5:[253,175,207],5:[251,137,186],10:[246,116,174],25:[228,25,117]},
+        po4: {0:[224,233,247],0.05:[197,214,237],0.1:[163,199,236],0.25:[146,189,235],0.5:[132,193,238],0.75:[89,169,236],1:[62,146,230]}
+      }
+    }
+  };
+  const CHART_PARAMS = ['ph','nh3','no2','no3','po4'];
+  const DEFAULT_BRAND = 'pawfly';
+  let activeBrand = DEFAULT_BRAND;
+  try{
+    const b = localStorage.getItem('activeBrand');
+    if(b && NUANCIERS[b]) activeBrand = b;
+  }catch(e){}
+
+  // Applique la marque active à PARAMS : réécrit swatches + presetValues pour les 5
+  // paramètres nuancier. Tout le reste du code continue de lire p.swatches sans savoir
+  // qu'une marque existe — un seul point de vérité, pas de branchement dispersé.
+  function applyBrand(){
+    const brand = NUANCIERS[activeBrand] || NUANCIERS[DEFAULT_BRAND];
+    CHART_PARAMS.forEach(k=>{
+      const p = PARAMS[k];
+      if(!p) return;
+      const sw = brand.params[k];
+      if(sw){
+        p.swatches = sw;
+        p.presetValues = Object.keys(sw).map(Number).sort((a,b)=>a-b);
+        p.unavailable = false;
+      } else {
+        p.swatches = null;
+        p.presetValues = [];
+        p.unavailable = true;
+      }
+    });
+  }
+  function brandLabel(){ return (NUANCIERS[activeBrand]||NUANCIERS[DEFAULT_BRAND]).label; }
+
   // ================= parameter registry =================
   const PARAMS = {
     ph:   {label:'pH',                     unit:'',    group:'chart',     decimals:2, ideal:[8.1,8.4],    acceptable:[7.8,8.6], optimal:8.25, color:'#DD5099',
@@ -676,6 +777,35 @@
 
   // ================= history (Supabase) =================
   let historyData = [];
+  // Marque active : localStorage fait foi pour l'affichage immédiat, Supabase pour la
+  // synchro entre appareils. Si la table app_settings n'existe pas, tout continue de
+  // fonctionner en local sans erreur visible — la marque n'est pas une donnée critique.
+  const BRAND_SETTING_KEY = 'active_brand';
+  async function loadActiveBrand(){
+    try{
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/app_settings?select=value&key=eq.${BRAND_SETTING_KEY}`, {headers: sbHeaders()});
+      if(!res.ok) return false;
+      const rows = await res.json();
+      const v = rows && rows[0] && rows[0].value;
+      if(v && NUANCIERS[v] && v!==activeBrand){
+        activeBrand = v;
+        try{ localStorage.setItem('activeBrand', v); }catch(e){}
+        return true;
+      }
+    }catch(e){ /* hors ligne ou table absente : on garde le local */ }
+    return false;
+  }
+  async function saveActiveBrand(){
+    try{ localStorage.setItem('activeBrand', activeBrand); }catch(e){}
+    try{
+      await fetch(`${SUPABASE_URL}/rest/v1/app_settings`, {
+        method:'POST',
+        headers: sbHeaders({'Prefer':'resolution=merge-duplicates'}),
+        body: JSON.stringify({key:BRAND_SETTING_KEY, value:activeBrand})
+      });
+    }catch(e){ /* silencieux : le local a déjà été écrit */ }
+  }
+
   async function loadHistory(){
     try{
       const res = await fetch(`${SUPABASE_URL}/rest/v1/measurements?select=*&order=created_at.desc`, {headers: sbHeaders()});
@@ -746,6 +876,36 @@
   // sein de chaque bloc, donc plus besoin de deviner en sautant d'une barre à l'autre.
   const DASH_GROUP_NUANCIER = ['ph','nh3','no2','no3','po4'];
   const DASH_GROUP_AUTRES = ['temp','sal','kh','ca','mg'];
+  // Sélecteur de marque : un seul choix global qui pilote les 5 barres nuancier, la
+  // calibration par défaut, la palette de nuances et les carrés de référence.
+  function renderBrandSelector(){
+    const row = document.getElementById('brandRow'), noteEl = document.getElementById('brandNote');
+    if(!row) return;
+    row.innerHTML='';
+    Object.keys(NUANCIERS).forEach(key=>{
+      const b = NUANCIERS[key];
+      const btn = document.createElement('button');
+      btn.type='button';
+      btn.className = 'brand-btn' + (key===activeBrand ? ' active' : '');
+      btn.textContent = b.label;
+      btn.addEventListener('click', async ()=>{
+        if(key===activeBrand) return;
+        activeBrand = key;
+        applyBrand();
+        renderBrandSelector();
+        renderDashboard();
+        resetRefState();
+        await saveActiveBrand();
+      });
+      row.appendChild(btn);
+    });
+    const b = NUANCIERS[activeBrand] || NUANCIERS[DEFAULT_BRAND];
+    const missing = CHART_PARAMS.filter(k=>!b.params[k]).map(k=>SHORT_LABEL[k]);
+    let txt = b.note || '';
+    if(missing.length) txt += (txt?' ':'') + `Non disponible : ${missing.join(', ')}.`;
+    noteEl.textContent = txt;
+  }
+
   // Dégradé simplifié à 3 couleurs clés (bas / milieu / haut du nuancier) pour un
   // contraste net et lisible, orienté comme la carte physique : valeur faible en haut,
   // valeur forte en bas.
@@ -843,7 +1003,13 @@
         const heightPct = val!==null ? Math.max(5, Math.min(100, ((val-dMin)/(dMax-dMin))*100)) : 4;
         const col = document.createElement('button');
         col.className='bar-col'; col.type='button';
-        const cardGrad = buildSwatchGradient(p);
+        // Paramètre absent du nuancier de la marque active : on garde la barre dans le
+        // bloc Nuancier avec la même orientation (faible en haut) pour ne pas casser la
+        // lecture du bloc, mais en couleur signature unie et signalée "n/d".
+        const unavailable = !!p.unavailable;
+        const cardGrad = unavailable
+          ? `linear-gradient(to bottom, ${p.color||'#6E93BE'}55, ${p.color||'#6E93BE'})`
+          : buildSwatchGradient(p);
         // Repère de plage idéale : 2 traits blancs, sans label. Pour les barres "carte"
         // (faible en haut), le repère suit la même échelle que le remplissage ; pour les
         // barres thermomètre/pleines (remplissage bas→haut), c'est l'inverse.
@@ -873,7 +1039,9 @@
         const meta = statusMeta(latest ? latest.status : null);
         const resultText = val!==null ? val.toFixed(p.decimals) : '—';
         const startVal = parseFloat(dMin.toFixed(2));
-        const minHtml = `<div class="bar-min">${startVal}</div>`;
+        const minHtml = unavailable
+          ? `<div class="bar-min bar-unavailable">n/d</div>`
+          : `<div class="bar-min">${startVal}</div>`;
         const resultBlockHtml = `
           <div class="bl">${SHORT_LABEL[k]||k}</div>
           <div class="bv2 ${meta.cls}">${resultText}</div>
@@ -1353,6 +1521,13 @@
       const bAdd=mkBtn('+ Ajouter une pastille', addCustomChip);
       const bSample=mkBtn('🎯 Échantillon', ()=>armAim('sample','Échantillon'));
       targetButtons.appendChild(bAdd); targetButtons.appendChild(bSample);
+      return;
+    }
+    // La marque active ne fournit pas ce paramètre en version nuancier : on le dit
+    // franchement au lieu de calibrer sur les couleurs d'une autre marque, ce qui
+    // donnerait un résultat faux sans que rien ne le signale.
+    if(p.unavailable){
+      refModeHelp.textContent = `${p.label} n'existe pas en nuancier chez ${brandLabel()}. Change de marque sur l'accueil, ou utilise le paramètre « Autre » pour caler les pastilles à la main depuis ta photo.`;
       return;
     }
     if(!firstSwatchPos || !lastSwatchPos){
@@ -1946,9 +2121,14 @@
   });
 
   // ---------- init ----------
+  applyBrand();
   populateHistoryFilter();
   resetRefState();
+  renderBrandSelector();
   loadHistory().then(renderDashboard);
+  // Supabase fait autorité mais arrive après : on part du cache localStorage pour un
+  // affichage immédiat, puis on ne re-rend que si le serveur dit autre chose.
+  loadActiveBrand().then(changed=>{ if(changed){ applyBrand(); renderBrandSelector(); renderDashboard(); } });
 
 })();
 </script>
