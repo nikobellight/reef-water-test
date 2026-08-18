@@ -1077,8 +1077,7 @@
     padding:5px 7px;
     box-shadow:0 6px 14px rgba(0,0,0,.1), inset 0 1px 0 rgba(255,255,255,.03);
   }
-  .cycle-toggle-header .ic{font-size:.78rem;line-height:1;}
-  .cycle-toggle-header .txt{font-size:.5rem;font-weight:600;line-height:1.15;text-align:center;white-space:nowrap;}
+  .cycle-toggle-header .l1,.cycle-toggle-header .l2{font-size:.5rem;font-weight:600;line-height:1.2;text-align:center;white-space:nowrap;}
   .cycle-toggle-header.active{
     border-color:rgba(255,181,90,.65);
     background:linear-gradient(145deg,rgba(70,50,18,.85),rgba(40,26,7,.92));
@@ -1090,8 +1089,7 @@
     .brand-btn{padding:5px 9px;font-size:.62rem;}
     .brand-note-compact{font-size:.6rem;}
     .cycle-toggle-header{padding:4px 6px;}
-    .cycle-toggle-header .ic{font-size:.7rem;}
-    .cycle-toggle-header .txt{font-size:.44rem;}
+    .cycle-toggle-header .l1,.cycle-toggle-header .l2{font-size:.44rem;}
     .hero-status-row{margin-top:7px;gap:4px;}
     .hero-status-row .hero-status{margin-top:0;}
   }
@@ -1107,10 +1105,10 @@
       <h1>MON RÉCIF</h1>
       <div class="hero-sub">Suivi récifal</div>
       <div class="app-meta">
-        <span class="ver-pill">v5.6</span>
+        <span class="ver-pill">v5.7</span>
       </div>
       <div class="hero-status-row">
-        <button type="button" class="cycle-toggle-header" id="cycleToggleBtn"><span class="ic">🔄</span><span class="txt">Nouveau cycle</span></button>
+        <button type="button" class="cycle-toggle-header" id="cycleToggleBtn"><span class="l1">Nouveau</span><span class="l2">Cycle</span></button>
         <div class="hero-status" id="heroStatus"><span class="dot"></span><span class="txt">Récif sous contrôle</span></div>
         <span class="hero-status-row-spacer"></span>
       </div>
@@ -1838,7 +1836,8 @@
     const btn = document.getElementById('cycleToggleBtn');
     if(!btn) return;
     btn.className = 'cycle-toggle-header' + (cyclingActive ? ' active' : '');
-    btn.querySelector('.txt').textContent = cyclingActive ? 'Cycle en cours' : 'Nouveau cycle';
+    btn.querySelector('.l1').textContent = cyclingActive ? 'Cycle' : 'Nouveau';
+    btn.querySelector('.l2').textContent = cyclingActive ? 'actif' : 'Cycle';
     btn.title = cyclingActive ? 'Touche pour arrêter le suivi de cycle' : "Touche pour activer le suivi de cycle azoté (pic d'ammoniaque → pic de nitrites → cycle terminé)";
   }
   async function loadCyclingActive(){
