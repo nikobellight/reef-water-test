@@ -432,6 +432,12 @@
     box-shadow:0 0 10px rgba(62,217,160,.8);
     flex:none;
   }
+  .hero-status.warn{border-color:rgba(255,181,90,.22);}
+  .hero-status.warn .dot{background:var(--amber);box-shadow:0 0 10px rgba(255,181,90,.8);}
+  .hero-status.bad{border-color:rgba(255,101,112,.24);}
+  .hero-status.bad .dot{background:var(--bad);box-shadow:0 0 10px rgba(255,101,112,.8);}
+  .hero-status.neutral{border-color:rgba(139,168,199,.20);}
+  .hero-status.neutral .dot{background:#6E93BE;box-shadow:0 0 8px rgba(110,147,190,.6);}
   main{max-width:720px;padding:0 20px;position:relative;z-index:2;}
 
   .card,
@@ -848,6 +854,9 @@
     box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
   }
   #historyChart{height:190px;}
+  .overview-legend{display:flex;flex-wrap:wrap;gap:8px 14px;padding:2px 2px 4px;}
+  .ol-item{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;color:#a9c2dc;}
+  .ol-dot{width:8px;height:8px;border-radius:50%;flex:none;box-shadow:0 0 6px currentColor;}
 
   .mode-toggle{
     padding:4px;
@@ -1047,10 +1056,9 @@
       <h1>MON RÉCIF</h1>
       <div class="hero-sub">Suivi récifal</div>
       <div class="app-meta">
-        <span class="ver-pill">v5.1</span>
-        <span class="mini-pill">Photo · Salifert · Direct</span>
+        <span class="ver-pill">v5.2</span>
       </div>
-      <div class="hero-status"><span class="dot"></span>Récif sous contrôle</div>
+      <div class="hero-status" id="heroStatus"><span class="dot"></span><span class="txt">Récif sous contrôle</span></div>
     </div>
   </header>
 
@@ -1767,7 +1775,53 @@
   document.getElementById('badgePickerCancel').addEventListener('click', closeBadgePicker);
   badgePickerOverlay.addEventListener('click', closeBadgePicker);
 
+  // Badge de statut en haut de l'app. Deux modes selon l'ancienneté de la toute
+  // première mesure jamais enregistrée : "jeune bac" (< 45 jours) suit le cycle azoté
+  // avec le vocabulaire que les récifalistes utilisent (pic d'ammoniaque, pic de
+  // nitrites, cycle terminé) ; au-delà, on repasse sur le statut classique
+  // idéal/acceptable déjà calculé par statusOf et stocké sur chaque mesure.
+  const CYCLE_WINDOW_DAYS = 45;
+  function updateHeroStatus(){
+    const el = document.getElementById('heroStatus');
+    if(!el) return;
+    const txt = el.querySelector('.txt');
+    const set = (cls, text) => { el.className = 'hero-status' + (cls?' '+cls:''); txt.textContent = text; };
+
+    if(!historyData.length){ set('neutral', 'Suivi en cours'); return; }
+
+    const firstDate = historyData.reduce((min,e)=> new Date(e.date)<new Date(min) ? e.date : min, historyData[0].date);
+    const daysSinceFirst = (Date.now() - new Date(firstDate).getTime()) / 86400000;
+
+    if(daysSinceFirst < CYCLE_WINDOW_DAYS){
+      const lNh3 = latestFor('nh3'), lNo2 = latestFor('no2'), lNo3 = latestFor('no3');
+      const isHigh = e => e && (e.status==='high' || e.status==='high-warn');
+      const isClean = e => e && (e.status==='ideal' || e.status==='low-warn' || e.status==='low');
+      if(isHigh(lNh3)){ set('bad', '🧪 Pic d\'ammoniaque — cycle en cours'); return; }
+      if(isHigh(lNo2)){ set('bad', '🧪 Pic de nitrites — cycle en cours'); return; }
+      if(isClean(lNh3) && isClean(lNo2) && lNo3){ set('good', '✅ Cycle terminé'); return; }
+      set('neutral', 'Suivi en cours'); return;
+    }
+
+    // Bac établi : on liste tous les paramètres dont la dernière mesure sort de la
+    // plage idéale (statut déjà calculé et stocké par statusOf au moment de la saisie,
+    // pas de nouveau seuil chimique ici), rouge classé avant orange dans l'affichage.
+    const bad = [], warn = [];
+    Object.keys(PARAMS).forEach(k=>{
+      const p = PARAMS[k];
+      if(!p.ideal || k==='autre') return;
+      const latest = latestFor(k);
+      if(!latest || !latest.status || latest.status==='ideal') return;
+      const short = SHORT_LABEL[k] || p.label;
+      if(latest.status==='low' || latest.status==='high') bad.push(short);
+      else warn.push(short);
+    });
+    if(!bad.length && !warn.length){ set('good', 'Récif sous contrôle'); return; }
+    const names = [...bad, ...warn];
+    set(bad.length ? 'bad' : 'warn', `${names.join(', ')} à surveiller`);
+  }
+
   function renderDashboard(){
+    updateHeroStatus();
     const allSorted = historyData.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
     const mostRecent = allSorted[0];
 
@@ -1898,6 +1952,15 @@
       gaugeEl.innerHTML = '';
     }
 
+    // Mode "Tous" : la pile de cartes mélangeant tous les paramètres n'était pas très
+    // lisible, remplacée par une vue d'ensemble — un point par mesure, positionné selon
+    // le même % que les barres du dashboard (barRange), coloré par paramètre. La liste
+    // filtrée sur un seul paramètre garde exactement son comportement d'avant.
+    if(!filter){
+      drawOverviewChart();
+      return;
+    }
+
     entries.forEach(e=>{
       const p=PARAMS[e.param]||{label:'Autre',unit:'',decimals:2};
       const label = e.param==='autre'?(e.customLabel||'Autre'):p.label;
@@ -1924,6 +1987,54 @@
       list.appendChild(row);
     });
     drawHistoryChart(filter);
+  }
+  // Vue d'ensemble "Tous" : un point par mesure tous paramètres confondus, positionné
+  // en % de l'échelle de chacun (barRange, la même que les barres du dashboard — aucun
+  // nouveau seuil chimique), aligné sur le temps réel plutôt qu'un index régulier
+  // puisque les fréquences de mesure diffèrent d'un paramètre à l'autre.
+  function drawOverviewChart(){
+    const wrap=document.getElementById('chartWrap'), canvas=document.getElementById('historyChart');
+    const keys = Object.keys(PARAMS).filter(k=>k!=='autre' && PARAMS[k].ideal);
+    let points = [];
+    keys.forEach(k=>{
+      const p = PARAMS[k];
+      const [dMin,dMax] = barRange(p);
+      seriesFor(k,40).forEach(e=>{
+        const pct = clamp(((Number(e.value)-dMin)/(dMax-dMin))*100, 0, 100);
+        points.push({k, color:p.color||'#6E93BE', date:new Date(e.date), pct});
+      });
+    });
+    const legend = document.getElementById('historyList');
+    if(points.length<2){
+      wrap.style.display='none';
+      legend.innerHTML = '';
+      return;
+    }
+    wrap.style.display='block';
+    points.sort((a,b)=>a.date-b.date);
+    const dpr=window.devicePixelRatio||1, w=canvas.clientWidth, h=180;
+    canvas.width=w*dpr; canvas.height=h*dpr;
+    const ctx=canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
+    const minT=points[0].date.getTime(), maxT=points[points.length-1].date.getTime();
+    const span=Math.max(1, maxT-minT);
+    const padL=12,padR=12,padT=14,padB=22;
+    const xAt=t=> padL+(w-padL-padR)*((t-minT)/span);
+    const yAt=pct=> padT+(h-padT-padB)*(1-pct/100);
+    [0,50,100].forEach(v=>{
+      const y=yAt(v);
+      ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(w-padR,y); ctx.stroke();
+    });
+    points.forEach(pt=>{
+      const x=xAt(pt.date.getTime()), y=yAt(pt.pct);
+      ctx.beginPath(); ctx.arc(x,y,3.6,0,Math.PI*2);
+      ctx.fillStyle=pt.color; ctx.globalAlpha=0.92; ctx.fill(); ctx.globalAlpha=1;
+    });
+    ctx.fillStyle='#6E93BE'; ctx.font="10px 'IBM Plex Mono',monospace"; ctx.textAlign='left';
+    ctx.fillText(points[0].date.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}), padL, h-6);
+    ctx.textAlign='right';
+    ctx.fillText(points[points.length-1].date.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}), w-padR, h-6);
+    const seen = [...new Set(points.map(p=>p.k))];
+    legend.innerHTML = `<div class="overview-legend">${seen.map(k=>`<span class="ol-item"><span class="ol-dot" style="background:${PARAMS[k].color||'#6E93BE'}"></span>${SHORT_LABEL[k]||k}</span>`).join('')}</div>`;
   }
   function drawHistoryChart(filter){
     const wrap=document.getElementById('chartWrap'), canvas=document.getElementById('historyChart');
