@@ -252,13 +252,806 @@
   .timer-fab.running{background:var(--coral);font-size:0.85rem;font-weight:600;}
   .timer-presets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
   .timer-presets button{flex:1;min-width:60px;padding:12px 6px;font-size:0.85rem;}
+     VISUAL REDESIGN v5 — aesthetic only, no logic/data changes
+     ============================================================ */
+  :root{
+    --bg-deep:#030812;
+    --bg-panel:#081525;
+    --bg-panel-raised:#0D2036;
+    --line:#163653;
+    --text:#F2F8FF;
+    --text-dim:#8BA8C7;
+    --actinic:#458CFF;
+    --aqua:#45E5D0;
+    --amber:#FFB55A;
+    --coral:#FF756D;
+    --good:#52E0A5;
+    --bad:#FF6570;
+    --radius:20px;
+  }
+
+  html{background:#020710;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 14% -8%, rgba(69,140,255,.22), transparent 34rem),
+      radial-gradient(circle at 92% 18%, rgba(69,229,208,.10), transparent 28rem),
+      linear-gradient(180deg,#06111f 0%,#030812 52%,#02060d 100%);
+    padding-bottom:104px;
+    color:var(--text);
+  }
+  body::before{
+    content:'';
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:-1;
+    opacity:.28;
+    background-image:
+      linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,.014) 1px, transparent 1px);
+    background-size:30px 30px;
+    mask-image:linear-gradient(to bottom,black,transparent 72%);
+  }
+
+  .ribbon{
+    height:3px;
+    background:linear-gradient(90deg,transparent 0%,#3f7fff 26%,#45e5d0 54%,#9a75ff 76%,transparent 100%);
+    box-shadow:0 0 18px rgba(69,140,255,.7);
+  }
+
+  header.masthead{
+    max-width:720px;
+    padding:18px 20px 0;
+    position:relative;
+    text-align:center;
+  }
+  header.masthead::before{
+    content:'';
+    position:absolute;
+    inset:6px 20px 18px;
+    border-radius:30px 30px 40px 40px;
+    border:1px solid rgba(109,164,215,.18);
+    background:
+      radial-gradient(circle at 50% 0%,rgba(76,145,255,.26),transparent 30%),
+      radial-gradient(circle at 50% 24%,rgba(69,229,208,.11),transparent 22%),
+      linear-gradient(180deg,rgba(11,30,51,.97),rgba(5,17,31,.98));
+    box-shadow:
+      0 24px 60px rgba(0,0,0,.24),
+      inset 0 1px 0 rgba(255,255,255,.05),
+      inset 0 -24px 50px rgba(0,0,0,.15);
+    z-index:0;
+  }
+  header.masthead::after{
+    content:'';
+    position:absolute;
+    left:50%;
+    top:18px;
+    width:72%;
+    height:150px;
+    transform:translateX(-50%);
+    background:radial-gradient(circle at center,rgba(85,150,255,.22),transparent 67%);
+    filter:blur(18px);
+    opacity:.95;
+    pointer-events:none;
+    z-index:0;
+  }
+  .hero-shell{
+    position:relative;
+    z-index:1;
+    padding:24px 22px 58px;
+  }
+  .hero-emblem{
+    width:56px;
+    height:56px;
+    margin:0 auto 12px;
+    border-radius:18px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#d9f6ff;
+    font-size:1.5rem;
+    font-weight:700;
+    background:
+      radial-gradient(circle at 30% 25%,rgba(255,255,255,.2),transparent 24%),
+      linear-gradient(145deg,rgba(25,79,143,.95),rgba(20,197,189,.78));
+    border:1px solid rgba(140,198,230,.2);
+    box-shadow:0 10px 30px rgba(0,0,0,.22),0 0 22px rgba(69,229,208,.14);
+  }
+  .app-kicker{
+    color:var(--aqua);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.64rem;
+    font-weight:600;
+    letter-spacing:.22em;
+    opacity:.92;
+    margin-bottom:8px;
+  }
+  header.masthead h1{
+    font-size:2rem;
+    line-height:0.98;
+    letter-spacing:-.065em;
+    text-shadow:0 0 28px rgba(69,140,255,.25);
+    margin:0;
+  }
+  .hero-sub{
+    margin-top:8px;
+    color:#9eb8d4;
+    font-size:.8rem;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+  }
+  .app-meta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:13px;
+    justify-content:center;
+  }
+  .ver-pill,.mini-pill{
+    display:inline-flex;
+    align-items:center;
+    border-radius:999px;
+    min-height:26px;
+    padding:0 10px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.66rem;
+    letter-spacing:.04em;
+  }
+  .ver-pill{
+    color:#d7e9fb;
+    border:1px solid rgba(139,168,199,.18);
+    background:rgba(13,32,54,.8);
+    font-weight:600;
+  }
+  .mini-pill{
+    color:#91cfe0;
+    border:1px solid rgba(69,229,208,.12);
+    background:rgba(10,31,49,.65);
+  }
+  .hero-status{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    margin-top:14px;
+    padding:9px 14px;
+    border-radius:999px;
+    border:1px solid rgba(62,217,160,.18);
+    background:rgba(8,28,45,.78);
+    color:#d9efff;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.72rem;
+    letter-spacing:.04em;
+    box-shadow:0 10px 22px rgba(0,0,0,.14), inset 0 1px 0 rgba(255,255,255,.03);
+  }
+  .hero-status .dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:var(--good);
+    box-shadow:0 0 10px rgba(62,217,160,.8);
+    flex:none;
+  }
+  main{max-width:720px;padding:0 20px;position:relative;z-index:2;}
+
+  .card,
+  .picker-btn,
+  #sheet,
+  #badgePickerSheet,
+  #timerSheet{
+    border:1px solid rgba(104,155,205,.18);
+    background:
+      linear-gradient(145deg,rgba(15,36,59,.95),rgba(6,20,35,.96));
+    box-shadow:
+      0 16px 45px rgba(0,0,0,.20),
+      inset 0 1px 0 rgba(255,255,255,.035);
+  }
+  .card{
+    border-radius:20px;
+    padding:20px;
+    margin-bottom:15px;
+  }
+  .card:hover{border-color:rgba(104,155,205,.28);}
+
+  .step-label{
+    color:#8eaac8;
+    font-size:.67rem;
+    letter-spacing:.13em;
+    margin-bottom:13px;
+  }
+  .step-label .dot{
+    width:8px;height:8px;
+    background:#527494;
+    box-shadow:0 0 0 4px rgba(82,116,148,.09);
+  }
+  .step-label.active .dot{
+    background:var(--aqua);
+    box-shadow:0 0 0 4px rgba(69,229,208,.10),0 0 13px rgba(69,229,208,.65);
+  }
+  .step-label.done .dot{
+    background:var(--good);
+    box-shadow:0 0 0 4px rgba(82,224,165,.10);
+  }
+
+  .section-title{
+    font-size:1.08rem;
+    letter-spacing:-.015em;
+  }
+  .section-sub{
+    margin-top:4px;
+    color:#7898b8;
+  }
+  .bar-group-label{
+    color:#7f9ebd;
+    letter-spacing:.1em;
+    margin-top:2px;
+  }
+
+  button{
+    border-radius:13px;
+    min-height:46px;
+  }
+  button.primary{
+    color:#00151c;
+    background:linear-gradient(110deg,#48e7cd 0%,#64d7f1 52%,#6e9cff 100%);
+    box-shadow:0 9px 26px rgba(69,229,208,.17),inset 0 1px 0 rgba(255,255,255,.32);
+    font-weight:700;
+  }
+  button.primary:hover{filter:brightness(1.06);}
+  button.secondary{
+    background:rgba(12,31,52,.74);
+    color:#dcecff;
+    border:1px solid rgba(117,158,200,.25);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+  }
+  button.ghost{
+    color:#6cebd8;
+    text-decoration:none;
+    font-weight:600;
+  }
+
+  select,
+  input[type=number],
+  input[type=text],
+  .sg-input-row,
+  .report-box{
+    background:rgba(2,10,19,.56);
+    border-color:rgba(112,154,196,.24);
+    border-radius:12px;
+    box-shadow:inset 0 1px 10px rgba(0,0,0,.18);
+  }
+  select:focus,
+  input:focus,
+  textarea:focus{
+    outline:none;
+    border-color:rgba(69,229,208,.72);
+    box-shadow:0 0 0 3px rgba(69,229,208,.10),inset 0 1px 10px rgba(0,0,0,.18);
+  }
+  label.field-label{color:#92acc7;font-size:.72rem;letter-spacing:.025em;}
+
+  /* Dashboard hero measurements */
+  .highlight-row-card{
+    margin-top:-44px;
+    position:relative;
+    z-index:4;
+    padding:14px 15px 13px;
+    border-radius:26px;
+    border-color:rgba(69,140,255,.24);
+    background:
+      radial-gradient(circle at 50% 0%,rgba(69,140,255,.17),transparent 64%),
+      linear-gradient(145deg,rgba(13,34,57,.98),rgba(5,17,31,.98));
+    box-shadow:0 18px 42px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  .highlight-row{
+    gap:10px;
+    justify-content:space-between;
+  }
+  .highlight-badge{
+    width:min(23.5%,98px);
+    aspect-ratio:1/1;
+    height:auto;
+    flex:0 1 98px;
+    min-width:72px;
+    border-width:1px !important;
+    border-radius:999px;
+    background:
+      radial-gradient(circle at 30% 26%,rgba(255,255,255,.12),transparent 24%),
+      radial-gradient(circle at 50% 120%,rgba(69,229,208,.18),transparent 42%),
+      linear-gradient(180deg,rgba(19,45,72,.92),rgba(5,19,33,.97));
+    position:relative;
+    overflow:hidden;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.06),
+      inset 0 -10px 20px rgba(0,0,0,.18),
+      0 10px 26px rgba(0,0,0,.18),
+      0 0 0 1px rgba(255,255,255,.02);
+    padding:10px 8px;
+  }
+  .highlight-badge::before{
+    content:'';
+    position:absolute;
+    inset:7px;
+    border-radius:inherit;
+    border:1px solid rgba(255,255,255,.05);
+    pointer-events:none;
+  }
+  .highlight-badge::after{
+    content:'';
+    position:absolute;
+    left:20%;right:20%;bottom:-18px;height:30px;
+    border-radius:50%;
+    background:currentColor;
+    opacity:.14;
+    filter:blur(14px);
+  }
+  .highlight-badge .hv{
+    font-size:1.42rem;
+    letter-spacing:-.04em;
+    text-shadow:0 0 18px currentColor;
+  }
+  .highlight-badge .hl{
+    margin-top:6px;
+    color:#9bb5ce;
+    font-size:.56rem;
+    line-height:1.2;
+    max-width:78%;
+  }
+
+  /* Parameter columns: mini gauges premium */
+  .bar-row{
+    gap:9px;
+    padding:8px 0 12px;
+  }
+  .bar-col{
+    max-width:none;
+    padding:7px 4px 10px;
+    border-radius:16px;
+    transition:background .15s ease,transform .08s ease, box-shadow .15s ease;
+  }
+  .bar-col:active{background:rgba(69,140,255,.06);transform:translateY(1px);}
+  .bar-track{
+    width:30px;
+    height:190px;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:999px;
+    background:linear-gradient(180deg,rgba(18,35,53,.92),rgba(7,20,33,.98));
+    box-shadow:
+      inset 0 0 18px rgba(0,0,0,.38),
+      inset 0 1px 0 rgba(255,255,255,.04),
+      0 8px 20px rgba(0,0,0,.16);
+    overflow:visible;
+  }
+  .bar-fill{
+    width:100%;
+    min-height:7px;
+    border-radius:inherit;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 0 14px rgba(255,255,255,.06);
+  }
+  .bar-dim{
+    left:2px;right:2px;
+    border-radius:999px;
+    background:linear-gradient(180deg,rgba(4,12,22,.86),rgba(4,12,22,.72));
+  }
+  .ideal-band{
+    position:absolute;
+    left:4px;
+    right:4px;
+    border-radius:999px;
+    background:linear-gradient(180deg,rgba(62,217,160,.22),rgba(62,217,160,.10));
+    box-shadow:0 0 12px rgba(62,217,160,.14), inset 0 0 0 1px rgba(62,217,160,.08);
+    pointer-events:none;
+    z-index:2;
+  }
+  .ideal-tick{
+    left:2px;right:2px;
+    height:2px;
+    background:rgba(248,252,255,.95);
+    box-shadow:0 0 7px rgba(255,255,255,.7);
+    z-index:3;
+  }
+  .bar-marker{
+    position:absolute;
+    left:50%;
+    width:13px;
+    height:13px;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    background:#f8fdff;
+    border:2px solid rgba(6,18,31,.9);
+    box-shadow:0 0 0 3px rgba(255,255,255,.12),0 0 14px rgba(255,255,255,.7);
+    pointer-events:none;
+    z-index:4;
+  }
+  .bar-marker.good{box-shadow:0 0 0 3px rgba(62,217,160,.18),0 0 14px rgba(62,217,160,.8);}
+  .bar-marker.warn{box-shadow:0 0 0 3px rgba(242,166,90,.18),0 0 14px rgba(242,166,90,.75);}
+  .bar-marker.bad{box-shadow:0 0 0 3px rgba(255,90,95,.16),0 0 14px rgba(255,90,95,.8);}
+  .bar-col .bl{
+    color:#c3d6e8;
+    font-size:.71rem;
+    font-weight:700;
+    letter-spacing:.01em;
+    margin-top:8px;
+  }
+  .bar-col .bv2{
+    font-size:1.08rem;
+    letter-spacing:-.03em;
+    line-height:1.05;
+    text-shadow:0 0 14px rgba(255,255,255,.05);
+  }
+  .bar-col .bu2,.bar-col .bar-min{color:#7898b8;}
+  .bar-col .bar-min{font-size:.58rem;letter-spacing:.03em;}
+
+  /* Gauge */
+  .gauge-bar{
+    height:12px;
+    margin:17px 0 17px;
+    box-shadow:inset 0 1px 3px rgba(0,0,0,.38),0 0 20px rgba(69,229,208,.06);
+  }
+  .gauge-marker{
+    top:-6px;bottom:-6px;
+    width:4px;
+    background:#fff;
+    box-shadow:0 0 0 3px rgba(255,255,255,.14),0 0 10px rgba(255,255,255,.88);
+  }
+  .gauge-col{
+    border:1px solid rgba(111,154,197,.14);
+    background:rgba(3,13,24,.48);
+    padding:12px 7px;
+    border-radius:13px;
+  }
+  .gauge-col .gc-label{font-size:.62rem;letter-spacing:.07em;}
+  .gauge-col .gc-val{font-size:1.04rem;}
+
+  /* New test cards */
+  .picker-btn{
+    min-height:84px;
+    margin-bottom:12px;
+    padding:16px 17px;
+    position:relative;
+    overflow:hidden;
+  }
+  .picker-btn::after{
+    content:'›';
+    position:absolute;
+    right:17px;top:50%;transform:translateY(-52%);
+    color:#7f9fbe;
+    font-size:1.65rem;
+    font-weight:300;
+  }
+  .picker-btn .ic{
+    width:46px;height:46px;
+    display:flex;align-items:center;justify-content:center;
+    border-radius:14px;
+    background:linear-gradient(145deg,rgba(69,140,255,.18),rgba(69,229,208,.10));
+    border:1px solid rgba(100,159,218,.18);
+    font-size:1.35rem;
+  }
+  .picker-btn .txt{padding-right:24px;}
+  .picker-btn .txt strong{font-size:1.03rem;}
+  .picker-btn .txt span{color:#86a3bf;line-height:1.4;}
+
+  /* Result display */
+  .readout{
+    background:
+      radial-gradient(circle at 50% 15%,rgba(69,229,208,.10),transparent 70%),
+      rgba(2,9,17,.68);
+    border-color:rgba(69,229,208,.18);
+    border-radius:17px;
+    padding:27px 18px 24px;
+  }
+  .readout input.value-edit{
+    color:#70f3de;
+    font-size:2.7rem;
+    font-weight:700;
+    letter-spacing:-.055em;
+    text-shadow:0 0 24px rgba(69,229,208,.30);
+  }
+  .readout .param{color:#91aac3;}
+  .confidence{color:#98b6d2;}
+
+  .ref-rect,
+  .chip,
+  .wb-item,
+  .target-confirm,
+  .mode-toggle{
+    background:rgba(4,18,31,.58);
+    border:1px solid rgba(105,151,196,.13);
+  }
+  .ref-rect{padding:10px 12px;border-radius:13px;}
+  .ref-rect .swatch{border-radius:9px;}
+  .chip{padding:7px 11px 7px 7px;}
+  .hist-chip{
+    background:rgba(5,20,35,.72);
+    border:1px solid rgba(106,151,196,.15);
+    padding:8px 12px;
+  }
+  .history-hero{margin-bottom:12px;}
+  .history-hero .section-title{margin-bottom:4px;}
+  .history-hero .section-sub{margin-bottom:0;}
+
+  .chip-row{padding-bottom:6px;margin-bottom:16px;gap:8px;}
+  .hist-chip{
+    padding:8px 13px;
+    border:1px solid rgba(96,141,185,.18);
+    background:linear-gradient(145deg,rgba(15,35,57,.92),rgba(7,20,34,.95));
+    box-shadow:0 8px 20px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.03);
+  }
+  .hist-chip .dot{box-shadow:0 0 10px currentColor;}
+  .hist-chip.active{
+    border-color:rgba(69,229,208,.72);
+    background:linear-gradient(145deg,rgba(18,53,70,.95),rgba(7,33,45,.95));
+    color:#dffff8;
+    box-shadow:0 0 0 2px rgba(69,229,208,.05),0 10px 24px rgba(0,0,0,.14);
+  }
+
+  #historyGauge{margin-bottom:14px;}
+  .hist-list{display:flex;flex-direction:column;gap:10px;}
+  .hist-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:12px;
+    border:1px solid rgba(90,134,177,.18);
+    border-radius:18px;
+    background:linear-gradient(145deg,rgba(13,33,54,.96),rgba(6,20,35,.98));
+    box-shadow:0 10px 26px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.03);
+    border-color:rgba(74,114,154,.20);
+    flex-wrap:nowrap;
+  }
+  .hist-row .hr-date{
+    width:54px;
+    flex:none;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:3px;
+    padding:8px 4px;
+    border-radius:14px;
+    background:rgba(4,16,28,.75);
+    color:#cfe6ff;
+    font-size:.66rem;
+  }
+  .hist-row .hr-date strong{font-size:.78rem;line-height:1;font-weight:700;}
+  .hist-row .hr-date small{font-size:.58rem;color:#83a6c8;line-height:1;}
+  .hist-row .hr-mid{gap:10px;flex:1;min-width:0;}
+  .hist-row .hr-text{display:flex;flex-direction:column;min-width:0;}
+  .hist-row .hr-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.79rem;color:#eff7ff;}
+  .hist-row .hr-meta{font-size:.61rem;color:#83a6c8;letter-spacing:.05em;text-transform:uppercase;margin-top:3px;}
+  .hist-row .hr-right{display:flex;align-items:center;gap:8px;flex:none;margin-left:auto;}
+  .hist-row .hr-value{
+    white-space:nowrap;
+    font-weight:700;
+    color:#dff8ff;
+    padding:8px 10px;
+    border-radius:999px;
+    background:rgba(8,30,47,.88);
+    border:1px solid rgba(93,139,183,.16);
+  }
+  .hist-row .del{
+    width:30px;height:30px;
+    display:flex;align-items:center;justify-content:center;
+    border-radius:50%;
+    border:1px solid rgba(104,145,184,.16);
+    background:rgba(6,20,32,.9);
+    color:#86a7c6;
+    font-size:.95rem;
+    padding:0;
+  }
+  .hist-row .del:active{transform:scale(.96);}
+
+  .chart-wrap{
+    background:rgba(2,10,18,.62);
+    border-color:rgba(97,143,188,.18);
+    border-radius:18px;
+    padding:6px 8px 2px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+  }
+  #historyChart{height:190px;}
+
+  .mode-toggle{
+    padding:4px;
+    border-radius:13px;
+  }
+  .mode-toggle button{min-height:40px;border-radius:10px;}
+  .mode-toggle button.active{
+    background:linear-gradient(180deg,rgba(38,74,108,.86),rgba(16,43,69,.86));
+    color:#eef8ff;
+    box-shadow:0 2px 10px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.05);
+  }
+
+  .sticky-banner{
+    top:3px;
+    margin:0 -20px 15px;
+    padding:12px 20px;
+    background:rgba(7,27,47,.94);
+    backdrop-filter:blur(16px);
+    border-bottom:1px solid rgba(69,229,208,.24);
+    box-shadow:0 7px 24px rgba(0,0,0,.28);
+  }
+  .sticky-banner .sp{color:#91b8ce;}
+  .sticky-banner .sv{color:#7af0de;text-shadow:0 0 18px rgba(69,229,208,.22);}
+
+  .photo-thumb-wrap,.canvas-wrap,.target-preview{
+    border-radius:15px;
+    border-color:rgba(103,151,198,.22);
+    box-shadow:0 10px 30px rgba(0,0,0,.18);
+  }
+
+  /* Floating navigation */
+  .bottom-nav{
+    left:12px;right:12px;bottom:10px;
+    border:1px solid rgba(106,154,200,.22);
+    border-radius:22px;
+    padding:7px 6px calc(7px + env(safe-area-inset-bottom));
+    background:rgba(5,18,32,.90);
+    backdrop-filter:blur(22px) saturate(150%);
+    box-shadow:0 12px 40px rgba(0,0,0,.50),inset 0 1px 0 rgba(255,255,255,.035);
+  }
+  .nav-btn{
+    min-height:51px;
+    color:#7896b3;
+    gap:4px;
+    border-radius:14px;
+    font-size:.62rem;
+  }
+  .nav-btn .ic{
+    width:28px;
+    height:28px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    filter:saturate(.75);
+  }
+  .nav-btn .ic svg{
+    width:22px;
+    height:22px;
+    stroke:currentColor;
+    fill:none;
+    stroke-width:1.8;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+  .nav-btn.active{
+    color:#72ecda;
+    background:rgba(69,229,208,.075);
+  }
+  .nav-btn.active .ic{filter:none;}
+  .nav-btn.fab .ic{
+    width:38px;height:38px;
+    border-radius:50%;
+    background:linear-gradient(145deg,#48e7cd,#649cff);
+    color:#00151e;
+    box-shadow:0 5px 18px rgba(69,229,208,.23);
+  }
+  .nav-btn.fab .ic svg{width:20px;height:20px;stroke-width:2;}
+
+  .timer-fab{
+    right:18px;bottom:96px;
+    width:54px;height:54px;
+    border:1px solid rgba(130,178,225,.23);
+    background:linear-gradient(145deg,#2d76e6,#4d9bff);
+    box-shadow:0 9px 30px rgba(0,0,0,.46),0 0 24px rgba(69,140,255,.17);
+  }
+  .timer-fab.running{background:linear-gradient(145deg,#ff806c,#ff5f79);}
+
+  .empty-state{
+    margin-top:4px;
+    padding:34px 18px;
+    border:1px dashed rgba(106,151,196,.18);
+    border-radius:18px;
+    background:rgba(7,21,36,.38);
+  }
+
+  #sheetOverlay,#badgePickerOverlay,#timerOverlay{backdrop-filter:blur(5px);background:rgba(0,4,10,.64)!important;}
+  #sheet,#badgePickerSheet,#timerSheet{
+    border-radius:24px 24px 0 0!important;
+    border-top-color:rgba(111,163,214,.26)!important;
+    box-shadow:0 -18px 60px rgba(0,0,0,.46);
+  }
+
+  @media (max-width:480px){
+    header.masthead{padding:12px 14px 0;}
+    header.masthead::before{inset:6px 14px 14px;border-radius:26px 26px 34px 34px;}
+    header.masthead::after{top:22px;width:88%;height:124px;}
+    .hero-shell{padding:18px 14px 46px;}
+    .hero-emblem{width:48px;height:48px;border-radius:15px;font-size:1.28rem;margin-bottom:10px;}
+    .app-kicker{font-size:.58rem;margin-bottom:7px;}
+    header.masthead h1{font-size:1.72rem;}
+    .hero-sub{font-size:.7rem;letter-spacing:.16em;}
+    .app-meta{gap:6px;margin-top:10px;}
+    .ver-pill,.mini-pill{font-size:.58rem;min-height:24px;padding:0 8px;}
+    .hero-status{margin-top:12px;padding:8px 12px;font-size:.66rem;}
+    main{padding:0 14px;}
+    .card{padding:17px 15px;border-radius:18px;}
+    .sticky-banner{margin-left:-14px;margin-right:-14px;padding-left:15px;padding-right:15px;}
+    .highlight-row-card{margin-top:-30px;padding:12px 10px;border-radius:22px;}
+    .highlight-row{gap:7px;justify-content:space-between;}
+    .highlight-badge{width:min(23.5%,82px);min-width:68px;aspect-ratio:1/1;border-radius:999px;padding:8px 4px;}
+    .highlight-badge .hv{font-size:1.12rem;}
+    .highlight-badge .hl{font-size:.47rem;max-width:82%;}
+    .chip-row{margin-bottom:14px;gap:7px;}
+    .hist-chip{padding:7px 11px;font-size:.72rem;}
+    .hist-row{padding:10px;gap:8px;border-radius:16px;}
+    .hist-row .hr-date{width:48px;padding:7px 3px;}
+    .hist-row .hr-label{font-size:.74rem;}
+    .hist-row .hr-meta{font-size:.57rem;}
+    .hist-row .hr-right{gap:6px;align-items:flex-end;flex-direction:column;}
+    .hist-row .hr-value{font-size:.73rem;padding:7px 8px;}
+    .hist-row .del{width:28px;height:28px;}
+    .nav-btn .ic{width:26px;height:26px;}
+    .nav-btn .ic svg{width:20px;height:20px;}
+    .nav-btn.fab .ic{width:34px;height:34px;}
+    .nav-btn.fab .ic svg{width:18px;height:18px;}
+    .bar-row{gap:4px;}
+    .bar-col{padding-left:1px;padding-right:1px;}
+    .bar-track{width:26px;height:172px;}
+    .bar-marker{width:11px;height:11px;}
+    .bar-col .bl{font-size:.64rem;}
+    .bar-col .bv2{font-size:.92rem;}
+    .gauge-cols{gap:5px;}
+    .gauge-col{padding:10px 4px;}
+    .gauge-col .gc-label{font-size:.56rem;}
+    .gauge-col .gc-val{font-size:.91rem;}
+    .bottom-nav{left:8px;right:8px;bottom:7px;}
+  }
+
+
+  /* Sélecteur de nuancier — même famille visuelle que .highlight-badge / .hist-chip :
+     pilules translucides sur fond profond, halo cyan sur l'état actif. */
+  #brandCard .section-title{margin-bottom:2px;}
+  .brand-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:12px;
+  }
+  .brand-btn{
+    border:1px solid rgba(96,141,185,.22);
+    background:linear-gradient(145deg,rgba(15,35,57,.92),rgba(7,20,34,.95));
+    color:#a9c2dc;
+    border-radius:999px;
+    padding:9px 15px;
+    font-size:.78rem;
+    font-weight:600;
+    letter-spacing:.01em;
+    box-shadow:0 8px 20px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.03);
+  }
+  .brand-btn.active{
+    border-color:rgba(69,229,208,.72);
+    background:linear-gradient(145deg,rgba(18,53,70,.95),rgba(7,33,45,.95));
+    color:#dffff8;
+    box-shadow:0 0 0 2px rgba(69,229,208,.05),0 10px 24px rgba(0,0,0,.14),0 0 14px rgba(69,229,208,.18);
+  }
+  .brand-note{
+    margin-top:11px;
+    color:#7f9ebd;
+    font-size:.72rem;
+    line-height:1.5;
+  }
+  .bar-unavailable{color:#5e7b98;opacity:.85;}
+
+  @media (max-width:480px){
+    .brand-btn{padding:8px 12px;font-size:.72rem;}
+    .brand-note{font-size:.68rem;}
+  }
+
 </style>
 </head>
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v5.0</span></h1>
-    <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
+    <div class="hero-shell">
+      <div class="hero-emblem">≋</div>
+      <div class="app-kicker">REEF CONTROL</div>
+      <h1>MON RÉCIF</h1>
+      <div class="hero-sub">Suivi récifal</div>
+      <div class="app-meta">
+        <span class="ver-pill">v5.1</span>
+        <span class="mini-pill">Photo · Salifert · Direct</span>
+      </div>
+      <div class="hero-status"><span class="dot"></span>Récif sous contrôle</div>
+    </div>
   </header>
 
   <main>
@@ -439,6 +1232,10 @@
     <section class="view" id="view-history">
       <div class="card">
         <p class="step-label active"><span class="dot"></span>Historique</p>
+        <div class="history-hero">
+          <p class="section-title">Historique récifal</p>
+          <p class="section-sub">Filtre un paramètre et visualise l’évolution de ton bac dans le temps.</p>
+        </div>
         <div class="chip-row" id="historyChips"></div>
         <div id="historyGauge"></div>
         <div class="chart-wrap" id="chartWrap"><canvas id="historyChart"></canvas></div>
@@ -472,10 +1269,10 @@
   <button class="timer-fab" id="timerFab">⏱</button>
 
   <nav class="bottom-nav">
-    <button class="nav-btn active" data-view="dashboard"><span class="ic">🏠</span>Accueil</button>
-    <button class="nav-btn" data-view="history"><span class="ic">📜</span>Historique</button>
-    <button class="nav-btn" data-view="report"><span class="ic">📄</span>Rapport</button>
-    <button class="nav-btn fab" data-view="picker"><span class="ic">➕</span>Nouveau</button>
+    <button class="nav-btn active" data-view="dashboard"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 13.5c3.2-1.1 5.7-5 8.5-8 2.8 3 5.3 6.9 8.5 8"/><path d="M5 12.8V18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2v-5.2"/><path d="M8 18c2.2-1 5.8-1 8 0"/></svg></span>Accueil</button>
+    <button class="nav-btn" data-view="history"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5a7.5 7.5 0 1 1-7.5 7.5"/><path d="M12 7.5a4.5 4.5 0 1 1-4.5 4.5"/><path d="M12 10.5a1.5 1.5 0 1 1-1.5 1.5"/></svg></span>Historique</button>
+    <button class="nav-btn" data-view="report"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5h8l3 3V18a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z"/><path d="M15 4.5v3h3"/><path d="M8.5 11h6.5"/><path d="M8.5 14h6.5"/><path d="M8.5 17h4"/></svg></span>Rapport</button>
+    <button class="nav-btn fab" data-view="picker"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7v10"/><path d="M7 12h10"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/><circle cx="6.5" cy="17.5" r="1" fill="currentColor" stroke="none"/></svg></span>Nouveau</button>
   </nav>
 
   <div id="sheetOverlay"></div>
@@ -943,10 +1740,10 @@
   // l'appareil. Remplace l'ancien badge "Jours" fixe (bugué + redondant avec la date
   // déjà affichée juste en dessous).
   const ALL_BADGE_PARAMS = ['temp','sal','ph','nh3','no2','no3','po4','kh','ca','mg'];
-  let highlightBadges = ['nh3','no2','no3'];
+  let highlightBadges = ['nh3','no2','no3','po4'];
   try{
     const saved = JSON.parse(localStorage.getItem('highlightBadges')||'null');
-    if(Array.isArray(saved) && saved.length===3 && saved.every(k=>ALL_BADGE_PARAMS.includes(k))) highlightBadges = saved;
+    if(Array.isArray(saved) && saved.length===4 && saved.every(k=>ALL_BADGE_PARAMS.includes(k))) highlightBadges = saved;
   }catch(e){}
   function saveHighlightBadges(){ try{ localStorage.setItem('highlightBadges', JSON.stringify(highlightBadges)); }catch(e){} }
 
@@ -1010,33 +1807,43 @@
         const cardGrad = unavailable
           ? `linear-gradient(to bottom, ${p.color||'#6E93BE'}55, ${p.color||'#6E93BE'})`
           : buildSwatchGradient(p);
-        // Repère de plage idéale : 2 traits blancs, sans label. Pour les barres "carte"
-        // (faible en haut), le repère suit la même échelle que le remplissage ; pour les
-        // barres thermomètre/pleines (remplissage bas→haut), c'est l'inverse.
-        let idealTicksHtml = '';
+        // Repère de plage idéale : bande translucide + 2 traits blancs, avec un minimum
+        // visuel de 6% de hauteur pour rester visible même sur une plage idéale étroite
+        // à l'échelle du nuancier (ex. PO4). Pour les barres "carte" (faible en haut), le
+        // repère suit la même échelle que le remplissage ; pour les barres thermomètre/
+        // pleines (remplissage bas→haut), c'est l'inverse.
+        const meta = statusMeta(latest ? latest.status : null);
+        const pctFromTop = v => {
+          const raw = clamp(((v-dMin)/(dMax-dMin))*100, 0, 100);
+          return cardGrad ? raw : (100-raw);
+        };
+        let idealTicksHtml = '', idealBandHtml = '', markerHtml = '';
         if(p.ideal){
-          const pctFromTop = v => {
-            const raw = clamp(((v-dMin)/(dMax-dMin))*100, 0, 100);
-            return cardGrad ? raw : (100-raw);
-          };
-          idealTicksHtml = `<div class="ideal-tick" style="top:${pctFromTop(p.ideal[0]).toFixed(1)}%"></div><div class="ideal-tick" style="top:${pctFromTop(p.ideal[1]).toFixed(1)}%"></div>`;
+          const tA = pctFromTop(p.ideal[0]);
+          const tB = pctFromTop(p.ideal[1]);
+          const top = Math.min(tA, tB);
+          const height = Math.max(6, Math.abs(tB - tA));
+          idealBandHtml = `<div class="ideal-band" style="top:${top.toFixed(1)}%;height:${height.toFixed(1)}%"></div>`;
+          idealTicksHtml = `<div class="ideal-tick" style="top:${tA.toFixed(1)}%"></div><div class="ideal-tick" style="top:${tB.toFixed(1)}%"></div>`;
+        }
+        if(val!==null){
+          markerHtml = `<div class="bar-marker ${meta.cls}" style="top:${pctFromTop(val).toFixed(1)}%"></div>`;
         }
         let trackHtml;
         if(cardGrad){
           // Mode carte du nuancier : faible en haut, fort en bas — on assombrit le bas.
-          trackHtml = `<div class="bar-track" style="background:${cardGrad}"><div class="bar-dim" style="height:${100-heightPct}%;bottom:0;top:auto;"></div>${idealTicksHtml}</div>`;
+          trackHtml = `<div class="bar-track" style="background:${cardGrad}"><div class="bar-dim" style="height:${100-heightPct}%;bottom:0;top:auto;"></div>${idealBandHtml}${idealTicksHtml}${markerHtml}</div>`;
         } else if(k==='temp'){
           // Mode thermomètre : froid en bas, chaud en haut — on assombrit le haut.
-          trackHtml = `<div class="bar-track" style="background:${TEMP_GRADIENT}"><div class="bar-dim" style="height:${100-heightPct}%;top:0;bottom:auto;"></div>${idealTicksHtml}</div>`;
+          trackHtml = `<div class="bar-track" style="background:${TEMP_GRADIENT}"><div class="bar-dim" style="height:${100-heightPct}%;top:0;bottom:auto;"></div>${idealBandHtml}${idealTicksHtml}${markerHtml}</div>`;
         } else {
-          trackHtml = `<div class="bar-track"><div class="bar-fill" style="height:${heightPct}%;background:${p.color||'#6E93BE'}"></div>${idealTicksHtml}</div>`;
+          trackHtml = `<div class="bar-track"><div class="bar-fill" style="height:${heightPct}%;background:${p.color||'#6E93BE'}"></div>${idealBandHtml}${idealTicksHtml}${markerHtml}</div>`;
         }
         // Tout le texte reste EN DEHORS de la barre (jamais superposé dessus). Pour le
         // groupe Nuancier, la lecture qui marchait déjà bien : minimum au-dessus, puis
         // la barre, puis le résultat en dessous. Pour Titration/mesure directe, la barre
         // se remplit dans l'autre sens (bas→haut) donc on inverse en miroir : résultat
         // au-dessus, minimum en dessous — pour rester logique dans les deux cas.
-        const meta = statusMeta(latest ? latest.status : null);
         const resultText = val!==null ? val.toFixed(p.decimals) : '—';
         const startVal = parseFloat(dMin.toFixed(2));
         const minHtml = unavailable
@@ -1096,13 +1903,23 @@
       const label = e.param==='autre'?(e.customLabel||'Autre'):p.label;
       const meta = statusMeta(e.status);
       const dotColor = e.param==='autre' ? '#6E93BE' : (p.color||'#6E93BE');
+      const when = new Date(e.date);
+      const dateTxt = when.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
+      const timeTxt = when.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
       const row = document.createElement('div'); row.className='hist-row';
       row.innerHTML = `
-        <span class="hr-date">${new Date(e.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})}</span>
-        <span class="hr-mid"><span class="param-dot" style="background:${dotColor}"></span><span class="hr-label">${label}</span></span>
-        <span class="hr-value">${Number(e.value).toFixed(p.decimals!==undefined?p.decimals:2)} ${p.unit||''}</span>
-        <span class="bar-dot ${meta.cls}"></span>
-        <button class="del">×</button>`;
+        <span class="hr-date"><strong>${dateTxt}</strong><small>${timeTxt}</small></span>
+        <span class="hr-mid">
+          <span class="param-dot" style="background:${dotColor}"></span>
+          <span class="hr-text">
+            <span class="hr-label">${label}</span>
+            <span class="hr-meta">${meta.label}</span>
+          </span>
+        </span>
+        <span class="hr-right">
+          <span class="hr-value">${Number(e.value).toFixed(p.decimals!==undefined?p.decimals:2)} ${p.unit||''}</span>
+          <button class="del" aria-label="Supprimer">×</button>
+        </span>`;
       row.querySelector('.del').addEventListener('click', ()=>deleteHistoryEntry(e.id));
       list.appendChild(row);
     });
