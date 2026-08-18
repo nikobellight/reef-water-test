@@ -248,7 +248,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v3.9</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v4.0</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -540,15 +540,9 @@
             <div style="font-size:0.66rem;color:var(--text-dim);">Référence</div>
           </div>
         </div>
-        <div style="font-size:0.66rem;color:var(--text-dim);text-align:center;margin-bottom:6px;">← moins concentré&nbsp;&nbsp;·&nbsp;&nbsp;plus concentré →</div>
-        <div style="display:flex;gap:8px;margin-bottom:10px;">
-          <div style="display:flex;flex-direction:column;justify-content:space-between;font-size:0.62rem;color:var(--text-dim);width:34px;text-align:center;line-height:1.15;flex:none;">
-            <span>↑<br>clair</span>
-            <span>foncé<br>↓</span>
-          </div>
-          <div class="palette-grid" id="fsPaletteGrid" style="flex:1;"></div>
-        </div>
-        <button class="primary" id="fsPaletteConfirm" style="width:100%;">Utiliser cette nuance</button>
+        <div style="font-size:0.66rem;color:var(--text-dim);text-align:center;margin-bottom:8px;">Du plus pâle au plus concentré, comme sur le nuancier — se lit de gauche à droite puis de haut en bas ↴</div>
+        <div class="palette-grid" id="fsPaletteGrid"></div>
+        <button class="primary" id="fsPaletteConfirm" style="width:100%;margin-top:10px;">Utiliser cette nuance</button>
       </div>
     </div>
   </div>
@@ -654,7 +648,16 @@
     const pad = span * 0.15;
     const dMin = aMin - pad, dMax = aMax + pad;
     const pct = v => Math.max(0, Math.min(100, ((v-dMin)/(dMax-dMin))*100));
-    const gAMin=pct(aMin), gIMin=pct(iMin), gIMax=pct(iMax), gAMax=pct(aMax);
+    // Écarte les paliers d'un minimum pour éviter une transition instantanée (bord net)
+    // quand deux bornes coïncident ou sont très proches — ex. NH3 : idéal 0-0, ce qui
+    // sans ce garde-fou fait tomber acceptable/idéal/idéal sur le même point.
+    let pts = [pct(aMin), pct(iMin), pct(iMax), pct(aMax)];
+    const minGap = 4;
+    for(let i=1;i<pts.length;i++){ if(pts[i] < pts[i-1]+minGap) pts[i] = pts[i-1]+minGap; }
+    const lo=minGap, hi=100-minGap;
+    if(pts[0] < lo){ const shift = lo-pts[0]; pts = pts.map(v=>v+shift); }
+    if(pts[3] > hi){ const scale = (hi-lo)/(pts[3]-pts[0]); pts = pts.map(v=> lo + (v-pts[0])*scale); }
+    const [gAMin,gIMin,gIMax,gAMax] = pts;
     const markerPct = pct(value);
     const gradient = `linear-gradient(90deg,
       var(--bad) 0%, var(--amber) ${gAMin}%,
@@ -1518,26 +1521,31 @@
     // pour empêcher un pas "moins concentré" de dépasser le neutre et de retomber dans
     // la teinte opposée (ex. vert pour un réactif dont l'axe va vers le rose).
     const refProj = Math.max(0, lab[1]*axis.ua + lab[2]*axis.ub);
-    const L_DELTAS=[12,4,-4,-12];
-    const PUSH_STEPS=[-1.4,-0.4,0.6,1.6];
-    L_DELTAS.forEach(dl=>{
-      PUSH_STEPS.forEach(ps=>{
-        let push=ps*axis.stepMag;
-        if(push<0 && -push>refProj) push=-refProj;
-        const newLab=[clamp(lab[0]+dl,4,97), lab[1]+axis.ua*push, lab[2]+axis.ub*push];
-        const rgb=labToRgb(newLab);
-        const cell=document.createElement('button');
-        cell.type='button'; cell.className='palette-cell';
-        cell.style.background=rgbCss(rgb);
-        cell.addEventListener('click', ()=>{
-          fsPaletteSelectedRgb=rgb;
-          fsPaletteGrid.querySelectorAll('.palette-cell').forEach(c=>c.classList.remove('selected'));
-          cell.classList.add('selected');
-          renderMarkers();
-        });
-        fsPaletteGrid.appendChild(cell);
+    // Une seule séquence ordonnée (pas une grille à deux axes indépendants) : la clarté
+    // suit la concentration au lieu d'être un choix séparé, comme sur un vrai nuancier
+    // où les pastilles à la fois foncent ET se saturent ensemble en montant en
+    // concentration. Se lit dans l'ordre naturel gauche→droite puis haut→bas, comme le
+    // texte : case 1 = le plus pâle/faible, dernière case = le plus concentré/fort.
+    const N = 12;
+    const PUSH_LO = -1.6, PUSH_HI = 2.2;
+    for(let i=0;i<N;i++){
+      const t = i/(N-1);
+      let push = (PUSH_LO + (PUSH_HI-PUSH_LO)*t) * axis.stepMag;
+      if(push<0 && -push>refProj) push=-refProj;
+      const dl = 8 - 14*t; // légèrement plus clair au début, un peu plus foncé à la fin
+      const newLab=[clamp(lab[0]+dl,4,97), lab[1]+axis.ua*push, lab[2]+axis.ub*push];
+      const rgb=labToRgb(newLab);
+      const cell=document.createElement('button');
+      cell.type='button'; cell.className='palette-cell';
+      cell.style.background=rgbCss(rgb);
+      cell.addEventListener('click', ()=>{
+        fsPaletteSelectedRgb=rgb;
+        fsPaletteGrid.querySelectorAll('.palette-cell').forEach(c=>c.classList.remove('selected'));
+        cell.classList.add('selected');
+        renderMarkers();
       });
-    });
+      fsPaletteGrid.appendChild(cell);
+    }
   }
   document.getElementById('fsPaletteConfirm').addEventListener('click', ()=>{
     if(fsPaletteVal===null || !fsPaletteSelectedRgb) return;
