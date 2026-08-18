@@ -112,13 +112,14 @@
   .bar-fill{width:100%;min-height:5px;transition:height .25s ease;}
   .bar-dim{position:absolute;bottom:0;left:0;right:0;background:rgba(5,11,20,0.8);transition:height .25s ease;}
   .ideal-tick{position:absolute;left:-2px;right:-2px;height:2px;background:rgba(255,255,255,0.9);box-shadow:0 0 3px rgba(0,0,0,0.7);pointer-events:none;z-index:2;transform:translateY(-50%);}
-  .bar-col .bl{font-size:0.76rem;color:var(--text-dim);margin-top:10px;white-space:nowrap;}
+  .bar-col .bl{font-size:0.76rem;color:var(--text-dim);margin:6px 0 0;white-space:nowrap;}
   .bar-col .bv2{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:1rem;margin-top:2px;white-space:nowrap;}
   .bar-col .bv2.good{color:var(--good);}
   .bar-col .bv2.warn{color:var(--amber);}
   .bar-col .bv2.bad{color:var(--bad);}
   .bar-col .bv2.none{color:var(--text);}
   .bar-col .bu2{font-size:0.62rem;color:var(--text-dim);margin-top:0;white-space:nowrap;}
+  .bar-col .bar-min{font-size:0.6rem;color:var(--text-dim);white-space:nowrap;margin:4px 0;}
   .bar-col .bv{font-family:'IBM Plex Mono',monospace;font-size:0.56rem;font-weight:600;margin-top:1px;text-align:center;line-height:1.15;white-space:nowrap;}
   .bar-col .bu{display:block;font-size:0.5rem;color:var(--text-dim);font-weight:500;}
   .empty-state{text-align:center;padding:34px 10px;color:var(--text-dim);}
@@ -247,7 +248,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v3.8</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v3.9</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -453,6 +454,7 @@
           <button data-period="week">Semaine</button>
           <button data-period="month">Mois</button>
           <button data-period="all">Tout</button>
+          <button data-period="lasttest">Dernier test</button>
         </div>
         <textarea class="report-box" id="reportBox" readonly></textarea>
         <div class="btn-row">
@@ -832,22 +834,22 @@
         } else {
           trackHtml = `<div class="bar-track"><div class="bar-fill" style="height:${heightPct}%;background:${p.color||'#6E93BE'}"></div>${idealTicksHtml}</div>`;
         }
-        // Plus de badges superposés — juste le résultat en gras et l'unité en dessous,
-        // sous la barre, comme la référence Blue. Coloré par statut pour garder le
-        // repère visuel utile, sans encombrer la barre elle-même.
+        // Tout le texte reste EN DEHORS de la barre (jamais superposé dessus). Pour le
+        // groupe Nuancier, la lecture qui marchait déjà bien : minimum au-dessus, puis
+        // la barre, puis le résultat en dessous. Pour Titration/mesure directe, la barre
+        // se remplit dans l'autre sens (bas→haut) donc on inverse en miroir : résultat
+        // au-dessus, minimum en dessous — pour rester logique dans les deux cas.
         const meta = statusMeta(latest ? latest.status : null);
         const resultText = val!==null ? val.toFixed(p.decimals) : '—';
-        // Repère de départ d'échelle : juste un chiffre discret, sans fond ni bordure,
-        // superposé à l'extrémité de départ de la barre (zéro impact sur la hauteur de
-        // colonne). 0 la plupart du temps, mais pas toujours (ex. pH démarre à 7.4).
-        const startAtTop = !!cardGrad;
         const startVal = parseFloat(dMin.toFixed(2));
-        const startLabelHtml = `<div style="position:absolute;left:50%;top:${startAtTop?2:148}px;transform:translate(-50%,-50%);font-size:0.6rem;color:var(--text-dim);pointer-events:none;white-space:nowrap;">${startVal}</div>`;
-        col.innerHTML = `
-          <div style="position:relative;">${trackHtml}${startLabelHtml}</div>
+        const minHtml = `<div class="bar-min">${startVal}</div>`;
+        const resultBlockHtml = `
           <div class="bl">${SHORT_LABEL[k]||k}</div>
           <div class="bv2 ${meta.cls}">${resultText}</div>
           <div class="bu2">${p.unit||''}</div>`;
+        col.innerHTML = cardGrad
+          ? `${minHtml}${trackHtml}${resultBlockHtml}`
+          : `${resultBlockHtml}${trackHtml}${minHtml}`;
         col.addEventListener('click', ()=>{ showView('history'); historyFilterParam=k; renderHistory(); });
         row.appendChild(col);
       });
@@ -957,6 +959,29 @@
     });
   });
   function generateReport(){
+    if(reportPeriod==='lasttest'){
+      const lines=[];
+      lines.push('RAPPORT DE SUIVI — AQUARIUM RÉCIFAL');
+      lines.push(`Généré le ${new Date().toLocaleString('fr-FR')}`);
+      lines.push('');
+      const allSortedDesc = historyData.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
+      if(!allSortedDesc.length){
+        lines.push('Aucune mesure enregistrée.');
+        return lines.join('\n');
+      }
+      const lastDate = new Date(allSortedDesc[0].date);
+      const batch = allSortedDesc.filter(e => Math.abs(new Date(e.date)-lastDate) <= 60*60000)
+        .sort((a,b)=>new Date(a.date)-new Date(b.date));
+      lines.push(`DERNIER TEST (${lastDate.toLocaleString('fr-FR')}, ± 1h) :`);
+      lines.push('');
+      batch.forEach(e=>{
+        const label = e.param==='autre' ? (e.customLabel||'Autre') : PARAMS[e.param].label;
+        const unit = e.param==='autre' ? '' : PARAMS[e.param].unit;
+        const meta = statusMeta(e.status);
+        lines.push(`- ${label} : ${e.value}${unit?' '+unit:''} (${meta.label.toLowerCase()})`);
+      });
+      return lines.join('\n');
+    }
     const cutoff=periodCutoff(reportPeriod);
     const filtered = historyData.filter(e=>!cutoff || new Date(e.date)>=cutoff);
     const lines=[];
