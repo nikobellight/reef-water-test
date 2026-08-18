@@ -99,7 +99,10 @@
     background:var(--bg-panel-raised);border:3px solid var(--line);
     padding:0;cursor:pointer;
   }
-  .highlight-badge .hv{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:1.3rem;line-height:1.1;}
+  .highlight-badge .hv{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:1.3rem;line-height:1.1;color:var(--text);}
+  .highlight-badge .hv.good{color:var(--good);}
+  .highlight-badge .hv.warn{color:var(--amber);}
+  .highlight-badge .hv.bad{color:var(--bad);}
   .highlight-badge .hl{font-size:0.6rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.03em;margin-top:4px;text-align:center;}
 
   .section-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1rem;margin:0 0 2px;}
@@ -249,7 +252,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v4.1</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v4.2</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -828,8 +831,9 @@
       const p=PARAMS[k], latest=latestFor(k);
       const val = latest ? Number(latest.value) : null;
       const valTxt = val!==null ? val.toFixed(p.decimals) : '—';
+      const meta = statusMeta(latest ? latest.status : null);
       return `<button type="button" class="highlight-badge" data-slot="${i}" style="border-color:${p.color||'var(--line)'}">
-        <div class="hv">${valTxt}</div>
+        <div class="hv ${meta.cls}">${valTxt}</div>
         <div class="hl">${p.unit?p.unit+' · ':''}${SHORT_LABEL[k]||p.label}</div>
       </button>`;
     }).join('');
