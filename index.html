@@ -247,7 +247,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v3.7</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v3.8</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -837,8 +837,14 @@
         // repère visuel utile, sans encombrer la barre elle-même.
         const meta = statusMeta(latest ? latest.status : null);
         const resultText = val!==null ? val.toFixed(p.decimals) : '—';
+        // Repère de départ d'échelle : juste un chiffre discret, sans fond ni bordure,
+        // superposé à l'extrémité de départ de la barre (zéro impact sur la hauteur de
+        // colonne). 0 la plupart du temps, mais pas toujours (ex. pH démarre à 7.4).
+        const startAtTop = !!cardGrad;
+        const startVal = parseFloat(dMin.toFixed(2));
+        const startLabelHtml = `<div style="position:absolute;left:50%;top:${startAtTop?2:148}px;transform:translate(-50%,-50%);font-size:0.6rem;color:var(--text-dim);pointer-events:none;white-space:nowrap;">${startVal}</div>`;
         col.innerHTML = `
-          ${trackHtml}
+          <div style="position:relative;">${trackHtml}${startLabelHtml}</div>
           <div class="bl">${SHORT_LABEL[k]||k}</div>
           <div class="bv2 ${meta.cls}">${resultText}</div>
           <div class="bu2">${p.unit||''}</div>`;
