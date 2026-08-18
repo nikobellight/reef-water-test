@@ -252,7 +252,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v4.2</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v4.3</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -329,9 +329,6 @@
           <p class="step-label active"><span class="dot"></span>Cibler sur la photo</p>
           <div class="photo-thumb-wrap" id="photoThumbWrap" style="display:none;"><canvas id="photoThumbTop"></canvas></div>
           <p class="mode-help" id="refModeHelp"></p>
-          <div class="wb-row" id="wbRow" style="display:none;">
-            <div class="wb-item"><div class="swatch" id="wbWhiteSwatch" style="background:#1a2332;"></div><div class="lbl">FOND BLANC</div></div>
-          </div>
           <div class="btn-row" id="targetButtons" style="flex-wrap:wrap;"></div>
         </div>
 
@@ -348,17 +345,6 @@
           <button class="primary" id="btnCompute" disabled>Calculer le résultat</button>
           <button class="ghost" id="btnReset">↺ Nouvelle photo</button>
         </div>
-
-        <details class="card" id="fallbackDetails">
-          <summary>Options avancées — profil enregistré / valeurs scanner (secours, moins précis)</summary>
-          <p class="mode-help">À utiliser seulement si tu n'as pas le nuancier physique sous la main : compare une photo de l'échantillon seul à des couleurs enregistrées ailleurs (moins fiable, car appareil et éclairage différents).</p>
-          <div class="profile-row" style="margin-bottom:10px;">
-            <select id="profileSelect"><option value="">— Aucun profil chargé —</option></select>
-            <button class="secondary" id="btnLoadProfile">Charger</button>
-          </div>
-          <button class="ghost" id="btnUseScannerDefaults">Utiliser les valeurs scanner intégrées</button>
-          <button class="ghost" id="btnBackToPhoto" style="display:none;">↩ Revenir à la calibration avec cette photo</button>
-        </details>
 
         <div class="card" id="resultPanel" style="display:none;">
           <p class="step-label done"><span class="dot"></span>Résultat — modifiable avant validation</p>
@@ -1293,12 +1279,10 @@
   const canvasWrap=document.getElementById('canvasWrap');
 
   let refParam='ph';
-  let calibMode='photo'; // 'photo' (nuancier+échantillon dans cette photo) | 'fallback' (profil/scanner + fond blanc)
-  let firstSwatchPos=null, lastSwatchPos=null; // {x,y} — les 2 taps de calibration en mode 'photo'
+  let firstSwatchPos=null, lastSwatchPos=null; // {x,y} — les 2 taps de calibration
   let refPoints={}; // {value(number): {rgb:[r,g,b], x?, y?}}
-  let whitePoint=null; // fallback only
   let samplePointRaw=null;
-  let aimTarget=null; // 'firstSwatch' | 'lastSwatch' | 'sample' | 'white' | {chip:value}
+  let aimTarget=null; // 'firstSwatch' | 'lastSwatch' | 'sample' | {chip:value}
   let pendingTarget=null; // {x,y,rgb}
   let hasPhoto=false;
 
@@ -1309,7 +1293,6 @@
   const chartCustomLabelField=document.getElementById('chartCustomLabelField'), chartCustomLabel=document.getElementById('chartCustomLabel');
   const verifyCard=document.getElementById('verifyCard'), refRectList=document.getElementById('refRectList');
   const refModeHelp=document.getElementById('refModeHelp');
-  const wbRow=document.getElementById('wbRow'), wbWhiteSwatch=document.getElementById('wbWhiteSwatch');
   const targetButtons=document.getElementById('targetButtons');
   const targetPreview=document.getElementById('targetPreview'), targetPreviewCanvas=document.getElementById('targetPreviewCanvas');
   const targetPreviewCtx=targetPreviewCanvas.getContext('2d');
@@ -1317,10 +1300,6 @@
   const targetConfirm=document.getElementById('targetConfirm'), targetSwatch=document.getElementById('targetSwatch');
   const btnCompute=document.getElementById('btnCompute');
   const resultPanel=document.getElementById('resultPanel');
-  const profileSelect=document.getElementById('profileSelect');
-  const fallbackDetails=document.getElementById('fallbackDetails');
-  const btnUseScannerDefaults=document.getElementById('btnUseScannerDefaults');
-  const btnBackToPhoto=document.getElementById('btnBackToPhoto');
   const nuancierBanner=document.getElementById('nuancierBanner'), nuancierBannerParam=document.getElementById('nuancierBannerParam'), nuancierBannerValue=document.getElementById('nuancierBannerValue');
 
   chartParamSelect.innerHTML = Object.keys(PARAMS).filter(k=>PARAMS[k].group==='chart').map(k=>`<option value="${k}">${PARAMS[k].label}</option>`).join('');
@@ -1350,19 +1329,11 @@
     r=linearToSrgb(r); g=linearToSrgb(g); bl=linearToSrgb(bl);
     return [clamp(Math.round(r*255),0,255), clamp(Math.round(g*255),0,255), clamp(Math.round(bl*255),0,255)];
   }
-  function whiteBalance(sample, white){
-    const scale=[255/Math.max(white[0],1),255/Math.max(white[1],1),255/Math.max(white[2],1)];
-    return [clamp(Math.round(sample[0]*scale[0]),0,255), clamp(Math.round(sample[1]*scale[1]),0,255), clamp(Math.round(sample[2]*scale[2]),0,255)];
-  }
 
   // -------- state reset / param switching --------
   function resetRefState(){
-    calibMode='photo';
     firstSwatchPos=null; lastSwatchPos=null;
-    refPoints={}; whitePoint=null; samplePointRaw=null; aimTarget=null; pendingTarget=null;
-    wbWhiteSwatch.style.background='#1a2332';
-    wbRow.style.display='none';
-    btnBackToPhoto.style.display='none';
+    refPoints={}; samplePointRaw=null; aimTarget=null; pendingTarget=null;
     resultPanel.style.display='none';
     verifyCard.style.display='none';
     document.getElementById('sampleReminder').style.display='none';
@@ -1376,13 +1347,6 @@
     refParam = chartParamSelect.value;
     targetButtons.innerHTML='';
     const p=PARAMS[refParam];
-    if(calibMode==='fallback'){
-      refModeHelp.textContent = "Mode secours : vise le fond blanc puis l'échantillon sur une photo de l'échantillon seul.";
-      const b1=mkBtn('🎯 Fond blanc', ()=>armAim('white','Fond blanc'));
-      const b2=mkBtn('🎯 Échantillon', ()=>armAim('sample','Échantillon'));
-      targetButtons.appendChild(b1); targetButtons.appendChild(b2);
-      return;
-    }
     if(refParam==='autre'){
       refModeHelp.textContent = "Paramètre libre : ajoute chaque pastille une par une depuis cette photo.";
       const bAdd=mkBtn('+ Ajouter une pastille', addCustomChip);
@@ -1452,7 +1416,7 @@
       const obj=refPoints[val];
       const isBad = bad.includes(val);
       const unitTxt = p.unit?(' '+p.unit):'';
-      const canRecalibrate = calibMode==='photo' && obj.x!==undefined;
+      const canRecalibrate = obj.x!==undefined;
       const rect=document.createElement('div');
       rect.className='ref-rect' + (canRecalibrate ? '' : ' disabled');
       if(isBad) rect.style.border='2px solid var(--bad)';
@@ -1629,67 +1593,6 @@
     openManualEntry(refParam, ()=>chartCustomLabel.value.trim()||'Autre');
   });
 
-  // -------- fallback (profil / scanner) --------
-  btnUseScannerDefaults.addEventListener('click', ()=>{
-    const p=PARAMS[refParam];
-    if(!p.swatches){ alert("Pas de valeurs scanner intégrées pour ce paramètre."); return; }
-    calibMode='fallback';
-    refPoints={};
-    Object.keys(p.swatches).forEach(v=>{ refPoints[v]={rgb:p.swatches[v]}; });
-    whitePoint=null; samplePointRaw=null;
-    wbRow.style.display='flex'; wbWhiteSwatch.style.background='#1a2332';
-    btnBackToPhoto.style.display='inline-block';
-    renderVerifyStrip(); renderTargetButtons(); updateComputeBtn();
-  });
-  btnBackToPhoto.addEventListener('click', resetRefState);
-  document.getElementById('btnLoadProfile').addEventListener('click', ()=>{
-    const opt=profileSelect.selectedOptions[0]; if(!opt||!opt.value) return;
-    const points=JSON.parse(opt.dataset.points||'[]');
-    const paramKey=opt.dataset.paramKey;
-    if(paramKey){ chartParamSelect.value=paramKey; refParam=paramKey; chartCustomLabelField.style.display = paramKey==='autre'?'block':'none'; if(paramKey==='autre') chartCustomLabel.value=opt.dataset.customLabel||''; }
-    calibMode='fallback'; refPoints={};
-    points.forEach(p=>{ refPoints[p.value]={rgb:p.rgb}; });
-    whitePoint=null; samplePointRaw=null;
-    wbRow.style.display='flex'; wbWhiteSwatch.style.background='#1a2332';
-    btnBackToPhoto.style.display='inline-block';
-    renderVerifyStrip(); renderTargetButtons(); updateComputeBtn(); updateBanner();
-  });
-  async function refreshProfileList(){
-    profileSelect.innerHTML='<option value="">— Aucun profil chargé —</option>';
-    try{
-      const res=await fetch(`${SUPABASE_URL}/rest/v1/nuancier_profiles?select=*&order=created_at.desc`, {headers:sbHeaders()});
-      if(!res.ok) throw new Error('http '+res.status);
-      const rows=await res.json();
-      rows.forEach(r=>{
-        const opt=document.createElement('option'); opt.value=String(r.id);
-        const pLabel = r.param_key==='autre' ? (r.custom_label||'Autre') : (PARAMS[r.param_key]?PARAMS[r.param_key].label:'');
-        opt.textContent = r.name + (pLabel?' · '+pLabel:'');
-        opt.dataset.points=JSON.stringify(r.points||[]); opt.dataset.paramKey=r.param_key||''; opt.dataset.customLabel=r.custom_label||'';
-        profileSelect.appendChild(opt);
-      });
-    }catch(e){ console.error(e); showSyncError(e.message); }
-  }
-  const btnSaveProfileRow = document.createElement('button');
-  btnSaveProfileRow.className='ghost'; btnSaveProfileRow.textContent='💾 Enregistrer la calibration actuelle comme profil'; btnSaveProfileRow.style.marginTop='10px';
-  fallbackDetails.appendChild(btnSaveProfileRow);
-  btnSaveProfileRow.addEventListener('click', ()=>{
-    const validEntries = Object.entries(refPoints);
-    if(validEntries.length<2){ alert('Calibre au moins 2 pastilles avant de sauvegarder un profil.'); return; }
-    openSheet({
-      title:'Nom du profil', showSwatch:false, placeholder:'ex. Mon nuancier recalibré', confirmText:'Enregistrer',
-      onConfirm: async ()=>{
-        const name=sheetInput.value.trim();
-        if(!name){ sheetError.textContent='Entre un nom.'; return; }
-        const payload={ name, param_key:refParam, custom_label:chartCustomLabel.value.trim()||null, points: validEntries.map(([v,obj])=>({value:parseFloat(v),rgb:obj.rgb})) };
-        try{
-          const res=await fetch(`${SUPABASE_URL}/rest/v1/nuancier_profiles`, {method:'POST', headers:sbHeaders({'Prefer':'return=representation'}), body:JSON.stringify(payload)});
-          if(!res.ok) throw new Error('http '+res.status);
-          closeSheet(); refreshProfileList();
-        }catch(e){ sheetError.textContent="Échec de l'enregistrement en ligne."; }
-      }
-    });
-  });
-
   // -------- capture --------
   document.getElementById('btnCamera').addEventListener('click', ()=>fileCamera.click());
   document.getElementById('btnGallery').addEventListener('click', ()=>fileGallery.click());
@@ -1707,7 +1610,6 @@
     viewCanvas.width=w; viewCanvas.height=h; viewCtx.drawImage(dataCanvas,0,0);
     hasPhoto=true;
     captureSection.style.display='none'; workspace.style.display='block';
-    refreshProfileList();
     renderTargetButtons();
     renderPhotoThumbs();
   }
@@ -1848,8 +1750,6 @@
     } else if(aimTarget==='lastSwatch'){
       lastSwatchPos={x:pendingTarget.x,y:pendingTarget.y};
       if(firstSwatchPos) computeInterpolatedRefPoints();
-    } else if(aimTarget==='white'){
-      whitePoint=pendingTarget.rgb; wbWhiteSwatch.style.background=rgbCss(whitePoint);
     } else if(aimTarget==='sample'){
       samplePointRaw=pendingTarget.rgb;
       document.getElementById('sampleReminderSwatch').style.background=rgbCss(samplePointRaw);
@@ -1866,8 +1766,7 @@
 
   function updateComputeBtn(){
     const n = Object.keys(refPoints).length;
-    if(calibMode==='fallback') btnCompute.disabled = !(n>=2 && whitePoint && samplePointRaw);
-    else btnCompute.disabled = !(n>=2 && samplePointRaw);
+    btnCompute.disabled = !(n>=2 && samplePointRaw);
   }
 
   // -------- canvas markers (visual only, on-photo) --------
@@ -1914,8 +1813,7 @@
   // -------- compute + editable result + validate --------
   btnCompute.addEventListener('click', computeResult);
   function computeResult(){
-    let sampleForMatch = samplePointRaw;
-    if(calibMode==='fallback') sampleForMatch = whiteBalance(samplePointRaw, whitePoint);
+    const sampleForMatch = samplePointRaw;
 
     const entries = Object.entries(refPoints)
       .map(([v,obj])=>({value:parseFloat(v), rgb:obj.rgb, de:deltaE(obj.rgb, sampleForMatch)}))
@@ -1926,28 +1824,14 @@
     else{ const w1=1/(best.de+0.001), w2=1/(second.de+0.001); resultValue=(best.value*w1+second.value*w2)/(w1+w2); }
     resultValue=Math.round(resultValue*100)/100;
 
-    // Fiabilité : en calibration "même photo" (mode principal), l'appareil et l'éclairage
-    // sont identiques entre pastilles et échantillon — un seuil ΔE absolu est donc pertinent
-    // et cohérent (une calibration correcte donne un ΔE bas, une calibration cassée un ΔE haut).
-    // En mode secours (profil/scanner = autre appareil, autre instant), l'écart absolu est
-    // structurellement gonflé par le changement d'appareil ; on juge alors la séparation
-    // relative entre la pastille gagnante et sa voisine plutôt que la valeur absolue.
+    // Fiabilité : pastilles et échantillon viennent toujours de la même photo, donc même
+    // appareil/éclairage — un seuil ΔE absolu est pertinent et cohérent (une calibration
+    // correcte donne un ΔE bas, une calibration cassée un ΔE haut).
     let confLabel, confColor;
-    if(calibMode==='fallback'){
-      if(!second){ confLabel='Une seule pastille de référence'; confColor='var(--amber)'; }
-      else{
-        const gapRatio = second.de / (best.de + 0.001);
-        if(best.de < 1.5){ confLabel='Correspondance quasi parfaite'; confColor='var(--good)'; }
-        else if(gapRatio > 1.6){ confLabel='Nette — bien distincte des pastilles voisines'; confColor='var(--good)'; }
-        else if(gapRatio > 1.2){ confLabel='Correcte — assez distincte des voisines'; confColor='var(--amber)'; }
-        else{ confLabel='Ambiguë — proche de plusieurs pastilles voisines'; confColor='var(--bad)'; }
-      }
-    } else {
-      if(best.de<3){ confLabel='Correspondance excellente'; confColor='var(--good)'; }
-      else if(best.de<7){ confLabel='Bonne correspondance'; confColor='var(--good)'; }
-      else if(best.de<14){ confLabel='Correspondance approximative'; confColor='var(--amber)'; }
-      else{ confLabel='Peu fiable — vérifie les pastilles ci-dessus (zone grisée ?)'; confColor='var(--bad)'; }
-    }
+    if(best.de<3){ confLabel='Correspondance excellente'; confColor='var(--good)'; }
+    else if(best.de<7){ confLabel='Bonne correspondance'; confColor='var(--good)'; }
+    else if(best.de<14){ confLabel='Correspondance approximative'; confColor='var(--amber)'; }
+    else{ confLabel='Peu fiable — vérifie les pastilles ci-dessus (zone grisée ?)'; confColor='var(--bad)'; }
 
     const status = refParam==='autre' ? null : statusOf(refParam, resultValue);
     showResult({value:resultValue, status, best, sample:sampleForMatch, entries, confLabel, confColor, manual:false});
@@ -1976,9 +1860,7 @@
       tbody.appendChild(tr);
     });
     document.getElementById('savedNote').textContent='';
-    document.getElementById('resultDisclaimer').textContent = calibMode==='fallback'
-      ? "Comparaison avec des couleurs enregistrées ailleurs (profil/scanner) — moins précis qu'une calibration sur cette photo, car appareil et éclairage diffèrent."
-      : "Résultat basé sur une comparaison colorimétrique entre pastilles et échantillon pris sur la même photo. Tu peux corriger la valeur ci-dessus avant de valider.";
+    document.getElementById('resultDisclaimer').textContent = "Résultat basé sur une comparaison colorimétrique entre pastilles et échantillon pris sur la même photo. Tu peux corriger la valeur ci-dessus avant de valider.";
     nuancierBannerValue.textContent = value+' '+p.unit;
     renderPhotoThumbs();
     resultPanel.style.display='block';
