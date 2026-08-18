@@ -1055,23 +1055,31 @@
 
   /* Toggle de cycle : pleine largeur, discret par défaut (inactif), s'allume en
      ambre quand actif — distinct du cyan des marques pour ne pas les confondre. */
-  .hero-status-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;}
-  .hero-status-row .hero-status{margin-top:0;}
-  .cycle-toggle-pill{
-    display:inline-flex;
+  .hero-status-row{
+    display:grid;
+    grid-template-columns:1fr auto 1fr;
     align-items:center;
     gap:6px;
-    margin:0 0 12px;
+    margin-top:14px;
+  }
+  .hero-status-row .hero-status{margin-top:0;justify-self:center;}
+  .hero-status-row-spacer{width:1px;}
+  .cycle-toggle-header{
+    justify-self:start;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:1px;
     border:1px solid rgba(96,141,185,.22);
     background:linear-gradient(145deg,rgba(15,35,57,.92),rgba(7,20,34,.95));
     color:#a9c2dc;
-    border-radius:999px;
-    padding:7px 14px;
-    font-size:.74rem;
-    font-weight:600;
+    border-radius:12px;
+    padding:5px 7px;
     box-shadow:0 6px 14px rgba(0,0,0,.1), inset 0 1px 0 rgba(255,255,255,.03);
   }
-  .cycle-toggle-pill.active{
+  .cycle-toggle-header .ic{font-size:.78rem;line-height:1;}
+  .cycle-toggle-header .txt{font-size:.5rem;font-weight:600;line-height:1.15;text-align:center;white-space:nowrap;}
+  .cycle-toggle-header.active{
     border-color:rgba(255,181,90,.65);
     background:linear-gradient(145deg,rgba(70,50,18,.85),rgba(40,26,7,.92));
     color:#ffe4bd;
@@ -1081,8 +1089,10 @@
   @media (max-width:480px){
     .brand-btn{padding:5px 9px;font-size:.62rem;}
     .brand-note-compact{font-size:.6rem;}
-    .cycle-toggle-pill{font-size:.68rem;padding:6px 12px;margin-bottom:10px;}
-    .hero-status-row{margin-top:7px;gap:6px;}
+    .cycle-toggle-header{padding:4px 6px;}
+    .cycle-toggle-header .ic{font-size:.7rem;}
+    .cycle-toggle-header .txt{font-size:.44rem;}
+    .hero-status-row{margin-top:7px;gap:4px;}
     .hero-status-row .hero-status{margin-top:0;}
   }
 
@@ -1097,10 +1107,12 @@
       <h1>MON RÉCIF</h1>
       <div class="hero-sub">Suivi récifal</div>
       <div class="app-meta">
-        <span class="ver-pill">v5.5</span>
+        <span class="ver-pill">v5.6</span>
       </div>
       <div class="hero-status-row">
+        <button type="button" class="cycle-toggle-header" id="cycleToggleBtn"><span class="ic">🔄</span><span class="txt">Nouveau cycle</span></button>
         <div class="hero-status" id="heroStatus"><span class="dot"></span><span class="txt">Récif sous contrôle</span></div>
+        <span class="hero-status-row-spacer"></span>
       </div>
     </div>
   </header>
@@ -1108,8 +1120,6 @@
   <main>
 
     <section class="view active" id="view-dashboard">
-      <button type="button" class="cycle-toggle-pill" id="cycleToggleBtn">🔄 Nouveau cycle</button>
-
       <div class="card sync-error" id="syncError" style="display:none;"><p>⚠️ Connexion à Supabase impossible.</p></div>
 
       <div class="card highlight-row-card">
@@ -1827,8 +1837,8 @@
   function renderCycleToggle(){
     const btn = document.getElementById('cycleToggleBtn');
     if(!btn) return;
-    btn.className = 'cycle-toggle-pill' + (cyclingActive ? ' active' : '');
-    btn.textContent = cyclingActive ? '🔄 Cycle en cours' : '🔄 Nouveau cycle';
+    btn.className = 'cycle-toggle-header' + (cyclingActive ? ' active' : '');
+    btn.querySelector('.txt').textContent = cyclingActive ? 'Cycle en cours' : 'Nouveau cycle';
     btn.title = cyclingActive ? 'Touche pour arrêter le suivi de cycle' : "Touche pour activer le suivi de cycle azoté (pic d'ammoniaque → pic de nitrites → cycle terminé)";
   }
   async function loadCyclingActive(){
