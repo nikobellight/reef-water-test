@@ -252,7 +252,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v4.4</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v4.5</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -334,6 +334,7 @@
 
         <div class="card" id="verifyCard" style="display:none;">
           <p class="step-label done"><span class="dot"></span>Pastilles détectées — touche pour corriger</p>
+          <p style="font-size:0.78rem;color:var(--text-dim);margin:-4px 0 8px;">Référence nuancier (pointillé) · Ton échantillon</p>
           <div class="ref-rect-list" id="refRectList"></div>
         </div>
 
@@ -1450,14 +1451,8 @@
       rect.className='ref-rect' + (canRecalibrate ? '' : ' disabled');
       if(isBad) rect.style.border='2px solid var(--bad)';
 
-      const swatchBtn=document.createElement('button');
-      swatchBtn.type='button'; swatchBtn.className='swatch'; swatchBtn.style.background=rgbCss(obj.rgb);
-      swatchBtn.title='Choisir une nuance proche';
-      swatchBtn.addEventListener('click', ()=>openPaletteFullscreen(val, obj.rgb, unitTxt));
-      rect.appendChild(swatchBtn);
-
-      // Carré de référence scannée (1200 DPI) juste à côté, pour comparer d'un coup
-      // d'œil la couleur détectée sur la photo à la vraie couleur du nuancier physique.
+      // Carré de référence scannée (1200 DPI) en premier, pour comparer d'un coup
+      // d'œil la vraie couleur du nuancier physique à la couleur détectée sur la photo.
       if(p.swatches && p.swatches[val]!==undefined){
         const refSwatch=document.createElement('div');
         refSwatch.className='swatch'; refSwatch.style.background=rgbCss(p.swatches[val]);
@@ -1465,6 +1460,12 @@
         refSwatch.title='Référence scannée';
         rect.appendChild(refSwatch);
       }
+
+      const swatchBtn=document.createElement('button');
+      swatchBtn.type='button'; swatchBtn.className='swatch'; swatchBtn.style.background=rgbCss(obj.rgb);
+      swatchBtn.title='Choisir une nuance proche';
+      swatchBtn.addEventListener('click', ()=>openPaletteFullscreen(val, obj.rgb, unitTxt));
+      rect.appendChild(swatchBtn);
 
       const valSpan=document.createElement('span'); valSpan.className='val'; valSpan.textContent=`${val}${unitTxt}${isBad?' ⚠️':''}`;
       rect.appendChild(valSpan);
