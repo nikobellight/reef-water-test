@@ -252,7 +252,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v4.3</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v4.4</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -1411,6 +1411,35 @@
       warnEl.style.display='none';
     }
 
+    // Écart global entre cette photo et le nuancier scanné (1200 DPI) : un éclairage
+    // chaud/froid décale un peu les couleurs même sur une calibration correcte (normal),
+    // mais un écart énorme (ex. "devrait être rose, c'est marron") signale un vrai souci
+    // de ciblage ou de photo, pas juste une teinte d'ambiance. Seuil volontairement large
+    // pour ne pas déclencher sur un simple éclairage chaud.
+    let scanWarnEl = document.getElementById('scanDeviationWarning');
+    if(!scanWarnEl){
+      scanWarnEl = document.createElement('div');
+      scanWarnEl.id='scanDeviationWarning';
+      scanWarnEl.style.cssText='background:rgba(242,166,90,0.14);border:1px solid var(--amber);border-radius:10px;padding:12px;margin-bottom:12px;font-size:0.85rem;color:var(--amber);line-height:1.5;';
+      verifyCard.insertBefore(scanWarnEl, refRectList);
+    }
+    if(p.swatches){
+      const comparable = keys.filter(val => p.swatches[val]!==undefined);
+      if(comparable.length){
+        const avgDe = comparable.reduce((sum,val)=> sum+deltaE(refPoints[val].rgb, p.swatches[val]), 0) / comparable.length;
+        if(avgDe > 38){
+          scanWarnEl.style.display='block';
+          scanWarnEl.innerHTML = `⚠️ Cette photo s'écarte beaucoup du nuancier de référence (ΔE moyen ${avgDe.toFixed(0)}) — vérifie ton ciblage ou reprends la photo. Compare les carrés pointillés ci-dessous à ta calibration.`;
+        } else {
+          scanWarnEl.style.display='none';
+        }
+      } else {
+        scanWarnEl.style.display='none';
+      }
+    } else {
+      scanWarnEl.style.display='none';
+    }
+
     refRectList.innerHTML='';
     keys.forEach(val=>{
       const obj=refPoints[val];
@@ -1426,6 +1455,16 @@
       swatchBtn.title='Choisir une nuance proche';
       swatchBtn.addEventListener('click', ()=>openPaletteFullscreen(val, obj.rgb, unitTxt));
       rect.appendChild(swatchBtn);
+
+      // Carré de référence scannée (1200 DPI) juste à côté, pour comparer d'un coup
+      // d'œil la couleur détectée sur la photo à la vraie couleur du nuancier physique.
+      if(p.swatches && p.swatches[val]!==undefined){
+        const refSwatch=document.createElement('div');
+        refSwatch.className='swatch'; refSwatch.style.background=rgbCss(p.swatches[val]);
+        refSwatch.style.border='1px dashed rgba(255,255,255,0.4)';
+        refSwatch.title='Référence scannée';
+        rect.appendChild(refSwatch);
+      }
 
       const valSpan=document.createElement('span'); valSpan.className='val'; valSpan.textContent=`${val}${unitTxt}${isBad?' ⚠️':''}`;
       rect.appendChild(valSpan);
