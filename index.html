@@ -852,11 +852,21 @@
     border-radius:18px;
     padding:6px 8px 2px;
     box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+    align-items:stretch;
+    gap:8px;
   }
-  #historyChart{height:190px;}
-  .overview-legend{display:flex;flex-wrap:wrap;gap:8px 14px;padding:2px 2px 4px;}
-  .ol-item{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;color:#a9c2dc;}
-  .ol-dot{width:8px;height:8px;border-radius:50%;flex:none;box-shadow:0 0 6px currentColor;}
+  #historyChart{height:190px;flex:1;min-width:0;}
+  .ov-legend{
+    flex:0 0 auto;
+    display:none;
+    flex-direction:column;
+    justify-content:center;
+    gap:5px;
+    padding:4px 0;
+    max-width:52px;
+  }
+  .ol-item{display:flex;align-items:center;gap:4px;font-size:.56rem;line-height:1.1;color:#a9c2dc;letter-spacing:0;}
+  .ol-dot{width:6px;height:6px;border-radius:50%;flex:none;box-shadow:0 0 5px currentColor;}
 
   .mode-toggle{
     padding:4px;
@@ -960,21 +970,22 @@
   }
 
   @media (max-width:480px){
-    header.masthead{padding:12px 14px 0;}
-    header.masthead::before{inset:6px 14px 14px;border-radius:26px 26px 34px 34px;}
-    header.masthead::after{top:22px;width:88%;height:124px;}
-    .hero-shell{padding:18px 14px 46px;}
-    .hero-emblem{width:48px;height:48px;border-radius:15px;font-size:1.28rem;margin-bottom:10px;}
-    .app-kicker{font-size:.58rem;margin-bottom:7px;}
-    header.masthead h1{font-size:1.72rem;}
-    .hero-sub{font-size:.7rem;letter-spacing:.16em;}
-    .app-meta{gap:6px;margin-top:10px;}
-    .ver-pill,.mini-pill{font-size:.58rem;min-height:24px;padding:0 8px;}
-    .hero-status{margin-top:12px;padding:8px 12px;font-size:.66rem;}
+    header.masthead{padding:8px 14px 0;}
+    header.masthead::before{inset:5px 14px 10px;border-radius:24px 24px 30px 30px;}
+    header.masthead::after{top:14px;width:80%;height:90px;}
+    .hero-shell{padding:10px 14px 34px;}
+    .hero-emblem{width:36px;height:36px;border-radius:12px;font-size:1.02rem;margin:0 auto 5px;}
+    .app-kicker{font-size:.52rem;margin-bottom:3px;letter-spacing:.18em;}
+    header.masthead h1{font-size:1.3rem;}
+    .hero-sub{font-size:.6rem;letter-spacing:.14em;margin-top:3px;}
+    .app-meta{gap:6px;margin-top:6px;}
+    .ver-pill,.mini-pill{font-size:.55rem;min-height:19px;padding:0 7px;}
+    .hero-status{margin-top:7px;padding:5px 10px;font-size:.6rem;gap:6px;}
+    .hero-status .dot{width:6px;height:6px;}
     main{padding:0 14px;}
     .card{padding:17px 15px;border-radius:18px;}
     .sticky-banner{margin-left:-14px;margin-right:-14px;padding-left:15px;padding-right:15px;}
-    .highlight-row-card{margin-top:-30px;padding:12px 10px;border-radius:22px;}
+    .highlight-row-card{margin-top:-24px;padding:12px 10px;border-radius:22px;}
     .highlight-row{gap:7px;justify-content:space-between;}
     .highlight-badge{width:min(23.5%,82px);min-width:68px;aspect-ratio:1/1;border-radius:999px;padding:8px 4px;}
     .highlight-badge .hv{font-size:1.12rem;}
@@ -1040,9 +1051,33 @@
   }
   .bar-unavailable{color:#5e7b98;opacity:.85;}
 
+  /* Toggle de cycle : pleine largeur, discret par défaut (inactif), s'allume en
+     ambre quand actif — distinct du cyan des marques pour ne pas les confondre. */
+  .cycle-toggle{
+    display:block;
+    width:100%;
+    margin:0 0 15px;
+    border:1px solid rgba(96,141,185,.22);
+    background:linear-gradient(145deg,rgba(15,35,57,.92),rgba(7,20,34,.95));
+    color:#a9c2dc;
+    border-radius:16px;
+    padding:12px 16px;
+    font-size:.82rem;
+    font-weight:600;
+    text-align:center;
+    box-shadow:0 8px 20px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.03);
+  }
+  .cycle-toggle.active{
+    border-color:rgba(255,181,90,.6);
+    background:linear-gradient(145deg,rgba(70,50,18,.85),rgba(40,26,7,.92));
+    color:#ffe4bd;
+    box-shadow:0 0 0 2px rgba(255,181,90,.06),0 10px 24px rgba(0,0,0,.14),0 0 14px rgba(255,181,90,.16);
+  }
+
   @media (max-width:480px){
     .brand-btn{padding:8px 12px;font-size:.72rem;}
     .brand-note{font-size:.68rem;}
+    .cycle-toggle{font-size:.76rem;padding:11px 14px;}
   }
 
 </style>
@@ -1056,7 +1091,7 @@
       <h1>MON RÉCIF</h1>
       <div class="hero-sub">Suivi récifal</div>
       <div class="app-meta">
-        <span class="ver-pill">v5.2</span>
+        <span class="ver-pill">v5.3</span>
       </div>
       <div class="hero-status" id="heroStatus"><span class="dot"></span><span class="txt">Récif sous contrôle</span></div>
     </div>
@@ -1071,6 +1106,8 @@
       <div class="card highlight-row-card">
         <div class="highlight-row" id="highlightRow"></div>
       </div>
+
+      <button type="button" class="cycle-toggle" id="cycleToggleBtn">🔄 Activer le suivi de cycle</button>
 
       <div class="card" id="brandCard">
         <p class="section-title">Nuancier utilisé</p>
@@ -1246,7 +1283,7 @@
         </div>
         <div class="chip-row" id="historyChips"></div>
         <div id="historyGauge"></div>
-        <div class="chart-wrap" id="chartWrap"><canvas id="historyChart"></canvas></div>
+        <div class="chart-wrap" id="chartWrap"><div class="ov-legend" id="ovLegend"></div><canvas id="historyChart"></canvas></div>
         <div class="empty-note" id="historyEmpty" style="display:none;margin-bottom:10px;color:var(--text-dim);font-size:0.85rem;">Aucune mesure pour ce filtre.</div>
         <div class="hist-list" id="historyList"></div>
       </div>
@@ -1501,25 +1538,25 @@
 
   // ================= parameter registry =================
   const PARAMS = {
-    ph:   {label:'pH',                     unit:'',    group:'chart',     decimals:2, ideal:[8.1,8.4],    acceptable:[7.8,8.6], optimal:8.25, color:'#DD5099',
+    ph:   {label:'pH',                     unit:'',    group:'chart',     decimals:2, ideal:[8.1,8.4],    acceptable:[7.8,8.6], optimal:8.25, color:'#D85A99',
            presetValues:[7.4,7.8,8.0,8.4],
            swatches:{7.4:[223,113,110],7.8:[218,84,142],8.0:[217,80,157],8.4:[194,85,151]}},
-    nh3:  {label:'Ammoniac (NH3/NH4⁺)',    unit:'ppm', group:'chart',     decimals:2, ideal:[0,0],        acceptable:[0,0.25], optimal:0, color:'#6FB93A',
+    nh3:  {label:'Ammoniac (NH3/NH4⁺)',    unit:'ppm', group:'chart',     decimals:2, ideal:[0,0],        acceptable:[0,0.25], optimal:0, color:'#9CC639',
            presetValues:[0,0.25,0.5,1,2,4,8],
            swatches:{0:[235,229,26],0.25:[169,205,37],0.5:[124,193,51],1:[78,181,58],2:[36,171,84],4:[20,155,109],8:[14,145,105]}},
-    no2:  {label:'Nitrite (NO2⁻)',         unit:'ppm', group:'chart',     decimals:2, ideal:[0,0],        acceptable:[0,0.25], optimal:0, color:'#9B5FB5',
+    no2:  {label:'Nitrite (NO2⁻)',         unit:'ppm', group:'chart',     decimals:2, ideal:[0,0],        acceptable:[0,0.25], optimal:0, color:'#B659C0',
            presetValues:[0,0.25,0.5,1,2,5],
            swatches:{0:[250,250,252],0.25:[247,241,243],0.5:[239,222,223],1:[223,182,199],2:[178,125,166],5:[177,101,155]}},
-    no3:  {label:'Nitrate (NO3⁻)',         unit:'ppm', group:'chart',     decimals:1, ideal:[2,10],       acceptable:[0,20], optimal:5, color:'#C2529A',
+    no3:  {label:'Nitrate (NO3⁻)',         unit:'ppm', group:'chart',     decimals:1, ideal:[2,10],       acceptable:[0,20], optimal:5, color:'#D55648',
            presetValues:[0,5,10,20,40,80,160],
            swatches:{0:[252,252,254],5:[252,250,251],10:[243,232,232],20:[233,212,219],40:[218,165,188],80:[186,131,173],160:[172,75,146]}},
-    po4:  {label:'Phosphate (PO4³⁻)',      unit:'ppm', group:'chart',     decimals:2, ideal:[0.03,0.10],  acceptable:[0,0.15], optimal:0.06, color:'#4FA37A',
+    po4:  {label:'Phosphate (PO4³⁻)',      unit:'ppm', group:'chart',     decimals:2, ideal:[0.03,0.10],  acceptable:[0,0.15], optimal:0.06, color:'#43B17A',
            presetValues:[0,0.25,0.5,1,2,4,10],
            swatches:{0:[243,232,137],0.25:[227,228,149],0.5:[211,223,145],1:[186,214,141],2:[131,190,133],4:[98,164,128],10:[48,134,120]}},
-    kh:   {label:'KH / Alcalinité',        unit:'dKH', group:'titration', decimals:1, ideal:[8,12],       acceptable:[7,13], optimal:10, color:'#A66BD1', calc:r=>khFromReading(r)},
-    ca:   {label:'Calcium',                unit:'ppm', group:'titration', decimals:0, ideal:[380,450],    acceptable:[350,480], optimal:420, color:'#FF6B9D', calc:r=>(1-r)*500},
-    mg:   {label:'Magnésium',              unit:'ppm', group:'titration', decimals:0, ideal:[1250,1350],  acceptable:[1200,1400], optimal:1300, color:'#4CD787', calc:r=>(1-r)*1500},
-    temp: {label:'Température',            unit:'°C',  group:'direct',    decimals:1, ideal:[24,27],      acceptable:[23,28], optimal:25.5, color:'#6B8FFF'},
+    kh:   {label:'KH / Alcalinité',        unit:'dKH', group:'titration', decimals:1, ideal:[8,12],       acceptable:[7,13], optimal:10, color:'#9374DC', calc:r=>khFromReading(r)},
+    ca:   {label:'Calcium',                unit:'ppm', group:'titration', decimals:0, ideal:[380,450],    acceptable:[350,480], optimal:420, color:'#E7BB55', calc:r=>(1-r)*500},
+    mg:   {label:'Magnésium',              unit:'ppm', group:'titration', decimals:0, ideal:[1250,1350],  acceptable:[1200,1400], optimal:1300, color:'#5ACB4D', calc:r=>(1-r)*1500},
+    temp: {label:'Température',            unit:'°C',  group:'direct',    decimals:1, ideal:[24,27],      acceptable:[23,28], optimal:25.5, color:'#6892F3'},
     sal:  {label:'Densité',                unit:'SG',  group:'direct',    decimals:3, ideal:[1.023,1.026],acceptable:[1.020,1.028], optimal:1.0245, color:'#4DD9E8'},
     autre:{label:'Autre',                  unit:'',    group:'chart',     decimals:2, ideal:null,         acceptable:null}
   };
@@ -1775,32 +1812,69 @@
   document.getElementById('badgePickerCancel').addEventListener('click', closeBadgePicker);
   badgePickerOverlay.addEventListener('click', closeBadgePicker);
 
-  // Badge de statut en haut de l'app. Deux modes selon l'ancienneté de la toute
-  // première mesure jamais enregistrée : "jeune bac" (< 45 jours) suit le cycle azoté
-  // avec le vocabulaire que les récifalistes utilisent (pic d'ammoniaque, pic de
-  // nitrites, cycle terminé) ; au-delà, on repasse sur le statut classique
+  // Badge de statut en haut de l'app. Deux modes, choisis par toi via le toggle
+  // "Mon bac cycle actuellement" (cyclingActive) plutôt que devinés depuis une date —
+  // l'app ne peut pas savoir si un bac est neuf ou déjà établi juste à partir de la
+  // date de ta première mesure dans l'app. En mode cycle : vocabulaire récifaliste
+  // (pic d'ammoniaque, pic de nitrites, cycle terminé). Sinon : statut classique
   // idéal/acceptable déjà calculé par statusOf et stocké sur chaque mesure.
-  const CYCLE_WINDOW_DAYS = 45;
+  let cyclingActive = false;
+  try{ cyclingActive = localStorage.getItem('cyclingActive')==='true'; }catch(e){}
+  function renderCycleToggle(){
+    const btn = document.getElementById('cycleToggleBtn');
+    if(!btn) return;
+    btn.className = 'cycle-toggle' + (cyclingActive ? ' active' : '');
+    btn.textContent = cyclingActive ? '🔄 Mon bac cycle actuellement' : '🔄 Activer le suivi de cycle';
+  }
+  async function loadCyclingActive(){
+    try{
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/app_settings?select=value&key=eq.cycling_active`, {headers: sbHeaders()});
+      if(!res.ok) return false;
+      const rows = await res.json();
+      const v = rows && rows[0] && rows[0].value;
+      if(v!==undefined && v!==null && (v==='true'||v==='false') && (v==='true')!==cyclingActive){
+        cyclingActive = (v==='true');
+        try{ localStorage.setItem('cyclingActive', String(cyclingActive)); }catch(e){}
+        return true;
+      }
+    }catch(e){ /* hors ligne ou table absente : on garde le local */ }
+    return false;
+  }
+  async function saveCyclingActive(){
+    try{ localStorage.setItem('cyclingActive', String(cyclingActive)); }catch(e){}
+    try{
+      await fetch(`${SUPABASE_URL}/rest/v1/app_settings`, {
+        method:'POST',
+        headers: sbHeaders({'Prefer':'resolution=merge-duplicates'}),
+        body: JSON.stringify({key:'cycling_active', value:String(cyclingActive)})
+      });
+    }catch(e){ /* silencieux : le local a déjà été écrit */ }
+  }
   function updateHeroStatus(){
     const el = document.getElementById('heroStatus');
     if(!el) return;
     const txt = el.querySelector('.txt');
     const set = (cls, text) => { el.className = 'hero-status' + (cls?' '+cls:''); txt.textContent = text; };
 
-    if(!historyData.length){ set('neutral', 'Suivi en cours'); return; }
-
-    const firstDate = historyData.reduce((min,e)=> new Date(e.date)<new Date(min) ? e.date : min, historyData[0].date);
-    const daysSinceFirst = (Date.now() - new Date(firstDate).getTime()) / 86400000;
-
-    if(daysSinceFirst < CYCLE_WINDOW_DAYS){
+    if(cyclingActive){
       const lNh3 = latestFor('nh3'), lNo2 = latestFor('no2'), lNo3 = latestFor('no3');
       const isHigh = e => e && (e.status==='high' || e.status==='high-warn');
       const isClean = e => e && (e.status==='ideal' || e.status==='low-warn' || e.status==='low');
       if(isHigh(lNh3)){ set('bad', '🧪 Pic d\'ammoniaque — cycle en cours'); return; }
       if(isHigh(lNo2)){ set('bad', '🧪 Pic de nitrites — cycle en cours'); return; }
-      if(isClean(lNh3) && isClean(lNo2) && lNo3){ set('good', '✅ Cycle terminé'); return; }
+      if(isClean(lNh3) && isClean(lNo2) && lNo3){
+        set('good', '✅ Cycle terminé');
+        // Le cycle est fini : on éteint le toggle tout seul pour que les prochaines
+        // visites repassent sur le statut bac établi, sans action de ta part.
+        cyclingActive = false;
+        renderCycleToggle();
+        saveCyclingActive();
+        return;
+      }
       set('neutral', 'Suivi en cours'); return;
     }
+
+    if(!historyData.length){ set('neutral', 'Suivi en cours'); return; }
 
     // Bac établi : on liste tous les paramètres dont la dernière mesure sort de la
     // plage idéale (statut déjà calculé et stocké par statusOf au moment de la saisie,
@@ -1991,53 +2065,83 @@
   // Vue d'ensemble "Tous" : un point par mesure tous paramètres confondus, positionné
   // en % de l'échelle de chacun (barRange, la même que les barres du dashboard — aucun
   // nouveau seuil chimique), aligné sur le temps réel plutôt qu'un index régulier
-  // puisque les fréquences de mesure diffèrent d'un paramètre à l'autre.
+  // puisque les fréquences de mesure diffèrent d'un paramètre à l'autre. Une ligne fine
+  // relie les points d'un même paramètre pour qu'on puisse suivre sa trajectoire, et la
+  // légende (à gauche, minuscule) permet d'identifier chaque couleur sans redescendre.
   function drawOverviewChart(){
     const wrap=document.getElementById('chartWrap'), canvas=document.getElementById('historyChart');
+    const ovLegend=document.getElementById('ovLegend');
+    const list=document.getElementById('historyList'); list.innerHTML='';
     const keys = Object.keys(PARAMS).filter(k=>k!=='autre' && PARAMS[k].ideal);
-    let points = [];
+    const byKey = {};
     keys.forEach(k=>{
       const p = PARAMS[k];
       const [dMin,dMax] = barRange(p);
-      seriesFor(k,40).forEach(e=>{
-        const pct = clamp(((Number(e.value)-dMin)/(dMax-dMin))*100, 0, 100);
-        points.push({k, color:p.color||'#6E93BE', date:new Date(e.date), pct});
-      });
+      const pts = seriesFor(k,40).map(e=>({date:new Date(e.date), pct:clamp(((Number(e.value)-dMin)/(dMax-dMin))*100, 0, 100)}));
+      if(pts.length) byKey[k] = pts;
     });
-    const legend = document.getElementById('historyList');
-    if(points.length<2){
+    const allPoints = Object.entries(byKey).flatMap(([k,pts])=>pts.map(pt=>({k,...pt})));
+    if(allPoints.length<2){
       wrap.style.display='none';
-      legend.innerHTML = '';
+      ovLegend.innerHTML=''; ovLegend.style.display='none';
       return;
     }
-    wrap.style.display='block';
-    points.sort((a,b)=>a.date-b.date);
-    const dpr=window.devicePixelRatio||1, w=canvas.clientWidth, h=180;
+    wrap.style.display='flex';
+    ovLegend.style.display='flex';
+    allPoints.sort((a,b)=>a.date-b.date);
+    const dpr=window.devicePixelRatio||1, w=canvas.clientWidth, h=190;
     canvas.width=w*dpr; canvas.height=h*dpr;
     const ctx=canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
-    const minT=points[0].date.getTime(), maxT=points[points.length-1].date.getTime();
+    const minT=allPoints[0].date.getTime(), maxT=allPoints[allPoints.length-1].date.getTime();
     const span=Math.max(1, maxT-minT);
-    const padL=12,padR=12,padT=14,padB=22;
+    const padL=8,padR=10,padT=14,padB=22;
     const xAt=t=> padL+(w-padL-padR)*((t-minT)/span);
     const yAt=pct=> padT+(h-padT-padB)*(1-pct/100);
-    [0,50,100].forEach(v=>{
+
+    // Grille de fond : 5 lignes (0/25/50/75/100%), les 0 et 100 un peu plus visibles
+    // pour donner un cadre net, avec repère textuel haut/bas de l'échelle.
+    [0,25,50,75,100].forEach(v=>{
       const y=yAt(v);
-      ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(w-padR,y); ctx.stroke();
+      ctx.strokeStyle = (v===0||v===100) ? 'rgba(255,255,255,0.13)' : 'rgba(255,255,255,0.055)';
+      ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(w-padR,y); ctx.stroke();
     });
-    points.forEach(pt=>{
+    ctx.fillStyle='#5e7b98'; ctx.font="9px 'IBM Plex Mono',monospace"; ctx.textAlign='left';
+    ctx.fillText('haut', padL+2, yAt(100)-4);
+    ctx.fillText('bas', padL+2, yAt(0)+11);
+
+    // Une ligne fine par paramètre reliant ses propres points dans l'ordre chronologique,
+    // dessinée sous les points pour qu'on puisse suivre sa trajectoire dans le temps.
+    Object.entries(byKey).forEach(([k,pts])=>{
+      if(pts.length<2) return;
+      const sorted = pts.slice().sort((a,b)=>a.date-b.date);
+      ctx.beginPath();
+      sorted.forEach((pt,i)=>{
+        const x=xAt(pt.date.getTime()), y=yAt(pt.pct);
+        i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+      });
+      ctx.strokeStyle = PARAMS[k].color||'#6E93BE';
+      ctx.globalAlpha = 0.55; ctx.lineWidth = 1.6; ctx.stroke(); ctx.globalAlpha = 1;
+    });
+    allPoints.forEach(pt=>{
       const x=xAt(pt.date.getTime()), y=yAt(pt.pct);
       ctx.beginPath(); ctx.arc(x,y,3.6,0,Math.PI*2);
-      ctx.fillStyle=pt.color; ctx.globalAlpha=0.92; ctx.fill(); ctx.globalAlpha=1;
+      ctx.fillStyle = PARAMS[pt.k].color||'#6E93BE';
+      ctx.fill();
+      ctx.lineWidth=1; ctx.strokeStyle='rgba(4,12,22,0.85)'; ctx.stroke();
     });
     ctx.fillStyle='#6E93BE'; ctx.font="10px 'IBM Plex Mono',monospace"; ctx.textAlign='left';
-    ctx.fillText(points[0].date.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}), padL, h-6);
+    ctx.fillText(allPoints[0].date.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}), padL, h-6);
     ctx.textAlign='right';
-    ctx.fillText(points[points.length-1].date.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}), w-padR, h-6);
-    const seen = [...new Set(points.map(p=>p.k))];
-    legend.innerHTML = `<div class="overview-legend">${seen.map(k=>`<span class="ol-item"><span class="ol-dot" style="background:${PARAMS[k].color||'#6E93BE'}"></span>${SHORT_LABEL[k]||k}</span>`).join('')}</div>`;
+    ctx.fillText(allPoints[allPoints.length-1].date.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}), w-padR, h-6);
+
+    ovLegend.innerHTML = Object.keys(byKey).map(k=>
+      `<span class="ol-item"><span class="ol-dot" style="background:${PARAMS[k].color||'#6E93BE'}"></span>${SHORT_LABEL[k]||k}</span>`
+    ).join('');
   }
   function drawHistoryChart(filter){
     const wrap=document.getElementById('chartWrap'), canvas=document.getElementById('historyChart');
+    const ovLegend=document.getElementById('ovLegend');
+    if(ovLegend){ ovLegend.style.display='none'; ovLegend.innerHTML=''; }
     if(!filter||filter==='autre'){ wrap.style.display='none'; return; }
     const series=seriesFor(filter,60);
     if(series.length<2){ wrap.style.display='none'; return; }
@@ -3053,10 +3157,18 @@
   populateHistoryFilter();
   resetRefState();
   renderBrandSelector();
+  renderCycleToggle();
+  document.getElementById('cycleToggleBtn').addEventListener('click', async ()=>{
+    cyclingActive = !cyclingActive;
+    renderCycleToggle();
+    renderDashboard();
+    await saveCyclingActive();
+  });
   loadHistory().then(renderDashboard);
   // Supabase fait autorité mais arrive après : on part du cache localStorage pour un
   // affichage immédiat, puis on ne re-rend que si le serveur dit autre chose.
   loadActiveBrand().then(changed=>{ if(changed){ applyBrand(); renderBrandSelector(); renderDashboard(); } });
+  loadCyclingActive().then(changed=>{ if(changed){ renderCycleToggle(); renderDashboard(); } });
 
 })();
 </script>
