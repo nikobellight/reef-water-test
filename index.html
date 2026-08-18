@@ -106,14 +106,19 @@
   .bar-group-label{font-size:0.7rem;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-dim);margin:0 0 6px;}
   .bar-row+.bar-group-label{margin-top:14px;}
 
-  .bar-row{display:flex;gap:4px;justify-content:space-between;padding:4px 0 8px;}
-  .bar-col{flex:1 1 0;min-width:0;max-width:64px;display:flex;flex-direction:column;align-items:center;background:none;border:none;color:var(--text);padding:0;}
-  .bar-track{width:10px;height:110px;background:var(--bg-panel-raised);border-radius:8px;display:flex;align-items:flex-end;overflow:hidden;position:relative;}
-  .bar-fill{width:100%;border-radius:8px;min-height:5px;transition:height .25s ease;}
-  .bar-dim{position:absolute;bottom:0;left:0;right:0;background:rgba(5,11,20,0.8);border-radius:0 0 8px 8px;transition:height .25s ease;}
+  .bar-row{display:flex;gap:8px;justify-content:space-between;padding:4px 0 8px;}
+  .bar-col{flex:1 1 0;min-width:0;max-width:70px;display:flex;flex-direction:column;align-items:center;background:none;border:none;color:var(--text);padding:0;}
+  .bar-track{width:20px;height:150px;background:var(--bg-panel-raised);border-radius:999px;display:flex;align-items:flex-end;overflow:hidden;position:relative;}
+  .bar-fill{width:100%;min-height:5px;transition:height .25s ease;}
+  .bar-dim{position:absolute;bottom:0;left:0;right:0;background:rgba(5,11,20,0.8);transition:height .25s ease;}
   .ideal-tick{position:absolute;left:-2px;right:-2px;height:2px;background:rgba(255,255,255,0.9);box-shadow:0 0 3px rgba(0,0,0,0.7);pointer-events:none;z-index:2;transform:translateY(-50%);}
-  .bar-col .bl{font-family:'IBM Plex Mono',monospace;font-size:0.58rem;color:var(--text-dim);margin-top:7px;white-space:nowrap;}
-  .bar-col.stagger .bl{margin-top:16px;}
+  .bar-col .bl{font-size:0.76rem;color:var(--text-dim);margin-top:10px;white-space:nowrap;}
+  .bar-col .bv2{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:1rem;margin-top:2px;white-space:nowrap;}
+  .bar-col .bv2.good{color:var(--good);}
+  .bar-col .bv2.warn{color:var(--amber);}
+  .bar-col .bv2.bad{color:var(--bad);}
+  .bar-col .bv2.none{color:var(--text);}
+  .bar-col .bu2{font-size:0.62rem;color:var(--text-dim);margin-top:0;white-space:nowrap;}
   .bar-col .bv{font-family:'IBM Plex Mono',monospace;font-size:0.56rem;font-weight:600;margin-top:1px;text-align:center;line-height:1.15;white-space:nowrap;}
   .bar-col .bu{display:block;font-size:0.5rem;color:var(--text-dim);font-weight:500;}
   .empty-state{text-align:center;padding:34px 10px;color:var(--text-dim);}
@@ -242,7 +247,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v3.6</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v3.7</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -804,7 +809,7 @@
         const val = latest ? Number(latest.value) : null;
         const heightPct = val!==null ? Math.max(5, Math.min(100, ((val-dMin)/(dMax-dMin))*100)) : 4;
         const col = document.createElement('button');
-        col.className='bar-col' + (i%2===1 ? ' stagger' : ''); col.type='button';
+        col.className='bar-col'; col.type='button';
         const cardGrad = buildSwatchGradient(p);
         // Repère de plage idéale : 2 traits blancs, sans label. Pour les barres "carte"
         // (faible en haut), le repère suit la même échelle que le remplissage ; pour les
@@ -820,29 +825,23 @@
         let trackHtml;
         if(cardGrad){
           // Mode carte du nuancier : faible en haut, fort en bas — on assombrit le bas.
-          trackHtml = `<div class="bar-track" style="background:${cardGrad}"><div class="bar-dim" style="height:${100-heightPct}%;bottom:0;top:auto;border-radius:0 0 8px 8px;"></div>${idealTicksHtml}</div>`;
+          trackHtml = `<div class="bar-track" style="background:${cardGrad}"><div class="bar-dim" style="height:${100-heightPct}%;bottom:0;top:auto;"></div>${idealTicksHtml}</div>`;
         } else if(k==='temp'){
           // Mode thermomètre : froid en bas, chaud en haut — on assombrit le haut.
-          trackHtml = `<div class="bar-track" style="background:${TEMP_GRADIENT}"><div class="bar-dim" style="height:${100-heightPct}%;top:0;bottom:auto;border-radius:8px 8px 0 0;"></div>${idealTicksHtml}</div>`;
+          trackHtml = `<div class="bar-track" style="background:${TEMP_GRADIENT}"><div class="bar-dim" style="height:${100-heightPct}%;top:0;bottom:auto;"></div>${idealTicksHtml}</div>`;
         } else {
           trackHtml = `<div class="bar-track"><div class="bar-fill" style="height:${heightPct}%;background:${p.color||'#6E93BE'}"></div>${idealTicksHtml}</div>`;
         }
-        // Deux repères superposés sur la barre, aux deux extrémités opposées de l'échelle
-        // (zéro impact sur la hauteur de colonne) : un badge ROND pour le départ d'échelle
-        // (0 la plupart du temps, mais pas toujours — ex. pH démarre à 7.4), et un badge
-        // CARRÉ pour le résultat actuel, coloré par statut. Chaque bloc n'ayant plus que
-        // 5 barres, il y a la place de remettre l'unité à côté des deux valeurs.
-        const startAtTop = !!cardGrad;
+        // Plus de badges superposés — juste le résultat en gras et l'unité en dessous,
+        // sous la barre, comme la référence Blue. Coloré par statut pour garder le
+        // repère visuel utile, sans encombrer la barre elle-même.
         const meta = statusMeta(latest ? latest.status : null);
-        const startVal = parseFloat(dMin.toFixed(2));
-        const resultColor = {good:'var(--good)', warn:'var(--amber)', bad:'var(--bad)', none:'var(--text)'}[meta.cls] || 'var(--text)';
-        const unitTxt = p.unit ? ' '+p.unit : '';
-        const resultText = val!==null ? (val.toFixed(p.decimals)+unitTxt) : '—';
-        const startBadge = `<div style="position:absolute;left:50%;top:${startAtTop?0:110}px;transform:translate(-50%,-50%);font-size:0.56rem;line-height:1;color:var(--text-dim);background:var(--bg-panel-raised);border:1px solid var(--line);padding:2px 6px;border-radius:999px;white-space:nowrap;pointer-events:none;">${startVal}${unitTxt}</div>`;
-        const resultBadge = `<div style="position:absolute;left:50%;top:${startAtTop?110:0}px;transform:translate(-50%,-50%);font-family:'IBM Plex Mono',monospace;font-size:0.6rem;font-weight:600;line-height:1.1;color:${resultColor};background:var(--bg-panel-raised);border:1px solid ${resultColor};padding:2px 6px;border-radius:4px;white-space:nowrap;pointer-events:none;">${resultText}</div>`;
+        const resultText = val!==null ? val.toFixed(p.decimals) : '—';
         col.innerHTML = `
-          <div style="position:relative;">${trackHtml}${startBadge}${resultBadge}</div>
-          <div class="bl">${SHORT_LABEL[k]||k}</div>`;
+          ${trackHtml}
+          <div class="bl">${SHORT_LABEL[k]||k}</div>
+          <div class="bv2 ${meta.cls}">${resultText}</div>
+          <div class="bu2">${p.unit||''}</div>`;
         col.addEventListener('click', ()=>{ showView('history'); historyFilterParam=k; renderHistory(); });
         row.appendChild(col);
       });
