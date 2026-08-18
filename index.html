@@ -97,6 +97,7 @@
     width:92px;height:92px;border-radius:50%;flex:none;
     display:flex;flex-direction:column;align-items:center;justify-content:center;
     background:var(--bg-panel-raised);border:3px solid var(--line);
+    padding:0;cursor:pointer;
   }
   .highlight-badge .hv{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:1.3rem;line-height:1.1;}
   .highlight-badge .hl{font-size:0.6rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.03em;margin-top:4px;text-align:center;}
@@ -248,7 +249,7 @@
 <body>
   <div class="ribbon"></div>
   <header class="masthead">
-    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v4.0</span></h1>
+    <h1>Suivi récifal <span style="font-size:0.55em;color:var(--text-dim);font-weight:500;">v4.1</span></h1>
     <p>Nuancier photo, titration Salifert et mesures directes — synchronisé via Supabase.</p>
   </header>
 
@@ -486,6 +487,13 @@
       <button class="secondary" id="sheetCancel">Annuler</button>
       <button class="primary" id="sheetConfirm">OK</button>
     </div>
+  </div>
+
+  <div id="badgePickerOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:64;display:none;"></div>
+  <div id="badgePickerSheet" style="position:fixed;left:0;right:0;bottom:0;background:var(--bg-panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 20px 26px;z-index:65;display:none;max-width:640px;margin:0 auto;max-height:70vh;overflow-y:auto;">
+    <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 14px;">Choisir un paramètre</h3>
+    <div id="badgePickerList" style="display:flex;flex-direction:column;gap:8px;"></div>
+    <button class="secondary" id="badgePickerCancel" style="width:100%;margin-top:14px;">Annuler</button>
   </div>
 
   <div id="timerOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:70;display:none;"></div>
@@ -780,25 +788,54 @@
     }
     return gaugeRange(p);
   }
+  // Badges du tableau de bord : entièrement éditables (comme le "+" de l'app Blue) —
+  // on tape un badge, on choisit le paramètre à y afficher, et ça reste mémorisé sur
+  // l'appareil. Remplace l'ancien badge "Jours" fixe (bugué + redondant avec la date
+  // déjà affichée juste en dessous).
+  const ALL_BADGE_PARAMS = ['temp','sal','ph','nh3','no2','no3','po4','kh','ca','mg'];
+  let highlightBadges = ['nh3','no2','no3'];
+  try{
+    const saved = JSON.parse(localStorage.getItem('highlightBadges')||'null');
+    if(Array.isArray(saved) && saved.length===3 && saved.every(k=>ALL_BADGE_PARAMS.includes(k))) highlightBadges = saved;
+  }catch(e){}
+  function saveHighlightBadges(){ try{ localStorage.setItem('highlightBadges', JSON.stringify(highlightBadges)); }catch(e){} }
+
+  const badgePickerOverlay=document.getElementById('badgePickerOverlay'), badgePickerSheet=document.getElementById('badgePickerSheet'), badgePickerList=document.getElementById('badgePickerList');
+  let badgePickerSlot=null;
+  function openBadgePicker(slot){
+    badgePickerSlot=slot;
+    badgePickerList.innerHTML='';
+    ALL_BADGE_PARAMS.forEach(k=>{
+      const btn=document.createElement('button');
+      btn.type='button'; btn.className='secondary'; btn.style.width='100%'; btn.style.textAlign='left';
+      btn.textContent = PARAMS[k].label;
+      btn.addEventListener('click', ()=>{
+        highlightBadges[slot]=k; saveHighlightBadges(); closeBadgePicker(); renderDashboard();
+      });
+      badgePickerList.appendChild(btn);
+    });
+    badgePickerOverlay.style.display='block'; badgePickerSheet.style.display='block';
+  }
+  function closeBadgePicker(){ badgePickerOverlay.style.display='none'; badgePickerSheet.style.display='none'; badgePickerSlot=null; }
+  document.getElementById('badgePickerCancel').addEventListener('click', closeBadgePicker);
+  badgePickerOverlay.addEventListener('click', closeBadgePicker);
+
   function renderDashboard(){
     const allSorted = historyData.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
     const mostRecent = allSorted[0];
-    const phLatest = latestFor('ph'), tempLatest = latestFor('temp');
-    const daysSince = mostRecent ? Math.floor((new Date() - new Date(mostRecent.date))/86400000) : null;
 
-    document.getElementById('highlightRow').innerHTML = `
-      <div class="highlight-badge" style="border-color:${PARAMS.temp.color}">
-        <div class="hv">${tempLatest?Number(tempLatest.value).toFixed(1):'—'}</div>
-        <div class="hl">°C · Temp</div>
-      </div>
-      <div class="highlight-badge" style="border-color:${PARAMS.ph.color}">
-        <div class="hv">${phLatest?Number(phLatest.value).toFixed(2):'—'}</div>
-        <div class="hl">pH</div>
-      </div>
-      <div class="highlight-badge">
-        <div class="hv">${daysSince!==null?daysSince:'—'}</div>
-        <div class="hl">Jours</div>
-      </div>`;
+    document.getElementById('highlightRow').innerHTML = highlightBadges.map((k,i)=>{
+      const p=PARAMS[k], latest=latestFor(k);
+      const val = latest ? Number(latest.value) : null;
+      const valTxt = val!==null ? val.toFixed(p.decimals) : '—';
+      return `<button type="button" class="highlight-badge" data-slot="${i}" style="border-color:${p.color||'var(--line)'}">
+        <div class="hv">${valTxt}</div>
+        <div class="hl">${p.unit?p.unit+' · ':''}${SHORT_LABEL[k]||p.label}</div>
+      </button>`;
+    }).join('');
+    document.querySelectorAll('#highlightRow .highlight-badge').forEach(btn=>{
+      btn.addEventListener('click', ()=>openBadgePicker(Number(btn.dataset.slot)));
+    });
     document.getElementById('lastMeasureSub').textContent = mostRecent
       ? `Dernière mesure le ${new Date(mostRecent.date).toLocaleDateString('fr-FR')}`
       : 'Aucune mesure encore';
@@ -1526,7 +1563,7 @@
     // où les pastilles à la fois foncent ET se saturent ensemble en montant en
     // concentration. Se lit dans l'ordre naturel gauche→droite puis haut→bas, comme le
     // texte : case 1 = le plus pâle/faible, dernière case = le plus concentré/fort.
-    const N = 12;
+    const N = 16;
     const PUSH_LO = -1.6, PUSH_HI = 2.2;
     for(let i=0;i<N;i++){
       const t = i/(N-1);
