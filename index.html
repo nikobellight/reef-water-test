@@ -1109,7 +1109,7 @@
       <h1>MON RÉCIF</h1>
       <div class="hero-sub">Suivi récifal</div>
       <div class="app-meta">
-        <span class="ver-pill">v6.1</span>
+        <span class="ver-pill">v6.2</span>
       </div>
       <div class="hero-status-row">
         <button type="button" class="cycle-toggle-header" id="cycleToggleBtn"><span class="ic">🔄</span><span class="l1">Nouveau</span><span class="l2">Cycle</span></button>
@@ -2929,6 +2929,7 @@
     aimTarget=null; pendingTarget=null;
     targetFullscreen.classList.remove('show');
     targetPreview.classList.remove('show'); targetConfirm.classList.remove('show');
+    targetLabel.textContent='';
     fsPaletteFooter.style.display='none';
     fsPaletteVal=null; fsPaletteSelectedRgb=null;
     fsCanvasArea.style.overflow='';
@@ -2998,16 +2999,31 @@
     activePointerId=null;
     if(inPaletteMode()) return; // mode palette : le doigt sert à zoomer/déplacer, pas à confirmer un pixel
     const [x,y]=getCanvasCoords(e.clientX,e.clientY);
-    const s=robustSampleAt(x,y,6);
+    // Filet de sécurité : si l'échantillonnage échoue pour une raison quelconque (photo
+    // pas encore prête, coordonnées invalides...), on affiche quand même le bouton
+    // Valider avec une couleur neutre plutôt que de laisser l'appui ne rien produire —
+    // mieux vaut un résultat à corriger qu'une fenêtre bloquée sans aucun bouton.
+    let s;
+    try{ s = robustSampleAt(x,y,6); }
+    catch(err){ console.error('Échantillonnage échoué', err); s = {rgb:[128,128,128], homogeneity:1}; }
     pendingTarget={x,y,rgb:s.rgb,homogeneity:s.homogeneity};
     targetSwatch.style.background=rgbCss(s.rgb);
     if(s.homogeneity<0.6){
       targetSwatch.style.boxShadow='0 0 0 3px var(--bad)';
-      targetLabel.textContent += ' — ⚠️ zone non uniforme';
+      targetLabel.textContent = '⚠️ zone non uniforme';
     } else {
       targetSwatch.style.boxShadow='none';
+      targetLabel.textContent = '';
     }
     targetConfirm.classList.add('show');
+  });
+  // Le navigateur peut annuler un appui en cours (interprété comme un geste de
+  // défilement) au lieu d'envoyer pointerup — sans ce nettoyage, activePointerId
+  // restait bloqué et la fenêtre de visée ne réagissait plus au toucher suivant.
+  window.addEventListener('pointercancel', e=>{
+    if(e.pointerId!==activePointerId) return;
+    activePointerId=null;
+    targetPreview.classList.remove('show');
   });
   viewCanvas.addEventListener('touchstart', e=>{ if(aimTarget) e.preventDefault(); }, {passive:false});
 
@@ -3120,7 +3136,7 @@
       const prev = latestFor(refParam);
       if(prev){
         const when = new Date(prev.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
-        prevEl.textContent = `Dernière mesure : ${Number(prev.value).toFixed(p.decimals)} ${p.unit} (le ${when})`;
+        prevEl.innerHTML = `Dernière mesure : ${Number(prev.value).toFixed(p.decimals)} ${p.unit}<br>(le ${when})`;
       } else {
         prevEl.textContent = 'Première mesure pour ce paramètre';
       }
