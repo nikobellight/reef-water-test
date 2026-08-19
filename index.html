@@ -194,6 +194,7 @@
   .readout .u{font-size:1rem;color:var(--text-dim);margin-left:4px;}
   .readout .param{color:var(--text-dim);font-size:0.85rem;margin-top:2px;}
   .confidence{font-family:'IBM Plex Mono',monospace;font-size:0.8rem;text-align:center;margin-bottom:16px;letter-spacing:0.02em;}
+  .de-explain{font-size:0.68rem;color:var(--text-dim);text-align:center;line-height:1.4;margin:-10px 0 16px;}
   .compare-row{display:flex;justify-content:center;gap:26px;margin-bottom:18px;}
   .compare-item{text-align:center;}
   .compare-item .swatch{width:52px;height:52px;border-radius:10px;border:1px solid var(--line);margin:0 auto 6px;}
@@ -1107,7 +1108,7 @@
       <h1>MON RÉCIF</h1>
       <div class="hero-sub">Suivi récifal</div>
       <div class="app-meta">
-        <span class="ver-pill">v5.8</span>
+        <span class="ver-pill">v5.9</span>
       </div>
       <div class="hero-status-row">
         <button type="button" class="cycle-toggle-header" id="cycleToggleBtn"><span class="ic">🔄</span><span class="l1">Nouveau</span><span class="l2">Cycle</span></button>
@@ -1218,6 +1219,7 @@
           </div>
           <div id="readoutGauge"></div>
           <div class="confidence" id="confidenceText"></div>
+          <p class="de-explain">ΔE = écart de couleur entre ton échantillon et la pastille la plus proche. Plus c'est bas, plus c'est fiable.</p>
           <div class="photo-thumb-wrap" id="photoThumbWrapResult" style="display:none;"><canvas id="photoThumbResult"></canvas></div>
           <div class="compare-row">
             <div class="compare-item"><div class="swatch" id="cmpSample"></div><div class="lbl">ÉCHANTILLON</div></div>
@@ -1306,7 +1308,7 @@
     <section class="view" id="view-report">
       <div class="card">
         <p class="step-label active"><span class="dot"></span>Rapport</p>
-        <p class="mode-help">Résumé à copier-coller dans une conversation avec une IA pour analyse.</p>
+        <p class="mode-help">Résumé à copier-coller.</p>
         <div class="mode-toggle" id="reportPeriodToggle">
           <button data-period="today" class="active">Jour</button>
           <button data-period="week">Semaine</button>
@@ -3076,7 +3078,8 @@
     if(best.de<3){ confLabel='Correspondance excellente'; confColor='var(--good)'; }
     else if(best.de<7){ confLabel='Bonne correspondance'; confColor='var(--good)'; }
     else if(best.de<14){ confLabel='Correspondance approximative'; confColor='var(--amber)'; }
-    else{ confLabel='Peu fiable — vérifie les pastilles ci-dessus (zone grisée ?)'; confColor='var(--bad)'; }
+    else if(best.de<30){ confLabel='Peu fiable — reprends la photo (reflets, éclairage coloré, luminosité)'; confColor='var(--bad)'; }
+    else{ confLabel='Peu fiable — écart franc, vérifie que la marque sélectionnée correspond à ton kit'; confColor='var(--bad)'; }
 
     const status = refParam==='autre' ? null : statusOf(refParam, resultValue);
     showResult({value:resultValue, status, best, sample:sampleForMatch, entries, confLabel, confColor, manual:false});
