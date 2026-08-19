@@ -193,6 +193,7 @@
   }
   .readout .u{font-size:1rem;color:var(--text-dim);margin-left:4px;}
   .readout .param{color:var(--text-dim);font-size:0.85rem;margin-top:2px;}
+  .prev-value{color:var(--text-dim);font-size:0.76rem;margin-top:6px;font-family:'IBM Plex Mono',monospace;}
   .confidence{font-family:'IBM Plex Mono',monospace;font-size:0.8rem;text-align:center;margin-bottom:16px;letter-spacing:0.02em;}
   .de-explain{font-size:0.68rem;color:var(--text-dim);text-align:center;line-height:1.4;margin:-10px 0 16px;}
   .compare-row{display:flex;justify-content:center;gap:26px;margin-bottom:18px;}
@@ -1108,7 +1109,7 @@
       <h1>MON RÉCIF</h1>
       <div class="hero-sub">Suivi récifal</div>
       <div class="app-meta">
-        <span class="ver-pill">v6.0</span>
+        <span class="ver-pill">v6.1</span>
       </div>
       <div class="hero-status-row">
         <button type="button" class="cycle-toggle-header" id="cycleToggleBtn"><span class="ic">🔄</span><span class="l1">Nouveau</span><span class="l2">Cycle</span></button>
@@ -1215,6 +1216,7 @@
           <div class="readout">
             <div><input type="text" inputmode="decimal" class="value-edit" id="readoutValue"><span class="u" id="readoutUnit"></span></div>
             <div class="param" id="readoutParam"></div>
+            <p class="prev-value" id="prevValueText"></p>
 
           </div>
           <div id="readoutGauge"></div>
@@ -3111,6 +3113,18 @@
     document.getElementById('readoutValue').value = value;
     document.getElementById('readoutUnit').textContent = p.unit;
     document.getElementById('readoutParam').textContent = isCustom ? (chartCustomLabel.value.trim()||'Autre') : p.label;
+    const prevEl = document.getElementById('prevValueText');
+    if(isCustom){
+      prevEl.textContent = '';
+    } else {
+      const prev = latestFor(refParam);
+      if(prev){
+        const when = new Date(prev.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
+        prevEl.textContent = `Dernière mesure : ${Number(prev.value).toFixed(p.decimals)} ${p.unit} (le ${when})`;
+      } else {
+        prevEl.textContent = 'Première mesure pour ce paramètre';
+      }
+    }
     const gaugeEl=document.getElementById('readoutGauge');
     if(isCustom){ gaugeEl.innerHTML=''; } else { renderGauge(gaugeEl, refParam, value); }
     const conf=document.getElementById('confidenceText');
