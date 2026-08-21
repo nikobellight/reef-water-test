@@ -1109,7 +1109,7 @@
       <h1>MON RÉCIF</h1>
       <div class="hero-sub">Suivi récifal</div>
       <div class="app-meta">
-        <span class="ver-pill">v6.3</span>
+        <span class="ver-pill">v6.4</span>
       </div>
       <div class="hero-status-row">
         <button type="button" class="cycle-toggle-header" id="cycleToggleBtn"><span class="ic">🔄</span><span class="l1">Nouveau</span><span class="l2">Cycle</span></button>
@@ -1310,7 +1310,7 @@
     <section class="view" id="view-report">
       <div class="card">
         <p class="step-label active"><span class="dot"></span>Rapport</p>
-        <p class="mode-help">Résumé à copier-coller.</p>
+        <p class="mode-help">Vue rapide de tes tests, avec export texte en dessous.</p>
         <div class="mode-toggle" id="reportPeriodToggle">
           <button data-period="today" class="active">Jour</button>
           <button data-period="week">Semaine</button>
@@ -1318,6 +1318,8 @@
           <button data-period="all">Tout</button>
           <button data-period="lasttest">Dernier test</button>
         </div>
+        <div class="hist-list" id="reportVisual"></div>
+        <p class="mode-help" style="margin-top:14px;">Texte à copier-coller :</p>
         <textarea class="report-box" id="reportBox" readonly></textarea>
         <div class="btn-row">
           <button class="secondary" id="btnCopyReport">📋 Copier</button>
@@ -2194,21 +2196,41 @@
       b.classList.add('active'); reportPeriod=b.dataset.period; renderReport();
     });
   });
+  // Regroupement du "dernier test" par écarts CONSÉCUTIFS plutôt que par fenêtre fixe
+  // autour de la toute dernière mesure : si plusieurs tests sont faits à la suite
+  // (même avec l'appli fermée/rouverte entre deux), ils restent groupés tant que
+  // l'écart entre deux mesures qui se suivent ne dépasse pas GAP_MINUTES — même si
+  // le total entre la première et la dernière dépasse 1h.
+  const LASTTEST_GAP_MINUTES = 60;
+  function lastTestBatch(gapMinutes){
+    gapMinutes = gapMinutes || LASTTEST_GAP_MINUTES;
+    const desc = historyData.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
+    if(!desc.length) return [];
+    const batch=[desc[0]];
+    for(let i=1;i<desc.length;i++){
+      const gapMs = new Date(batch[batch.length-1].date) - new Date(desc[i].date);
+      if(gapMs <= gapMinutes*60000) batch.push(desc[i]);
+      else break;
+    }
+    return batch.slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
+  }
+  function formatBatchHeader(batch){
+    if(batch.length<=1) return `DERNIER TEST (${new Date(batch[0].date).toLocaleString('fr-FR')}) :`;
+    const start=new Date(batch[0].date), end=new Date(batch[batch.length-1].date);
+    return `DERNIER TEST (du ${start.toLocaleString('fr-FR')} au ${end.toLocaleString('fr-FR')}) :`;
+  }
   function generateReport(){
     if(reportPeriod==='lasttest'){
       const lines=[];
       lines.push('RAPPORT DE SUIVI — AQUARIUM RÉCIFAL');
       lines.push(`Généré le ${new Date().toLocaleString('fr-FR')}`);
       lines.push('');
-      const allSortedDesc = historyData.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
-      if(!allSortedDesc.length){
+      const batch = lastTestBatch();
+      if(!batch.length){
         lines.push('Aucune mesure enregistrée.');
         return lines.join('\n');
       }
-      const lastDate = new Date(allSortedDesc[0].date);
-      const batch = allSortedDesc.filter(e => Math.abs(new Date(e.date)-lastDate) <= 60*60000)
-        .sort((a,b)=>new Date(a.date)-new Date(b.date));
-      lines.push(`DERNIER TEST (${lastDate.toLocaleString('fr-FR')}, ± 1h) :`);
+      lines.push(formatBatchHeader(batch));
       lines.push('');
       batch.forEach(e=>{
         const label = e.param==='autre' ? (e.customLabel||'Autre') : PARAMS[e.param].label;
@@ -2226,12 +2248,9 @@
     lines.push(`Période : ${periodLabelText(reportPeriod)}`);
     lines.push('');
 
-    const allSortedDesc = historyData.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
-    if(allSortedDesc.length){
-      const lastDate = new Date(allSortedDesc[0].date);
-      const batch = allSortedDesc.filter(e => Math.abs(new Date(e.date)-lastDate) <= 60*60000)
-        .sort((a,b)=>new Date(a.date)-new Date(b.date));
-      lines.push(`DERNIER TEST (${lastDate.toLocaleString('fr-FR')}, ± 1h) :`);
+    const batch = lastTestBatch();
+    if(batch.length){
+      lines.push(formatBatchHeader(batch));
       batch.forEach(e=>{
         const label = e.param==='autre' ? (e.customLabel||'Autre') : PARAMS[e.param].label;
         const unit = e.param==='autre' ? '' : PARAMS[e.param].unit;
@@ -2241,12 +2260,7 @@
       lines.push('');
     }
 
-    lines.push('PLAGES DE RÉFÉRENCE (consensus récifal) :');
-    Object.keys(PARAMS).filter(k=>k!=='autre'&&PARAMS[k].ideal).forEach(k=>{
-      const p=PARAMS[k];
-      lines.push(`- ${p.label} : idéal ${p.ideal[0]}–${p.ideal[1]} ${p.unit} (acceptable ${p.acceptable[0]}–${p.acceptable[1]} ${p.unit})`);
-    });
-    lines.push(''); lines.push('HISTORIQUE DES MESURES (par paramètre, ordre chronologique) :');
+    lines.push('HISTORIQUE DES MESURES (par paramètre, ordre chronologique) :');
     const byParam={};
     filtered.forEach(e=>{ const key=e.param==='autre'?('autre:'+(e.customLabel||'Autre')):e.param; (byParam[key]=byParam[key]||[]).push(e); });
     const gk=Object.keys(byParam);
@@ -2263,7 +2277,48 @@
     });
     return lines.join('\n');
   }
-  function renderReport(){ document.getElementById('reportBox').value = generateReport(); }
+  // Carte visuelle (même style que l'historique) au-dessus du texte copiable —
+  // pas de plages de référence, juste pastille couleur + libellé + statut + valeur.
+  function reportRowHtml(e){
+    const p=PARAMS[e.param]||{label:'Autre',unit:'',decimals:2};
+    const label = e.param==='autre' ? (e.customLabel||'Autre') : p.label;
+    const unit = e.param==='autre' ? '' : (p.unit||'');
+    const meta = statusMeta(e.status);
+    const dotColor = e.param==='autre' ? '#6E93BE' : (p.color||'#6E93BE');
+    const when = new Date(e.date);
+    const dateTxt = when.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
+    const timeTxt = when.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    const decimals = e.param==='autre' ? 2 : (p.decimals!==undefined?p.decimals:2);
+    return `
+      <div class="hist-row">
+        <span class="hr-date"><strong>${dateTxt}</strong><small>${timeTxt}</small></span>
+        <span class="hr-mid">
+          <span class="param-dot" style="background:${dotColor}"></span>
+          <span class="hr-text">
+            <span class="hr-label">${label}</span>
+            <span class="hr-meta">${meta.label}</span>
+          </span>
+        </span>
+        <span class="hr-right">
+          <span class="hr-value">${Number(e.value).toFixed(decimals)} ${unit}</span>
+        </span>
+      </div>`;
+  }
+  function renderReportVisual(){
+    const el = document.getElementById('reportVisual'); if(!el) return;
+    if(reportPeriod==='lasttest'){
+      const batch = lastTestBatch();
+      if(!batch.length){ el.innerHTML = '<p style="color:var(--text-dim);font-size:0.85rem;">Aucune mesure enregistrée.</p>'; return; }
+      el.innerHTML = `<p class="section-sub" style="margin:2px 0 8px;">${formatBatchHeader(batch)}</p>` + batch.map(reportRowHtml).join('');
+      return;
+    }
+    const cutoff=periodCutoff(reportPeriod);
+    const filtered = historyData.filter(e=>!cutoff || new Date(e.date)>=cutoff)
+      .slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
+    if(!filtered.length){ el.innerHTML = '<p style="color:var(--text-dim);font-size:0.85rem;">Aucune mesure sur cette période.</p>'; return; }
+    el.innerHTML = filtered.map(reportRowHtml).join('');
+  }
+  function renderReport(){ document.getElementById('reportBox').value = generateReport(); renderReportVisual(); }
   function flashBtn(id,text){ const b=document.getElementById(id); const old=b.textContent; b.textContent=text; setTimeout(()=>b.textContent=old,1800); }
   document.getElementById('btnCopyReport').addEventListener('click', async ()=>{
     const ta=document.getElementById('reportBox');
@@ -2511,6 +2566,7 @@
   let aimTarget=null; // 'firstSwatch' | 'lastSwatch' | 'sample' | {chip:value}
   let pendingTarget=null; // {x,y,rgb}
   let hasPhoto=false;
+  let photoSource=null; // 'camera' | 'gallery' — pour ne pas re-sauvegarder une photo déjà issue de la galerie
 
   const workspace=document.getElementById('workspace');
   const captureSection=document.getElementById('captureSection');
@@ -2868,8 +2924,8 @@
   // -------- capture --------
   document.getElementById('btnCamera').addEventListener('click', ()=>fileCamera.click());
   document.getElementById('btnGallery').addEventListener('click', ()=>fileGallery.click());
-  fileCamera.addEventListener('change', e=>{ if(e.target.files[0]) handleFile(e.target.files[0]); });
-  fileGallery.addEventListener('change', e=>{ if(e.target.files[0]) handleFile(e.target.files[0]); });
+  fileCamera.addEventListener('change', e=>{ if(e.target.files[0]){ photoSource='camera'; handleFile(e.target.files[0]); } });
+  fileGallery.addEventListener('change', e=>{ if(e.target.files[0]){ photoSource='gallery'; handleFile(e.target.files[0]); } });
 
   async function handleFile(file){
     let srcImg;
@@ -2909,7 +2965,7 @@
   }
   document.getElementById('btnReset').addEventListener('click', ()=>{
     workspace.style.display='none'; captureSection.style.display='block';
-    fileCamera.value=''; fileGallery.value=''; hasPhoto=false;
+    fileCamera.value=''; fileGallery.value=''; hasPhoto=false; photoSource=null;
     resetRefState();
     renderPhotoThumbs();
   });
@@ -3178,6 +3234,7 @@
   // Téléchargements ; iOS/Safari peut ouvrir un aperçu selon la version.
   function downloadPhoto(paramKey){
     if(!hasPhoto) return;
+    if(photoSource!=='camera') return; // déjà dans la galerie : pas de re-sauvegarde en double
     dataCanvas.toBlob(blob=>{
       if(!blob) return;
       const url=URL.createObjectURL(blob);
