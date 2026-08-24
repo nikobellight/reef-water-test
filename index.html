@@ -1118,7 +1118,7 @@
       <h1>MON RÉCIF</h1>
       <div class="hero-sub">Suivi récifal</div>
       <div class="app-meta">
-        <span class="ver-pill">v6.6</span>
+        <span class="ver-pill">v6.7</span>
       </div>
       <div class="hero-status-row">
         <button type="button" class="cycle-toggle-header" id="cycleToggleBtn"><span class="ic">🔄</span><span class="l1">Nouveau</span><span class="l2">Cycle</span></button>
@@ -2602,6 +2602,7 @@
   let pendingTarget=null; // {x,y,rgb}
   let hasPhoto=false;
   let photoSource=null; // 'camera' | 'gallery' — pour ne pas re-sauvegarder une photo déjà issue de la galerie
+  let currentLowConf=false; // reflète la zone basse ambiguë du dernier calcul, jusqu'à la validation
 
   const workspace=document.getElementById('workspace');
   const captureSection=document.getElementById('captureSection');
@@ -2650,7 +2651,7 @@
   // -------- state reset / param switching --------
   function resetRefState(){
     firstSwatchPos=null; lastSwatchPos=null;
-    refPoints={}; samplePointRaw=null; aimTarget=null; pendingTarget=null;
+    refPoints={}; samplePointRaw=null; aimTarget=null; pendingTarget=null; currentLowConf=false;
     resultPanel.style.display='none';
     verifyCard.style.display='none';
     document.getElementById('sampleReminder').style.display='none';
@@ -3214,6 +3215,7 @@
     else{ confLabel='Peu fiable — écart franc, vérifie que la marque sélectionnée correspond à ton kit'; confColor='var(--bad)'; }
 
     const lowConf = refParam!=='autre' && lowConfZoneCheck(activeBrand, refParam, best, second);
+    currentLowConf = lowConf;
     const status = refParam==='autre' ? null : statusOf(refParam, resultValue);
     showResult({value:resultValue, status, best, sample:sampleForMatch, entries, confLabel, confColor, manual:false, lowConf});
   }
@@ -3273,6 +3275,10 @@
   document.getElementById('readoutValue').addEventListener('input', ()=>{
     if(refParam==='autre') return;
     const v = parseFloat(document.getElementById('readoutValue').value.replace(',','.'));
+    currentLowConf = false;
+    document.getElementById('lowConfBanner').style.display = 'none';
+    document.getElementById('readoutValue').classList.remove('dim');
+    document.getElementById('readoutUnit').classList.remove('dim');
     if(!isNaN(v)) renderGauge(document.getElementById('readoutGauge'), refParam, v);
   });
   // Sauvegarde auto de la photo, déclenchée par la validation elle-même — pas de bouton
@@ -3297,10 +3303,12 @@
     const val=parseFloat(document.getElementById('readoutValue').value.replace(',','.'));
     if(isNaN(val)) return;
     downloadPhoto(refParam);
-    const status = isCustom ? null : statusOf(refParam, val);
+    const status = isCustom ? null : (currentLowConf ? 'ideal' : statusOf(refParam, val));
+    const baseNote = document.getElementById('confidenceText').textContent;
+    const note = currentLowConf ? `${LOW_CONF_LABEL} — ${baseNote}` : baseNote;
     const saved = await addHistoryEntry({
       param: refParam, value: val, status, source:'nuancier',
-      note: document.getElementById('confidenceText').textContent,
+      note,
       customLabel: isCustom ? (chartCustomLabel.value.trim()||'Autre') : undefined
     });
     const savedEl=document.getElementById('savedNote');
