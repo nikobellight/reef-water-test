@@ -194,6 +194,8 @@
   .readout .u{font-size:1rem;color:var(--text-dim);margin-left:4px;}
   .readout .param{color:var(--text-dim);font-size:0.85rem;margin-top:2px;}
   .prev-value{color:var(--text-dim);font-size:0.76rem;margin-top:6px;font-family:'IBM Plex Mono',monospace;}
+  .low-conf-banner{background:rgba(230,178,60,0.14);border:1px solid var(--amber);color:var(--amber);border-radius:10px;padding:10px 14px;font-size:0.85rem;font-weight:600;margin-bottom:14px;text-align:center;}
+  .value-edit.dim, .readout .u.dim{opacity:0.45;font-weight:400;}
   .confidence{font-family:'IBM Plex Mono',monospace;font-size:0.8rem;text-align:center;margin-bottom:16px;letter-spacing:0.02em;}
   .de-explain{font-size:0.68rem;color:var(--text-dim);text-align:center;line-height:1.4;margin:-10px 0 16px;}
   .compare-row{display:flex;justify-content:center;gap:26px;margin-bottom:18px;}
@@ -1109,7 +1111,7 @@
       <h1>MON RÉCIF</h1>
       <div class="hero-sub">Suivi récifal</div>
       <div class="app-meta">
-        <span class="ver-pill">v6.4</span>
+        <span class="ver-pill">v6.5</span>
       </div>
       <div class="hero-status-row">
         <button type="button" class="cycle-toggle-header" id="cycleToggleBtn"><span class="ic">🔄</span><span class="l1">Nouveau</span><span class="l2">Cycle</span></button>
@@ -1213,6 +1215,7 @@
 
         <div class="card" id="resultPanel" style="display:none;">
           <p class="step-label done"><span class="dot"></span>Résultat — modifiable avant validation</p>
+          <div class="low-conf-banner" id="lowConfBanner" style="display:none;"></div>
           <div class="readout">
             <div><input type="text" inputmode="decimal" class="value-edit" id="readoutValue"><span class="u" id="readoutUnit"></span></div>
             <div class="param" id="readoutParam"></div>
@@ -1583,6 +1586,25 @@
     sal:  {label:'Densité',                unit:'SG',  group:'direct',    decimals:3, ideal:[1.023,1.026],acceptable:[1.020,1.028], optimal:1.0245, color:'#4DD9E8'},
     autre:{label:'Autre',                  unit:'',    group:'chart',     decimals:2, ideal:null,         acceptable:null}
   };
+
+  // Zones basses où la distinction colorimétrique entre deux paliers proches n'est pas
+  // fiable physiquement (limite connue du kit/réactif à faible concentration, pas un bug
+  // de calibration). Confirmées au cas par cas avec Nicolas — à compléter au besoin.
+  // Le déclenchement se fait sur l'échantillon réel (ΔE aux deux points candidats),
+  // pas sur l'écart entre les pastilles de calibration elles-mêmes.
+  const LOW_CONF_ZONES = {
+    redsea: { nh3: [0, 0.2] },
+    api:    { nh3: [0, 0.25] },
+    elos:   { nh3: [0, 0.1] }
+  };
+  const LOW_CONF_LABEL = 'Proche de zéro / indétectable avec précision à ce niveau';
+  function lowConfZoneCheck(brandKey, paramKey, best, second){
+    const zone = (LOW_CONF_ZONES[brandKey]||{})[paramKey];
+    if(!zone || !second) return false;
+    if(best.de < 2) return false; // match net à une seule pastille : lecture fiable
+    const vals = [best.value, second.value].sort((a,b)=>a-b);
+    return vals[0]===zone[0] && vals[1]===zone[1];
+  }
 
   const STATUS_META = {
     ideal:      {cls:'good', label:'Idéal'},
@@ -3178,16 +3200,27 @@
     else if(best.de<30){ confLabel='Peu fiable — reprends la photo (reflets, éclairage coloré, luminosité)'; confColor='var(--bad)'; }
     else{ confLabel='Peu fiable — écart franc, vérifie que la marque sélectionnée correspond à ton kit'; confColor='var(--bad)'; }
 
+    const lowConf = refParam!=='autre' && lowConfZoneCheck(activeBrand, refParam, best, second);
     const status = refParam==='autre' ? null : statusOf(refParam, resultValue);
-    showResult({value:resultValue, status, best, sample:sampleForMatch, entries, confLabel, confColor, manual:false});
+    showResult({value:resultValue, status, best, sample:sampleForMatch, entries, confLabel, confColor, manual:false, lowConf});
   }
 
   function showResult(opts){
-    const value=opts.value, status=opts.status, best=opts.best, sample=opts.sample, entries=opts.entries, confLabel=opts.confLabel, confColor=opts.confColor, manual=opts.manual;
+    const value=opts.value, status=opts.status, best=opts.best, sample=opts.sample, entries=opts.entries, confLabel=opts.confLabel, confColor=opts.confColor, manual=opts.manual, lowConf=opts.lowConf;
     const p=PARAMS[refParam]; const isCustom=refParam==='autre'; const meta=statusMeta(status);
     document.getElementById('readoutValue').value = value;
     document.getElementById('readoutUnit').textContent = p.unit;
     document.getElementById('readoutParam').textContent = isCustom ? (chartCustomLabel.value.trim()||'Autre') : p.label;
+    const lowConfBanner = document.getElementById('lowConfBanner');
+    const valueEl = document.getElementById('readoutValue'), unitEl = document.getElementById('readoutUnit');
+    if(lowConf){
+      lowConfBanner.textContent = LOW_CONF_LABEL;
+      lowConfBanner.style.display = 'block';
+      valueEl.classList.add('dim'); unitEl.classList.add('dim');
+    } else {
+      lowConfBanner.style.display = 'none';
+      valueEl.classList.remove('dim'); unitEl.classList.remove('dim');
+    }
     const prevEl = document.getElementById('prevValueText');
     if(isCustom){
       prevEl.textContent = '';
