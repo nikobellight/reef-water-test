@@ -703,6 +703,13 @@
     background:#fff;
     box-shadow:0 0 0 3px rgba(255,255,255,.14),0 0 10px rgba(255,255,255,.88);
   }
+  .gauge-marker.uncertain{
+    background:repeating-linear-gradient(45deg, var(--amber) 0 3px, transparent 3px 6px);
+    box-shadow:0 0 0 3px rgba(242,166,90,.22),0 0 8px rgba(242,166,90,.6);
+  }
+  .gauge-uncertain-note{
+    text-align:center;font-size:0.72rem;color:var(--amber);margin:-10px 0 12px;font-style:italic;
+  }
   .gauge-col{
     border:1px solid rgba(111,154,197,.14);
     background:rgba(3,13,24,.48);
@@ -1111,7 +1118,7 @@
       <h1>MON RÉCIF</h1>
       <div class="hero-sub">Suivi récifal</div>
       <div class="app-meta">
-        <span class="ver-pill">v6.5</span>
+        <span class="ver-pill">v6.6</span>
       </div>
       <div class="hero-status-row">
         <button type="button" class="cycle-toggle-header" id="cycleToggleBtn"><span class="ic">🔄</span><span class="l1">Nouveau</span><span class="l2">Cycle</span></button>
@@ -1593,6 +1600,7 @@
   // Le déclenchement se fait sur l'échantillon réel (ΔE aux deux points candidats),
   // pas sur l'écart entre les pastilles de calibration elles-mêmes.
   const LOW_CONF_ZONES = {
+    pawfly: { nh3: [0, 0.25] },
     redsea: { nh3: [0, 0.2] },
     api:    { nh3: [0, 0.25] },
     elos:   { nh3: [0, 0.1] }
@@ -1626,7 +1634,7 @@
 
   // Barre dégradée rouge -> vert -> rouge avec repère à la valeur mesurée,
   // + bloc Acceptable / Good / Optimal (plages chiffrées réelles).
-  function renderGauge(container, paramKey, value){
+  function renderGauge(container, paramKey, value, lowConf){
     const p = PARAMS[paramKey];
     if(!p || !p.ideal){ container.innerHTML=''; return; }
     const [aMin,aMax] = p.acceptable, [iMin,iMax] = p.ideal, opt = p.optimal;
@@ -1644,7 +1652,11 @@
     if(pts[0] < lo){ const shift = lo-pts[0]; pts = pts.map(v=>v+shift); }
     if(pts[3] > hi){ const scale = (hi-lo)/(pts[3]-pts[0]); pts = pts.map(v=> lo + (v-pts[0])*scale); }
     const [gAMin,gIMin,gIMax,gAMax] = pts;
-    const markerPct = pct(value);
+    // Zone basse incertaine : on ne feint pas de savoir où exactement dans [idéal min, valeur]
+    // se situe la vraie concentration, donc le curseur reste sur la borne idéale plutôt que
+    // sur le chiffre interpolé — la couleur qu'on afficherait sinon (ambre) suggérerait à tort
+    // un léger dépassement, alors que le bandeau au-dessus dit justement l'inverse.
+    const markerPct = lowConf ? gIMin : pct(value);
     const gradient = `linear-gradient(90deg,
       var(--bad) 0%, var(--amber) ${gAMin}%,
       var(--good) ${gIMin}%, var(--good) ${gIMax}%,
@@ -1652,8 +1664,9 @@
     const dec = p.decimals;
     container.innerHTML = `
       <div class="gauge-bar" style="background:${gradient}">
-        <div class="gauge-marker" style="left:${markerPct}%"></div>
+        <div class="gauge-marker${lowConf?' uncertain':''}" style="left:${markerPct}%"></div>
       </div>
+      ${lowConf ? '<p class="gauge-uncertain-note">Position approximative — zone basse incertaine</p>' : ''}
       <div class="gauge-cols">
         <div class="gauge-col"><div class="gc-label">Acceptable</div><div class="gc-val amber">${aMin}–${aMax}<span class="gc-unit">${p.unit}</span></div></div>
         <div class="gauge-col"><div class="gc-label">Idéal</div><div class="gc-val good">${iMin}–${iMax}<span class="gc-unit">${p.unit}</span></div></div>
@@ -3234,7 +3247,7 @@
       }
     }
     const gaugeEl=document.getElementById('readoutGauge');
-    if(isCustom){ gaugeEl.innerHTML=''; } else { renderGauge(gaugeEl, refParam, value); }
+    if(isCustom){ gaugeEl.innerHTML=''; } else { renderGauge(gaugeEl, refParam, value, lowConf); }
     const conf=document.getElementById('confidenceText');
     conf.textContent = manual ? 'Sélection manuelle' : `ΔE ${best.de.toFixed(1)} · ${confLabel}`;
     conf.style.color = manual ? 'var(--text-dim)' : confColor;
