@@ -1136,7 +1136,7 @@
       <h1>MON RÉCIF</h1>
       <div class="hero-sub" data-i18n="app.tagline">Suivi récifal</div>
       <div class="app-meta">
-        <span class="ver-pill">v6.16</span>
+        <span class="ver-pill">v6.17</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1322,16 +1322,16 @@
 
     <section class="view" id="view-history">
       <div class="card">
-        <p class="step-label active"><span class="dot"></span>Historique</p>
+        <p class="step-label active"><span class="dot"></span><span data-i18n="history.stepLabel">Historique</span></p>
         <div class="history-hero">
-          <p class="section-title">Historique récifal</p>
-          <p class="section-sub">Filtre un paramètre et visualise l’évolution de ton bac dans le temps.</p>
+          <p class="section-title" data-i18n="history.title">Historique récifal</p>
+          <p class="section-sub" data-i18n="history.subtitle">Filtre un paramètre et visualise l’évolution de ton bac dans le temps.</p>
         </div>
         <div class="chip-row" id="historyChips"></div>
         <div id="historyGauge"></div>
         <div class="chart-wrap" id="chartWrap"><canvas id="historyChart"></canvas></div>
         <div class="mini-grid" id="miniGrid"></div>
-        <div class="empty-note" id="historyEmpty" style="display:none;margin-bottom:10px;color:var(--text-dim);font-size:0.85rem;">Aucune mesure pour ce filtre.</div>
+        <div class="empty-note" id="historyEmpty" style="display:none;margin-bottom:10px;color:var(--text-dim);font-size:0.85rem;" data-i18n="history.emptyFilter">Aucune mesure pour ce filtre.</div>
         <div class="hist-list" id="historyList"></div>
       </div>
     </section>
@@ -1665,7 +1665,13 @@
       'direct.sgLabel': 'Densité (SG) — jamais moins de 1, jamais plus de 2',
       'direct.pptLabel': 'Salinité (ppt)',
       'direct.pptPlaceholder': 'ex. 35',
-      'direct.convertedFrom': 'converti depuis {ppt} ppt'
+      'direct.convertedFrom': 'converti depuis {ppt} ppt',
+      'history.stepLabel': 'Historique',
+      'history.title': 'Historique récifal',
+      'history.subtitle': 'Filtre un paramètre et visualise l’évolution de ton bac dans le temps.',
+      'history.emptyFilter': 'Aucune mesure pour ce filtre.',
+      'history.chipAll': 'Tous',
+      'common.delete': 'Supprimer'
     },
     en: {
       'app.tagline': 'Reef Tracking',
@@ -1760,7 +1766,13 @@
       'direct.sgLabel': 'Density (SG) — never below 1, never above 2',
       'direct.pptLabel': 'Salinity (ppt)',
       'direct.pptPlaceholder': 'e.g. 35',
-      'direct.convertedFrom': 'converted from {ppt} ppt'
+      'direct.convertedFrom': 'converted from {ppt} ppt',
+      'history.stepLabel': 'History',
+      'history.title': 'Reef history',
+      'history.subtitle': 'Filter a parameter and see how your tank has changed over time.',
+      'history.emptyFilter': 'No readings for this filter.',
+      'history.chipAll': 'All',
+      'common.delete': 'Delete'
     }
   };
   let currentLang = 'fr';
@@ -2356,7 +2368,7 @@
       b.addEventListener('click', ()=>{ historyFilterParam = val; renderHistory(); });
       row.appendChild(b);
     };
-    mkChip('', 'Tous', null);
+    mkChip('', t('history.chipAll'), null);
     Object.keys(PARAMS).filter(k=>k!=='autre').forEach(k=>mkChip(k, SHORT_LABEL[k]||k, PARAMS[k].color));
     mkChip('autre', 'Autre', '#6E93BE');
   }
@@ -2407,7 +2419,7 @@
         </span>
         <span class="hr-right">
           <span class="hr-value">${Number(e.value).toFixed(p.decimals!==undefined?p.decimals:2)} ${p.unit||''}</span>
-          <button class="del" aria-label="Supprimer">×</button>
+          <button class="del" aria-label="${t('common.delete')}">×</button>
         </span>`;
       row.querySelector('.del').addEventListener('click', ()=>deleteHistoryEntry(e.id));
       list.appendChild(row);
