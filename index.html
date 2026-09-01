@@ -1136,7 +1136,7 @@
       <h1>MON RÉCIF</h1>
       <div class="hero-sub" data-i18n="app.tagline">Suivi récifal</div>
       <div class="app-meta">
-        <span class="ver-pill">v6.15</span>
+        <span class="ver-pill">v6.16</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1293,29 +1293,29 @@
     <!-- ================= DIRECT ================= -->
     <section class="view" id="view-direct">
       <div class="card">
-        <p class="step-label active"><span class="dot"></span>Température</p>
-        <div class="field"><label class="field-label">Température (°C)</label><input type="number" id="tempInput" step="0.1" placeholder="ex. 25.5"></div>
-        <button class="primary" id="btnSaveTemp">Enregistrer</button>
+        <p class="step-label active"><span class="dot"></span><span data-i18n="direct.tempStep">Température</span></p>
+        <div class="field"><label class="field-label" data-i18n="direct.tempLabel">Température (°C)</label><input type="number" id="tempInput" step="0.1" placeholder="ex. 25.5" data-i18n-placeholder="direct.tempPlaceholder"></div>
+        <button class="primary" id="btnSaveTemp" data-i18n="common.save">Enregistrer</button>
         <p class="save-msg" id="tempSaveMsg"></p>
       </div>
       <div class="card">
-        <p class="step-label active"><span class="dot"></span>Densité</p>
+        <p class="step-label active"><span class="dot"></span><span data-i18n="direct.salStep">Densité</span></p>
         <div class="mode-toggle" id="salUnitToggle">
           <button data-unit="sg" class="active" type="button">SG</button>
           <button data-unit="ppt" type="button">ppt</button>
         </div>
         <div class="field" id="salSgField">
-          <label class="field-label">Densité (SG) — jamais moins de 1, jamais plus de 2</label>
+          <label class="field-label" data-i18n="direct.sgLabel">Densité (SG) — jamais moins de 1, jamais plus de 2</label>
           <div class="sg-input-row">
             <span class="sg-prefix">1.</span>
             <input type="text" inputmode="numeric" id="salInputSg" maxlength="3" placeholder="025">
           </div>
         </div>
         <div class="field" id="salPptField" style="display:none;">
-          <label class="field-label">Salinité (ppt)</label>
-          <input type="number" id="salInputPpt" step="0.1" placeholder="ex. 35">
+          <label class="field-label" data-i18n="direct.pptLabel">Salinité (ppt)</label>
+          <input type="number" id="salInputPpt" step="0.1" placeholder="ex. 35" data-i18n-placeholder="direct.pptPlaceholder">
         </div>
-        <button class="primary" id="btnSaveSal">Enregistrer</button>
+        <button class="primary" id="btnSaveSal" data-i18n="common.save">Enregistrer</button>
         <p class="save-msg" id="salSaveMsg"></p>
       </div>
     </section>
@@ -1656,7 +1656,16 @@
       'titration.btnCalc': 'Calculer',
       'titration.formulaHint': 'Vérifie ces formules par rapport à la notice papier de ta boîte Salifert (SALCORE).',
       'titration.viewDashboard': 'Voir le tableau de bord',
-      'titration.readingError': 'Entre une lecture entre 0.00 et 1.00 ml.'
+      'titration.readingError': 'Entre une lecture entre 0.00 et 1.00 ml.',
+      'common.savedFailShort': '⚠️ Échec Supabase',
+      'direct.tempStep': 'Température',
+      'direct.tempLabel': 'Température (°C)',
+      'direct.tempPlaceholder': 'ex. 25.5',
+      'direct.salStep': 'Densité',
+      'direct.sgLabel': 'Densité (SG) — jamais moins de 1, jamais plus de 2',
+      'direct.pptLabel': 'Salinité (ppt)',
+      'direct.pptPlaceholder': 'ex. 35',
+      'direct.convertedFrom': 'converti depuis {ppt} ppt'
     },
     en: {
       'app.tagline': 'Reef Tracking',
@@ -1742,7 +1751,16 @@
       'titration.btnCalc': 'Calculate',
       'titration.formulaHint': 'Check these formulas against the paper insert of your Salifert box (SALCORE).',
       'titration.viewDashboard': 'View dashboard',
-      'titration.readingError': 'Enter a reading between 0.00 and 1.00 ml.'
+      'titration.readingError': 'Enter a reading between 0.00 and 1.00 ml.',
+      'common.savedFailShort': '⚠️ Supabase failed',
+      'direct.tempStep': 'Temperature',
+      'direct.tempLabel': 'Temperature (°C)',
+      'direct.tempPlaceholder': 'e.g. 25.5',
+      'direct.salStep': 'Salinity',
+      'direct.sgLabel': 'Density (SG) — never below 1, never above 2',
+      'direct.pptLabel': 'Salinity (ppt)',
+      'direct.pptPlaceholder': 'e.g. 35',
+      'direct.convertedFrom': 'converted from {ppt} ppt'
     }
   };
   let currentLang = 'fr';
@@ -2744,7 +2762,7 @@
     const saved=await addHistoryEntry({param:'temp',value:v,status:statusOf('temp',v),source:'direct'});
     if(saved) document.getElementById('tempInput').value='';
     const msg=document.getElementById('tempSaveMsg');
-    msg.textContent = saved? "✅ Enregistré dans l'historique" : '⚠️ Échec Supabase';
+    msg.textContent = saved? t('common.savedSuccess') : t('common.savedFailShort');
     msg.style.color = saved? 'var(--good)':'var(--bad)';
     msg.style.display='block'; setTimeout(()=>msg.style.display='none', saved?1800:4000);
   });
@@ -2772,12 +2790,12 @@
       if(!raw || isNaN(ppt)) return;
       // Approximation pratique du hobby récifal : SG = 1 + ppt/1340
       v = Math.round((1 + ppt/1340) * 1000) / 1000;
-      note = `converti depuis ${ppt} ppt`;
+      note = t('direct.convertedFrom', {ppt});
     }
     const saved = await addHistoryEntry({param:'sal', value:v, status:statusOf('sal',v), source:'direct', note});
     if(saved){ document.getElementById('salInputSg').value=''; document.getElementById('salInputPpt').value=''; }
     const msg=document.getElementById('salSaveMsg');
-    msg.textContent = saved? "✅ Enregistré dans l'historique" : '⚠️ Échec Supabase';
+    msg.textContent = saved? t('common.savedSuccess') : t('common.savedFailShort');
     msg.style.color = saved? 'var(--good)':'var(--bad)';
     msg.style.display='block'; setTimeout(()=>msg.style.display='none', saved?1800:4000);
   });
