@@ -1136,12 +1136,12 @@
       <h1>MON RÉCIF</h1>
       <div class="hero-sub" data-i18n="app.tagline">Suivi récifal</div>
       <div class="app-meta">
-        <span class="ver-pill">v6.20</span>
+        <span class="ver-pill">v6.21</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
         <button type="button" class="cycle-toggle-header" id="cycleToggleBtn"><span class="ic">🔄</span><span class="l1">Nouveau</span><span class="l2">Cycle</span></button>
-        <div class="hero-status" id="heroStatus"><span class="dot"></span><span class="txt">Récif sous contrôle</span></div>
+        <div class="hero-status" id="heroStatus"><span class="dot"></span><span class="txt" data-i18n="hero.underControl">Récif sous contrôle</span></div>
         <span class="hero-status-row-spacer"></span>
       </div>
     </div>
@@ -1383,14 +1383,14 @@
 
   <div id="badgePickerOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:64;display:none;"></div>
   <div id="badgePickerSheet" style="position:fixed;left:0;right:0;bottom:0;background:var(--bg-panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 20px 26px;z-index:65;display:none;max-width:640px;margin:0 auto;max-height:70vh;overflow-y:auto;">
-    <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 14px;">Choisir un paramètre</h3>
+    <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 14px;" data-i18n="badge.pickerTitle">Choisir un paramètre</h3>
     <div id="badgePickerList" style="display:flex;flex-direction:column;gap:8px;"></div>
-    <button class="secondary" id="badgePickerCancel" style="width:100%;margin-top:14px;">Annuler</button>
+    <button class="secondary" id="badgePickerCancel" style="width:100%;margin-top:14px;" data-i18n="common.cancel">Annuler</button>
   </div>
 
   <div id="timerOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:70;display:none;"></div>
   <div id="timerSheet" style="position:fixed;left:0;right:0;bottom:0;background:var(--bg-panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 20px 26px;z-index:71;display:none;max-width:640px;margin:0 auto;">
-    <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 14px;">Minuteur</h3>
+    <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 14px;" data-i18n="timer.title">Minuteur</h3>
     <div id="timerIdleView">
       <div class="timer-presets">
         <button class="secondary" data-min="1">1 min</button>
@@ -1399,20 +1399,20 @@
         <button class="secondary" data-min="7">7 min</button>
       </div>
       <div class="reading-row" style="margin-bottom:14px;">
-        <input type="number" id="timerCustomMin" placeholder="Autre (minutes)" min="1">
-        <button class="secondary" id="timerCustomStart" style="width:auto;white-space:nowrap;">Démarrer</button>
+        <input type="number" id="timerCustomMin" placeholder="Autre (minutes)" min="1" data-i18n-placeholder="timer.customPlaceholder">
+        <button class="secondary" id="timerCustomStart" style="width:auto;white-space:nowrap;" data-i18n="timer.start">Démarrer</button>
       </div>
     </div>
     <div id="timerRunningView" style="display:none;text-align:center;">
       <div style="font-family:'IBM Plex Mono',monospace;font-size:3rem;font-weight:600;color:var(--aqua);margin-bottom:16px;" id="timerDisplay">00:00</div>
-      <button class="secondary" id="timerStop" style="width:100%;">Arrêter</button>
+      <button class="secondary" id="timerStop" style="width:100%;" data-i18n="timer.stop">Arrêter</button>
     </div>
   </div>
 
   <div id="targetFullscreen">
     <div class="fs-header">
-      <span class="lbl" id="fsTargetLabel">Vise sur la photo</span>
-      <button class="secondary" id="btnAimCancel">Annuler</button>
+      <span class="lbl" id="fsTargetLabel" data-i18n="aim.defaultLabel">Vise sur la photo</span>
+      <button class="secondary" id="btnAimCancel" data-i18n="common.cancel">Annuler</button>
     </div>
     <div class="fs-canvas-area">
       <div class="canvas-wrap" id="canvasWrap"><canvas id="viewCanvas"></canvas></div>
@@ -1425,24 +1425,24 @@
       <div class="target-confirm" id="targetConfirm">
         <div class="swatch" id="targetSwatch"></div>
         <div class="btns">
-          <button class="secondary" id="targetRedo">Recommencer</button>
-          <button class="primary" id="targetValidate">✅ Valider ce point</button>
+          <button class="secondary" id="targetRedo" data-i18n="aim.redo">Recommencer</button>
+          <button class="primary" id="targetValidate" data-i18n="aim.validate">✅ Valider ce point</button>
         </div>
       </div>
       <div id="fsPaletteFooter" style="display:none;">
         <div style="display:flex;gap:16px;margin-bottom:10px;">
           <div style="text-align:center;">
             <div id="fsPaletteCurrentSwatch" style="width:38px;height:38px;border-radius:8px;border:1px solid var(--line);margin:0 auto 4px;"></div>
-            <div style="font-size:0.66rem;color:var(--text-dim);">Détectée</div>
+            <div style="font-size:0.66rem;color:var(--text-dim);" data-i18n="aim.detected">Détectée</div>
           </div>
           <div style="text-align:center;">
             <div id="fsPaletteRefSwatch" style="width:38px;height:38px;border-radius:8px;border:1px solid var(--line);margin:0 auto 4px;"></div>
-            <div style="font-size:0.66rem;color:var(--text-dim);">Référence</div>
+            <div style="font-size:0.66rem;color:var(--text-dim);" data-i18n="aim.reference">Référence</div>
           </div>
         </div>
-        <div style="font-size:0.66rem;color:var(--text-dim);text-align:center;margin-bottom:8px;">Du plus pâle au plus concentré, comme sur le nuancier — se lit de gauche à droite puis de haut en bas ↴</div>
+        <div style="font-size:0.66rem;color:var(--text-dim);text-align:center;margin-bottom:8px;" data-i18n="aim.paletteHint">Du plus pâle au plus concentré, comme sur le nuancier — se lit de gauche à droite puis de haut en bas ↴</div>
         <div class="palette-grid" id="fsPaletteGrid"></div>
-        <button class="primary" id="fsPaletteConfirm" style="width:100%;margin-top:10px;">Utiliser cette nuance</button>
+        <button class="primary" id="fsPaletteConfirm" style="width:100%;margin-top:10px;" data-i18n="aim.usePalette">Utiliser cette nuance</button>
       </div>
     </div>
   </div>
@@ -1719,7 +1719,40 @@
       'brand.redsea.note': "PO4 : points 0 et 0.1 mesurés dans l'ombre du gobelet sur la carte, fiabilité faible.",
       'brand.api.note': 'Cartes eau de mer. Sources web compressées : couleurs approximatives.',
       'brand.elos.note': 'pH et NH3 = cartes eau douce (pas idéales pour récifal). NH3 : 4 paliers seulement, sans correction de balance des blancs.',
-      'brand.unavailable': 'Non disponible : {list}.'
+      'brand.unavailable': 'Non disponible : {list}.',
+      'hero.underControl': 'Récif sous contrôle',
+      'hero.ammoniaSpike': "🧪 Pic d'ammoniaque — cycle en cours",
+      'hero.nitriteSpike': '🧪 Pic de nitrites — cycle en cours',
+      'hero.cycleComplete': '✅ Cycle terminé',
+      'hero.trackingInProgress': 'Suivi en cours',
+      'hero.toWatch': '{names} à surveiller',
+      'cycle.l1Idle': 'Nouveau',
+      'cycle.l2Idle': 'Cycle',
+      'cycle.l1Active': 'Cycle',
+      'cycle.l2Active': 'actif',
+      'cycle.titleIdle': "Touche pour activer le suivi de cycle azoté (pic d'ammoniaque → pic de nitrites → cycle terminé)",
+      'cycle.titleActive': 'Touche pour arrêter le suivi de cycle',
+      'badge.pickerTitle': 'Choisir un paramètre',
+      'timer.title': 'Minuteur',
+      'timer.customPlaceholder': 'Autre (minutes)',
+      'timer.start': 'Démarrer',
+      'timer.stop': 'Arrêter',
+      'timer.finished': '⏱ Minuteur terminé !',
+      'aim.defaultLabel': 'Vise sur la photo',
+      'aim.redo': 'Recommencer',
+      'aim.validate': '✅ Valider ce point',
+      'aim.detected': 'Détectée',
+      'aim.reference': 'Référence',
+      'aim.paletteHint': 'Du plus pâle au plus concentré, comme sur le nuancier — se lit de gauche à droite puis de haut en bas ↴',
+      'aim.usePalette': 'Utiliser cette nuance',
+      'aim.scannedRef': 'Référence scannée',
+      'aim.pickClose': 'Choisir une nuance proche',
+      'aim.revisit': 'Revisiter sur la photo',
+      'nuancier.aim.recalibSwatch': 'Pastille {v}{unit}',
+      'nuancier.calibWarning': '❌ Zone non exploitable : <strong>{labels}</strong> — probablement cachée par le tube, un reflet ou du texte. Reprends la photo avec le tube décalé, ou corrige-la avec ✏️ ci-dessous.',
+      'nuancier.scanDeviationWarning': "⚠️ Cette photo s'écarte beaucoup du nuancier de référence (ΔE moyen {de}) — vérifie ton ciblage ou reprends la photo. Compare les carrés pointillés ci-dessous à ta calibration.",
+      'common.networkUnavailable': 'réseau indisponible',
+      'aim.nonUniform': '⚠️ zone non uniforme'
     },
     en: {
       'app.tagline': 'Reef Tracking',
@@ -1868,7 +1901,40 @@
       'brand.redsea.note': "PO4: points 0 and 0.1 measured in the cup's shadow on the card, low reliability.",
       'brand.api.note': 'Saltwater charts. Compressed web sources: approximate colors.',
       'brand.elos.note': 'pH and NH3 = freshwater charts (not ideal for reef tanks). NH3: only 4 steps, no white-balance correction.',
-      'brand.unavailable': 'Not available: {list}.'
+      'brand.unavailable': 'Not available: {list}.',
+      'hero.underControl': 'Reef under control',
+      'hero.ammoniaSpike': '🧪 Ammonia spike — cycle in progress',
+      'hero.nitriteSpike': '🧪 Nitrite spike — cycle in progress',
+      'hero.cycleComplete': '✅ Cycle complete',
+      'hero.trackingInProgress': 'Tracking in progress',
+      'hero.toWatch': '{names} need attention',
+      'cycle.l1Idle': 'New',
+      'cycle.l2Idle': 'Cycle',
+      'cycle.l1Active': 'Cycle',
+      'cycle.l2Active': 'active',
+      'cycle.titleIdle': 'Tap to start tracking a nitrogen cycle (ammonia spike → nitrite spike → cycle done)',
+      'cycle.titleActive': 'Tap to stop cycle tracking',
+      'badge.pickerTitle': 'Choose a parameter',
+      'timer.title': 'Timer',
+      'timer.customPlaceholder': 'Other (minutes)',
+      'timer.start': 'Start',
+      'timer.stop': 'Stop',
+      'timer.finished': '⏱ Timer finished!',
+      'aim.defaultLabel': 'Target on the photo',
+      'aim.redo': 'Redo',
+      'aim.validate': '✅ Confirm this point',
+      'aim.detected': 'Detected',
+      'aim.reference': 'Reference',
+      'aim.paletteHint': 'From palest to most concentrated, as on the color chart — reads left to right, then top to bottom ↴',
+      'aim.usePalette': 'Use this swatch',
+      'aim.scannedRef': 'Scanned reference',
+      'aim.pickClose': 'Pick a close swatch',
+      'aim.revisit': 'Revisit on the photo',
+      'nuancier.aim.recalibSwatch': 'Swatch {v}{unit}',
+      'nuancier.calibWarning': "❌ Unusable area: <strong>{labels}</strong> — likely hidden by the tube, a reflection, or text. Retake the photo with the tube shifted, or correct it with ✏️ below.",
+      'nuancier.scanDeviationWarning': '⚠️ This photo deviates a lot from the reference color chart (avg ΔE {de}) — check your targeting or retake the photo. Compare the dashed squares below to your calibration.',
+      'common.networkUnavailable': 'network unavailable',
+      'aim.nonUniform': '⚠️ non-uniform area'
     }
   };
   let currentLang = 'fr';
@@ -2139,7 +2205,7 @@
       if(!res.ok){ showSyncError(await sbErrorDetail(res)); historyData=[]; return; }
       const rows = await res.json();
       historyData = rows.map(r=>({id:r.id, date:r.created_at, param:r.param, value:Number(r.value), status:r.status, source:r.source, note:r.note, customLabel:r.custom_label}));
-    }catch(e){ console.error(e); historyData=[]; showSyncError(e.message||'réseau indisponible'); }
+    }catch(e){ console.error(e); historyData=[]; showSyncError(e.message||t('common.networkUnavailable')); }
   }
   async function addHistoryEntry(entry){
     const body = {param:entry.param, value:entry.value, status:entry.status, source:entry.source, note:entry.note||null, custom_label:entry.customLabel||null};
@@ -2152,7 +2218,7 @@
         historyData.push({id:r.id, date:r.created_at, param:r.param, value:Number(r.value), status:r.status, source:r.source, note:r.note, customLabel:r.custom_label});
         ok=true;
       }
-    }catch(e){ console.error(e); showSyncError(e.message||'réseau indisponible'); }
+    }catch(e){ console.error(e); showSyncError(e.message||t('common.networkUnavailable')); }
     renderDashboard();
     return ok;
   }
@@ -2309,9 +2375,9 @@
     const btn = document.getElementById('cycleToggleBtn');
     if(!btn) return;
     btn.className = 'cycle-toggle-header' + (cyclingActive ? ' active' : '');
-    btn.querySelector('.l1').textContent = cyclingActive ? 'Cycle' : 'Nouveau';
-    btn.querySelector('.l2').textContent = cyclingActive ? 'actif' : 'Cycle';
-    btn.title = cyclingActive ? 'Touche pour arrêter le suivi de cycle' : "Touche pour activer le suivi de cycle azoté (pic d'ammoniaque → pic de nitrites → cycle terminé)";
+    btn.querySelector('.l1').textContent = cyclingActive ? t('cycle.l1Active') : t('cycle.l1Idle');
+    btn.querySelector('.l2').textContent = cyclingActive ? t('cycle.l2Active') : t('cycle.l2Idle');
+    btn.title = cyclingActive ? t('cycle.titleActive') : t('cycle.titleIdle');
   }
   async function loadCyclingActive(){
     try{
@@ -2347,10 +2413,10 @@
       const lNh3 = latestFor('nh3'), lNo2 = latestFor('no2'), lNo3 = latestFor('no3');
       const isHigh = e => e && (e.status==='high' || e.status==='high-warn');
       const isClean = e => e && (e.status==='ideal' || e.status==='low-warn' || e.status==='low');
-      if(isHigh(lNh3)){ set('bad', '🧪 Pic d\'ammoniaque — cycle en cours'); return; }
-      if(isHigh(lNo2)){ set('bad', '🧪 Pic de nitrites — cycle en cours'); return; }
+      if(isHigh(lNh3)){ set('bad', t('hero.ammoniaSpike')); return; }
+      if(isHigh(lNo2)){ set('bad', t('hero.nitriteSpike')); return; }
       if(isClean(lNh3) && isClean(lNo2) && lNo3){
-        set('good', '✅ Cycle terminé');
+        set('good', t('hero.cycleComplete'));
         // Le cycle est fini : on éteint le toggle tout seul pour que les prochaines
         // visites repassent sur le statut bac établi, sans action de ta part.
         cyclingActive = false;
@@ -2358,10 +2424,10 @@
         saveCyclingActive();
         return;
       }
-      set('neutral', 'Suivi en cours'); return;
+      set('neutral', t('hero.trackingInProgress')); return;
     }
 
-    if(!historyData.length){ set('neutral', 'Suivi en cours'); return; }
+    if(!historyData.length){ set('neutral', t('hero.trackingInProgress')); return; }
 
     // Bac établi : on liste tous les paramètres dont la dernière mesure sort de la
     // plage idéale (statut déjà calculé et stocké par statusOf au moment de la saisie,
@@ -2376,9 +2442,9 @@
       if(latest.status==='low' || latest.status==='high') bad.push(short);
       else warn.push(short);
     });
-    if(!bad.length && !warn.length){ set('good', 'Récif sous contrôle'); return; }
+    if(!bad.length && !warn.length){ set('good', t('hero.underControl')); return; }
     const names = [...bad, ...warn];
-    set(bad.length ? 'bad' : 'warn', `${names.join(', ')} à surveiller`);
+    set(bad.length ? 'bad' : 'warn', t('hero.toWatch', {names: names.join(', ')}));
   }
 
   function renderDashboard(){
@@ -3008,7 +3074,7 @@
       releaseWakeLock();
       fab.classList.remove('running'); fab.textContent='⏱';
       idleView.style.display='block'; runView.style.display='none';
-      if(finished){ beep(); closeTimerSheet(); alert('⏱ Minuteur terminé !'); }
+      if(finished){ beep(); closeTimerSheet(); alert(t('timer.finished')); }
     }
     document.querySelectorAll('.timer-presets button').forEach(b=>{
       b.addEventListener('click', ()=>{ startTimer(parseFloat(b.dataset.min)); });
@@ -3169,7 +3235,7 @@
     if(bad.length){
       const labels = bad.map(v=>`${v}${p.unit?(' '+p.unit):''}`).join(', ');
       warnEl.style.display='block';
-      warnEl.innerHTML = `❌ Zone non exploitable : <strong>${labels}</strong> — probablement cachée par le tube, un reflet ou du texte. Reprends la photo avec le tube décalé, ou corrige-la avec ✏️ ci-dessous.`;
+      warnEl.innerHTML = t('nuancier.calibWarning', {labels});
     } else {
       warnEl.style.display='none';
     }
@@ -3192,7 +3258,7 @@
         const avgDe = comparable.reduce((sum,val)=> sum+deltaE(refPoints[val].rgb, p.swatches[val]), 0) / comparable.length;
         if(avgDe > 38){
           scanWarnEl.style.display='block';
-          scanWarnEl.innerHTML = `⚠️ Cette photo s'écarte beaucoup du nuancier de référence (ΔE moyen ${avgDe.toFixed(0)}) — vérifie ton ciblage ou reprends la photo. Compare les carrés pointillés ci-dessous à ta calibration.`;
+          scanWarnEl.innerHTML = t('nuancier.scanDeviationWarning', {de: avgDe.toFixed(0)});
         } else {
           scanWarnEl.style.display='none';
         }
@@ -3219,13 +3285,13 @@
         const refSwatch=document.createElement('div');
         refSwatch.className='swatch'; refSwatch.style.background=rgbCss(p.swatches[val]);
         refSwatch.style.border='1px dashed rgba(255,255,255,0.4)';
-        refSwatch.title='Référence scannée';
+        refSwatch.title=t('aim.scannedRef');
         rect.appendChild(refSwatch);
       }
 
       const swatchBtn=document.createElement('button');
       swatchBtn.type='button'; swatchBtn.className='swatch'; swatchBtn.style.background=rgbCss(obj.rgb);
-      swatchBtn.title='Choisir une nuance proche';
+      swatchBtn.title=t('aim.pickClose');
       swatchBtn.addEventListener('click', ()=>openPaletteFullscreen(val, obj.rgb, unitTxt));
       rect.appendChild(swatchBtn);
 
@@ -3235,8 +3301,8 @@
       if(canRecalibrate){
         const actions=document.createElement('span'); actions.className='ref-rect-actions';
         const bPhoto=document.createElement('button');
-        bPhoto.type='button'; bPhoto.className='ref-rect-action'; bPhoto.title='Revisiter sur la photo'; bPhoto.textContent='✏️';
-        bPhoto.addEventListener('click', ()=>armAim({chip:val}, `Pastille ${val}${unitTxt}`));
+        bPhoto.type='button'; bPhoto.className='ref-rect-action'; bPhoto.title=t('aim.revisit'); bPhoto.textContent='✏️';
+        bPhoto.addEventListener('click', ()=>armAim({chip:val}, t('nuancier.aim.recalibSwatch',{v:val,unit:unitTxt})));
         actions.appendChild(bPhoto);
         rect.appendChild(actions);
       }
@@ -3549,7 +3615,7 @@
     targetSwatch.style.background=rgbCss(s.rgb);
     if(s.homogeneity<0.6){
       targetSwatch.style.boxShadow='0 0 0 3px var(--bad)';
-      targetLabel.textContent = '⚠️ zone non uniforme';
+      targetLabel.textContent = t('aim.nonUniform');
     } else {
       targetSwatch.style.boxShadow='none';
       targetLabel.textContent = '';
@@ -3782,6 +3848,7 @@
     applyI18nDom();
     runLangRefreshHooks();
     renderBrandSelector();
+    renderCycleToggle();
     renderDashboard();
     await saveLang();
   });
@@ -3797,7 +3864,7 @@
   // affichage immédiat, puis on ne re-rend que si le serveur dit autre chose.
   loadActiveBrand().then(changed=>{ if(changed){ applyBrand(); renderBrandSelector(); renderDashboard(); } });
   loadCyclingActive().then(changed=>{ if(changed){ renderCycleToggle(); renderDashboard(); } });
-  loadLang().then(changed=>{ if(changed){ applyParamLabels(); applyStatusLabels(); applyBrandNotes(); renderLangToggle(); applyI18nDom(); runLangRefreshHooks(); renderBrandSelector(); renderDashboard(); } });
+  loadLang().then(changed=>{ if(changed){ applyParamLabels(); applyStatusLabels(); applyBrandNotes(); renderLangToggle(); applyI18nDom(); runLangRefreshHooks(); renderBrandSelector(); renderCycleToggle(); renderDashboard(); } });
 
 })();
 </script>
