@@ -1136,7 +1136,7 @@
       <h1>MON RÉCIF</h1>
       <div class="hero-sub" data-i18n="app.tagline">Suivi récifal</div>
       <div class="app-meta">
-        <span class="ver-pill">v6.12</span>
+        <span class="ver-pill">v6.13</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1195,21 +1195,21 @@
       <div class="sticky-banner" id="nuancierBanner"><span class="sp" id="nuancierBannerParam"></span><span class="sv" id="nuancierBannerValue"></span></div>
 
       <div class="card">
-        <p class="step-label active"><span class="dot"></span>Paramètre testé</p>
+        <p class="step-label active"><span class="dot"></span><span data-i18n="nuancier.paramStep">Paramètre testé</span></p>
         <select id="chartParamSelect"></select>
         <div class="field" id="chartCustomLabelField" style="display:none;margin-top:12px;">
-          <label class="field-label">Nom du paramètre</label>
-          <input type="text" id="chartCustomLabel" placeholder="ex. Cuivre">
+          <label class="field-label" data-i18n="nuancier.customLabel">Nom du paramètre</label>
+          <input type="text" id="chartCustomLabel" placeholder="ex. Cuivre" data-i18n-placeholder="nuancier.customLabelPlaceholder">
         </div>
-        <button class="ghost" id="btnManualEntry" style="margin-top:6px;">✏️ Entrer une valeur manuellement (sans test)</button>
+        <button class="ghost" id="btnManualEntry" style="margin-top:6px;" data-i18n="nuancier.manualEntry">✏️ Entrer une valeur manuellement (sans test)</button>
       </div>
 
       <section id="captureSection" class="card">
-        <p class="step-label"><span class="dot"></span>Photo</p>
-        <p class="mode-help" id="captureHelp">Photographie le nuancier ET l'échantillon (goutte ou tube) ensemble, dans la même photo, sous le même éclairage.</p>
+        <p class="step-label"><span class="dot"></span><span data-i18n="nuancier.photoStep">Photo</span></p>
+        <p class="mode-help" id="captureHelp" data-i18n="nuancier.captureHelp">Photographie le nuancier ET l'échantillon (goutte ou tube) ensemble, dans la même photo, sous le même éclairage.</p>
         <div class="btn-row">
-          <button class="primary" id="btnCamera">📷 Prendre une photo</button>
-          <button class="secondary" id="btnGallery">Galerie</button>
+          <button class="primary" id="btnCamera" data-i18n="nuancier.btnCamera">📷 Prendre une photo</button>
+          <button class="secondary" id="btnGallery" data-i18n="nuancier.btnGallery">Galerie</button>
         </div>
         <input type="file" accept="image/*" capture="environment" id="fileCamera">
         <input type="file" accept="image/*" id="fileGallery">
@@ -1218,29 +1218,29 @@
       <section id="workspace" style="display:none;">
 
         <div class="card">
-          <p class="step-label active"><span class="dot"></span>Cibler sur la photo</p>
+          <p class="step-label active"><span class="dot"></span><span data-i18n="nuancier.targetStep">Cibler sur la photo</span></p>
           <div class="photo-thumb-wrap" id="photoThumbWrap" style="display:none;"><canvas id="photoThumbTop"></canvas></div>
           <p class="mode-help" id="refModeHelp"></p>
           <div class="btn-row" id="targetButtons" style="flex-wrap:wrap;"></div>
         </div>
 
         <div class="card" id="verifyCard" style="display:none;">
-          <p class="step-label done"><span class="dot"></span>Pastilles détectées — touche pour corriger</p>
-          <p style="font-size:0.78rem;color:var(--text-dim);margin:-4px 0 8px;">Référence nuancier (pointillé) · Ton échantillon</p>
+          <p class="step-label done"><span class="dot"></span><span data-i18n="nuancier.verifyStep">Pastilles détectées — touche pour corriger</span></p>
+          <p style="font-size:0.78rem;color:var(--text-dim);margin:-4px 0 8px;" data-i18n="nuancier.verifyHint">Référence nuancier (pointillé) · Ton échantillon</p>
           <div class="ref-rect-list" id="refRectList"></div>
         </div>
 
         <div class="card">
           <div id="sampleReminder" style="display:none;align-items:center;gap:10px;margin-bottom:12px;">
             <div id="sampleReminderSwatch" style="width:36px;height:36px;border-radius:8px;border:1px solid var(--line);flex:none;"></div>
-            <span style="font-size:0.82rem;color:var(--text-dim);">Échantillon ciblé — celui qui sera calculé</span>
+            <span style="font-size:0.82rem;color:var(--text-dim);" data-i18n="nuancier.sampleReminder">Échantillon ciblé — celui qui sera calculé</span>
           </div>
-          <button class="primary" id="btnCompute" disabled>Calculer le résultat</button>
-          <button class="ghost" id="btnReset">↺ Nouvelle photo</button>
+          <button class="primary" id="btnCompute" disabled data-i18n="nuancier.btnCompute">Calculer le résultat</button>
+          <button class="ghost" id="btnReset" data-i18n="nuancier.btnReset">↺ Nouvelle photo</button>
         </div>
 
         <div class="card" id="resultPanel" style="display:none;">
-          <p class="step-label done"><span class="dot"></span>Résultat — modifiable avant validation</p>
+          <p class="step-label done"><span class="dot"></span><span data-i18n="nuancier.resultStep">Résultat — modifiable avant validation</span></p>
           <div class="low-conf-banner" id="lowConfBanner" style="display:none;"></div>
           <div class="readout">
             <div><input type="text" inputmode="decimal" class="value-edit" id="readoutValue"><span class="u" id="readoutUnit"></span></div>
@@ -1250,14 +1250,14 @@
           </div>
           <div id="readoutGauge"></div>
           <div class="confidence" id="confidenceText"></div>
-          <p class="de-explain">ΔE = écart de couleur entre ton échantillon et la pastille la plus proche. Plus c'est bas, plus c'est fiable.</p>
+          <p class="de-explain" data-i18n="nuancier.deExplain">ΔE = écart de couleur entre ton échantillon et la pastille la plus proche. Plus c'est bas, plus c'est fiable.</p>
           <div class="photo-thumb-wrap" id="photoThumbWrapResult" style="display:none;"><canvas id="photoThumbResult"></canvas></div>
           <div class="compare-row">
-            <div class="compare-item"><div class="swatch" id="cmpSample"></div><div class="lbl">ÉCHANTILLON</div></div>
-            <div class="compare-item"><div class="swatch" id="cmpMatch"></div><div class="lbl">CORRESPONDANCE</div></div>
+            <div class="compare-item"><div class="swatch" id="cmpSample"></div><div class="lbl" data-i18n="nuancier.sampleLbl">ÉCHANTILLON</div></div>
+            <div class="compare-item"><div class="swatch" id="cmpMatch"></div><div class="lbl" data-i18n="nuancier.matchLbl">CORRESPONDANCE</div></div>
           </div>
-          <table class="matches"><thead><tr><th>Pastille</th><th>Valeur</th><th>ΔE</th></tr></thead><tbody id="matchesBody"></tbody></table>
-          <button class="primary" id="btnValidateResult" style="margin-top:16px;">✅ Valider cette mesure</button>
+          <table class="matches"><thead><tr><th data-i18n="nuancier.thSwatch">Pastille</th><th data-i18n="nuancier.thValue">Valeur</th><th>ΔE</th></tr></thead><tbody id="matchesBody"></tbody></table>
+          <button class="primary" id="btnValidateResult" style="margin-top:16px;" data-i18n="nuancier.btnValidate">✅ Valider cette mesure</button>
           <p class="saved-note" id="savedNote"></p>
           <p class="disclaimer" id="resultDisclaimer"></p>
         </div>
@@ -1593,7 +1593,28 @@
       'picker.titration.title': 'Titration (Salifert)',
       'picker.titration.subtitle': 'KH/Alcalinité · Calcium · Magnésium',
       'picker.direct.title': 'Mesure directe',
-      'picker.direct.subtitle': 'Température · Densité'
+      'picker.direct.subtitle': 'Température · Densité',
+      'nuancier.paramStep': 'Paramètre testé',
+      'nuancier.customLabel': 'Nom du paramètre',
+      'nuancier.customLabelPlaceholder': 'ex. Cuivre',
+      'nuancier.manualEntry': '✏️ Entrer une valeur manuellement (sans test)',
+      'nuancier.photoStep': 'Photo',
+      'nuancier.captureHelp': "Photographie le nuancier ET l'échantillon (goutte ou tube) ensemble, dans la même photo, sous le même éclairage.",
+      'nuancier.btnCamera': '📷 Prendre une photo',
+      'nuancier.btnGallery': 'Galerie',
+      'nuancier.targetStep': 'Cibler sur la photo',
+      'nuancier.verifyStep': 'Pastilles détectées — touche pour corriger',
+      'nuancier.verifyHint': 'Référence nuancier (pointillé) · Ton échantillon',
+      'nuancier.sampleReminder': 'Échantillon ciblé — celui qui sera calculé',
+      'nuancier.btnCompute': 'Calculer le résultat',
+      'nuancier.btnReset': '↺ Nouvelle photo',
+      'nuancier.resultStep': 'Résultat — modifiable avant validation',
+      'nuancier.deExplain': "ΔE = écart de couleur entre ton échantillon et la pastille la plus proche. Plus c'est bas, plus c'est fiable.",
+      'nuancier.sampleLbl': 'ÉCHANTILLON',
+      'nuancier.matchLbl': 'CORRESPONDANCE',
+      'nuancier.thSwatch': 'Pastille',
+      'nuancier.thValue': 'Valeur',
+      'nuancier.btnValidate': '✅ Valider cette mesure'
     },
     en: {
       'app.tagline': 'Reef Tracking',
@@ -1616,7 +1637,28 @@
       'picker.titration.title': 'Titration (Salifert)',
       'picker.titration.subtitle': 'KH/Alkalinity · Calcium · Magnesium',
       'picker.direct.title': 'Direct reading',
-      'picker.direct.subtitle': 'Temperature · Salinity (SG)'
+      'picker.direct.subtitle': 'Temperature · Salinity (SG)',
+      'nuancier.paramStep': 'Parameter tested',
+      'nuancier.customLabel': 'Parameter name',
+      'nuancier.customLabelPlaceholder': 'e.g. Copper',
+      'nuancier.manualEntry': '✏️ Enter a value manually (no test)',
+      'nuancier.photoStep': 'Photo',
+      'nuancier.captureHelp': 'Photograph the color chart AND the sample (drop or tube) together, in the same photo, under the same lighting.',
+      'nuancier.btnCamera': '📷 Take a photo',
+      'nuancier.btnGallery': 'Gallery',
+      'nuancier.targetStep': 'Target on the photo',
+      'nuancier.verifyStep': 'Swatches detected — tap to correct',
+      'nuancier.verifyHint': 'Color chart reference (dashed) · Your sample',
+      'nuancier.sampleReminder': 'Targeted sample — this is what will be computed',
+      'nuancier.btnCompute': 'Calculate result',
+      'nuancier.btnReset': '↺ New photo',
+      'nuancier.resultStep': 'Result — editable before saving',
+      'nuancier.deExplain': 'ΔE = color distance between your sample and the closest swatch. Lower is more reliable.',
+      'nuancier.sampleLbl': 'SAMPLE',
+      'nuancier.matchLbl': 'MATCH',
+      'nuancier.thSwatch': 'Swatch',
+      'nuancier.thValue': 'Value',
+      'nuancier.btnValidate': '✅ Save this reading'
     }
   };
   let currentLang = 'fr';
@@ -1644,6 +1686,9 @@
   function applyI18nDom(){
     document.querySelectorAll('[data-i18n]').forEach(el=>{
       el.textContent = t(el.getAttribute('data-i18n'));
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{
+      el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
     });
   }
 
