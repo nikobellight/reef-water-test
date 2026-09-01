@@ -1136,7 +1136,7 @@
       <h1>MON RÉCIF</h1>
       <div class="hero-sub" data-i18n="app.tagline">Suivi récifal</div>
       <div class="app-meta">
-        <span class="ver-pill">v6.19</span>
+        <span class="ver-pill">v6.20</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1504,7 +1504,7 @@
   const NUANCIERS = {
     pawfly: {
       label: 'Pawfly',
-      note: 'Scanné à 1200 DPI depuis la carte physique — référence la plus fiable.',
+      note: 'brand.pawfly.note',
       params: {
         ph:  {7.4:[223,113,110],7.8:[218,84,142],8.0:[217,80,157],8.4:[194,85,151]},
         nh3: {0:[235,229,26],0.25:[169,205,37],0.5:[124,193,51],1:[78,181,58],2:[36,171,84],4:[20,155,109],8:[14,145,105]},
@@ -1515,7 +1515,7 @@
     },
     salifert: {
       label: 'Salifert',
-      note: 'Cartes officielles. Le pH saute du vert au bleu entre 8.3 et 8.6.',
+      note: 'brand.salifert.note',
       params: {
         ph:  {7.4:[250,237,1],7.7:[217,221,43],8.0:[178,200,116],8.3:[11,118,73],8.6:[11,128,204]},
         nh3: {0.15:[255,255,248],0.25:[253,255,243],0.5:[254,254,211],1:[255,251,148],1.5:[253,218,125],2:[248,174,122]},
@@ -1526,7 +1526,7 @@
     },
     redsea: {
       label: 'Red Sea',
-      note: 'PO4 : points 0 et 0.1 mesurés dans l\'ombre du gobelet sur la carte, fiabilité faible.',
+      note: 'brand.redsea.note',
       params: {
         ph:  {7.6:[66,91,84],7.8:[73,80,84],8.0:[76,88,104],8.2:[79,68,123],8.4:[51,37,114],8.6:[47,24,106]},
         nh3: {0:[199,218,65],0.2:[172,214,119],0.4:[150,210,107],0.8:[100,196,114],1.2:[55,192,135],2:[17,149,110]},
@@ -1537,7 +1537,7 @@
     },
     api: {
       label: 'API',
-      note: 'Cartes eau de mer. Sources web compressées : couleurs approximatives.',
+      note: 'brand.api.note',
       params: {
         ph:  {7.4:[252,222,83],7.8:[193,126,97],8.0:[116,42,61],8.2:[124,67,94],8.4:[173,70,136],8.8:[125,56,152]},
         nh3: {0:[237,243,73],0.25:[193,231,31],0.5:[202,253,76],1:[150,214,96],2:[22,131,60],4:[52,134,72],8:[50,85,81]},
@@ -1548,7 +1548,7 @@
     },
     elos: {
       label: 'Elos',
-      note: 'pH et NH3 = cartes eau douce (pas idéales pour récifal). NH3 : 4 paliers seulement, sans correction de balance des blancs.',
+      note: 'brand.elos.note',
       params: {
         ph:  {5.8:[255,254,2],6.3:[255,220,10],6.6:[253,184,17],6.9:[250,153,27],7.2:[241,108,50],7.5:[239,97,124],7.8:[235,72,143],8.3:[233,50,149]},
         nh3: {0:[237,207,46],0.1:[221,200,48],0.5:[89,153,92],1:[40,135,107]},
@@ -1713,7 +1713,13 @@
       'status.low': 'Trop bas',
       'status.high': 'Trop haut',
       'status.warn': 'Attention',
-      'status.bad': 'Hors norme'
+      'status.bad': 'Hors norme',
+      'brand.pawfly.note': 'Scanné à 1200 DPI depuis la carte physique — référence la plus fiable.',
+      'brand.salifert.note': 'Cartes officielles. Le pH saute du vert au bleu entre 8.3 et 8.6.',
+      'brand.redsea.note': "PO4 : points 0 et 0.1 mesurés dans l'ombre du gobelet sur la carte, fiabilité faible.",
+      'brand.api.note': 'Cartes eau de mer. Sources web compressées : couleurs approximatives.',
+      'brand.elos.note': 'pH et NH3 = cartes eau douce (pas idéales pour récifal). NH3 : 4 paliers seulement, sans correction de balance des blancs.',
+      'brand.unavailable': 'Non disponible : {list}.'
     },
     en: {
       'app.tagline': 'Reef Tracking',
@@ -1856,7 +1862,13 @@
       'status.low': 'Too low',
       'status.high': 'Too high',
       'status.warn': 'Caution',
-      'status.bad': 'Out of range'
+      'status.bad': 'Out of range',
+      'brand.pawfly.note': 'Scanned at 1200 DPI from the physical card — the most reliable reference.',
+      'brand.salifert.note': 'Official charts. pH jumps from green to blue between 8.3 and 8.6.',
+      'brand.redsea.note': "PO4: points 0 and 0.1 measured in the cup's shadow on the card, low reliability.",
+      'brand.api.note': 'Saltwater charts. Compressed web sources: approximate colors.',
+      'brand.elos.note': 'pH and NH3 = freshwater charts (not ideal for reef tanks). NH3: only 4 steps, no white-balance correction.',
+      'brand.unavailable': 'Not available: {list}.'
     }
   };
   let currentLang = 'fr';
@@ -1989,6 +2001,10 @@
     STATUS_META.good.label = t('status.ideal');
     STATUS_META.warn.label = t('status.warn');
     STATUS_META.bad.label = t('status.bad');
+  }
+  const BRAND_NOTE_KEYS = {pawfly:'brand.pawfly.note', salifert:'brand.salifert.note', redsea:'brand.redsea.note', api:'brand.api.note', elos:'brand.elos.note'};
+  function applyBrandNotes(){
+    Object.keys(BRAND_NOTE_KEYS).forEach(k=>{ if(NUANCIERS[k]) NUANCIERS[k].note = t(BRAND_NOTE_KEYS[k]); });
   }
   function statusOf(paramKey, value){
     const p = PARAMS[paramKey];
@@ -2213,7 +2229,7 @@
     const b = NUANCIERS[activeBrand] || NUANCIERS[DEFAULT_BRAND];
     const missing = CHART_PARAMS.filter(k=>!b.params[k]).map(k=>SHORT_LABEL[k]);
     let txt = b.note || '';
-    if(missing.length) txt += (txt?' ':'') + `Non disponible : ${missing.join(', ')}.`;
+    if(missing.length) txt += (txt?' ':'') + t('brand.unavailable', {list: missing.join(', ')});
     noteEl.textContent = txt;
   }
 
@@ -3748,6 +3764,7 @@
   // ---------- init ----------
   applyParamLabels();
   applyStatusLabels();
+  applyBrandNotes();
   applyBrand();
   populateHistoryFilter();
   resetRefState();
@@ -3760,9 +3777,11 @@
     try{ localStorage.setItem('appLang', currentLang); }catch(e){}
     applyParamLabels();
     applyStatusLabels();
+    applyBrandNotes();
     renderLangToggle();
     applyI18nDom();
     runLangRefreshHooks();
+    renderBrandSelector();
     renderDashboard();
     await saveLang();
   });
@@ -3778,7 +3797,7 @@
   // affichage immédiat, puis on ne re-rend que si le serveur dit autre chose.
   loadActiveBrand().then(changed=>{ if(changed){ applyBrand(); renderBrandSelector(); renderDashboard(); } });
   loadCyclingActive().then(changed=>{ if(changed){ renderCycleToggle(); renderDashboard(); } });
-  loadLang().then(changed=>{ if(changed){ applyParamLabels(); applyStatusLabels(); renderLangToggle(); applyI18nDom(); runLangRefreshHooks(); renderDashboard(); } });
+  loadLang().then(changed=>{ if(changed){ applyParamLabels(); applyStatusLabels(); applyBrandNotes(); renderLangToggle(); applyI18nDom(); runLangRefreshHooks(); renderBrandSelector(); renderDashboard(); } });
 
 })();
 </script>
