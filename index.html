@@ -1136,7 +1136,7 @@
       <h1>MON RÉCIF</h1>
       <div class="hero-sub" data-i18n="app.tagline">Suivi récifal</div>
       <div class="app-meta">
-        <span class="ver-pill">v6.17</span>
+        <span class="ver-pill">v6.18</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1338,21 +1338,21 @@
 
     <section class="view" id="view-report">
       <div class="card">
-        <p class="step-label active"><span class="dot"></span>Rapport</p>
-        <p class="mode-help">Vue rapide de tes tests, avec export texte en dessous.</p>
+        <p class="step-label active"><span class="dot"></span><span data-i18n="report.stepLabel">Rapport</span></p>
+        <p class="mode-help" data-i18n="report.subtitle">Vue rapide de tes tests, avec export texte en dessous.</p>
         <div class="mode-toggle" id="reportPeriodToggle">
-          <button data-period="today" class="active">Jour</button>
-          <button data-period="week">Semaine</button>
-          <button data-period="month">Mois</button>
-          <button data-period="all">Tout</button>
-          <button data-period="lasttest">Dernier test</button>
+          <button data-period="today" class="active" data-i18n="report.period.today">Jour</button>
+          <button data-period="week" data-i18n="report.period.week">Semaine</button>
+          <button data-period="month" data-i18n="report.period.month">Mois</button>
+          <button data-period="all" data-i18n="report.period.all">Tout</button>
+          <button data-period="lasttest" data-i18n="report.period.lasttest">Dernier test</button>
         </div>
         <div class="hist-list" id="reportVisual"></div>
-        <p class="mode-help" style="margin-top:14px;">Texte à copier-coller :</p>
+        <p class="mode-help" style="margin-top:14px;" data-i18n="report.copyPasteLabel">Texte à copier-coller :</p>
         <textarea class="report-box" id="reportBox" readonly></textarea>
         <div class="btn-row">
-          <button class="secondary" id="btnCopyReport">📋 Copier</button>
-          <button class="secondary" id="btnDownloadReport">⬇️ Télécharger</button>
+          <button class="secondary" id="btnCopyReport" data-i18n="report.btnCopy">📋 Copier</button>
+          <button class="secondary" id="btnDownloadReport" data-i18n="report.btnDownload">⬇️ Télécharger</button>
         </div>
         <p class="mode-help" id="copyHint" style="margin-top:8px;"></p>
       </div>
@@ -1671,7 +1671,31 @@
       'history.subtitle': 'Filtre un paramètre et visualise l’évolution de ton bac dans le temps.',
       'history.emptyFilter': 'Aucune mesure pour ce filtre.',
       'history.chipAll': 'Tous',
-      'common.delete': 'Supprimer'
+      'common.delete': 'Supprimer',
+      'report.stepLabel': 'Rapport',
+      'report.subtitle': 'Vue rapide de tes tests, avec export texte en dessous.',
+      'report.period.today': 'Jour',
+      'report.period.week': 'Semaine',
+      'report.period.month': 'Mois',
+      'report.period.all': 'Tout',
+      'report.period.lasttest': 'Dernier test',
+      'report.periodLabel.today': "Aujourd'hui",
+      'report.periodLabel.week': '7 derniers jours',
+      'report.periodLabel.month': '30 derniers jours',
+      'report.periodLabel.all': "Tout l'historique",
+      'report.copyPasteLabel': 'Texte à copier-coller :',
+      'report.btnCopy': '📋 Copier',
+      'report.btnDownload': '⬇️ Télécharger',
+      'report.lastTestHeader': 'DERNIER TEST ({date}) :',
+      'report.lastTestHeaderRange': 'DERNIER TEST (du {start} au {end}) :',
+      'report.header': 'RAPPORT DE SUIVI — AQUARIUM RÉCIFAL',
+      'report.generatedOn': 'Généré le {date}',
+      'report.periodPrefix': 'Période : {label}',
+      'report.noneRecorded': 'Aucune mesure enregistrée.',
+      'report.noneInPeriod': 'Aucune mesure sur cette période.',
+      'report.historySection': 'HISTORIQUE DES MESURES (par paramètre, ordre chronologique) :',
+      'report.copied': 'Copié !',
+      'report.copyFallbackHint': 'Texte sélectionné : maintiens le doigt dessus puis touche « Copier » dans le menu qui apparaît (ou utilise Télécharger).'
     },
     en: {
       'app.tagline': 'Reef Tracking',
@@ -1772,7 +1796,31 @@
       'history.subtitle': 'Filter a parameter and see how your tank has changed over time.',
       'history.emptyFilter': 'No readings for this filter.',
       'history.chipAll': 'All',
-      'common.delete': 'Delete'
+      'common.delete': 'Delete',
+      'report.stepLabel': 'Report',
+      'report.subtitle': 'A quick view of your tests, with text export below.',
+      'report.period.today': 'Day',
+      'report.period.week': 'Week',
+      'report.period.month': 'Month',
+      'report.period.all': 'All',
+      'report.period.lasttest': 'Last test',
+      'report.periodLabel.today': 'Today',
+      'report.periodLabel.week': 'Last 7 days',
+      'report.periodLabel.month': 'Last 30 days',
+      'report.periodLabel.all': 'Entire history',
+      'report.copyPasteLabel': 'Text to copy-paste:',
+      'report.btnCopy': '📋 Copy',
+      'report.btnDownload': '⬇️ Download',
+      'report.lastTestHeader': 'LAST TEST ({date}):',
+      'report.lastTestHeaderRange': 'LAST TEST (from {start} to {end}):',
+      'report.header': 'REEF TRACKING REPORT',
+      'report.generatedOn': 'Generated on {date}',
+      'report.periodPrefix': 'Period: {label}',
+      'report.noneRecorded': 'No readings recorded.',
+      'report.noneInPeriod': 'No readings for this period.',
+      'report.historySection': 'READING HISTORY (by parameter, chronological order):',
+      'report.copied': 'Copied!',
+      'report.copyFallbackHint': 'Text selected: press and hold, then tap "Copy" in the menu that appears (or use Download).'
     }
   };
   let currentLang = 'fr';
@@ -2526,7 +2574,7 @@
     if(p==='month') return new Date(now.getTime()-30*86400000);
     return null;
   }
-  function periodLabelText(p){ return p==='today'?"Aujourd'hui":p==='week'?'7 derniers jours':p==='month'?'30 derniers jours':"Tout l'historique"; }
+  function periodLabelText(p){ return p==='today'?t('report.periodLabel.today'):p==='week'?t('report.periodLabel.week'):p==='month'?t('report.periodLabel.month'):t('report.periodLabel.all'); }
   document.querySelectorAll('#reportPeriodToggle button').forEach(b=>{
     b.addEventListener('click', ()=>{
       document.querySelectorAll('#reportPeriodToggle button').forEach(x=>x.classList.remove('active'));
@@ -2552,19 +2600,19 @@
     return batch.slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
   }
   function formatBatchHeader(batch){
-    if(batch.length<=1) return `DERNIER TEST (${new Date(batch[0].date).toLocaleString(currentLocale())}) :`;
+    if(batch.length<=1) return t('report.lastTestHeader', {date: new Date(batch[0].date).toLocaleString(currentLocale())});
     const start=new Date(batch[0].date), end=new Date(batch[batch.length-1].date);
-    return `DERNIER TEST (du ${start.toLocaleString(currentLocale())} au ${end.toLocaleString(currentLocale())}) :`;
+    return t('report.lastTestHeaderRange', {start: start.toLocaleString(currentLocale()), end: end.toLocaleString(currentLocale())});
   }
   function generateReport(){
     if(reportPeriod==='lasttest'){
       const lines=[];
-      lines.push('RAPPORT DE SUIVI — AQUARIUM RÉCIFAL');
-      lines.push(`Généré le ${new Date().toLocaleString(currentLocale())}`);
+      lines.push(t('report.header'));
+      lines.push(t('report.generatedOn', {date: new Date().toLocaleString(currentLocale())}));
       lines.push('');
       const batch = lastTestBatch();
       if(!batch.length){
-        lines.push('Aucune mesure enregistrée.');
+        lines.push(t('report.noneRecorded'));
         return lines.join('\n');
       }
       lines.push(formatBatchHeader(batch));
@@ -2580,9 +2628,9 @@
     const cutoff=periodCutoff(reportPeriod);
     const filtered = historyData.filter(e=>!cutoff || new Date(e.date)>=cutoff);
     const lines=[];
-    lines.push('RAPPORT DE SUIVI — AQUARIUM RÉCIFAL');
-    lines.push(`Généré le ${new Date().toLocaleString(currentLocale())}`);
-    lines.push(`Période : ${periodLabelText(reportPeriod)}`);
+    lines.push(t('report.header'));
+    lines.push(t('report.generatedOn', {date: new Date().toLocaleString(currentLocale())}));
+    lines.push(t('report.periodPrefix', {label: periodLabelText(reportPeriod)}));
     lines.push('');
 
     const batch = lastTestBatch();
@@ -2597,11 +2645,11 @@
       lines.push('');
     }
 
-    lines.push('HISTORIQUE DES MESURES (par paramètre, ordre chronologique) :');
+    lines.push(t('report.historySection'));
     const byParam={};
     filtered.forEach(e=>{ const key=e.param==='autre'?('autre:'+(e.customLabel||'Autre')):e.param; (byParam[key]=byParam[key]||[]).push(e); });
     const gk=Object.keys(byParam);
-    if(gk.length===0) lines.push('  Aucune mesure sur cette période.');
+    if(gk.length===0) lines.push('  '+t('report.noneInPeriod'));
     gk.forEach(key=>{
       const entries=byParam[key].slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
       const label=key.startsWith('autre:')?key.slice(6):PARAMS[key].label;
@@ -2645,14 +2693,14 @@
     const el = document.getElementById('reportVisual'); if(!el) return;
     if(reportPeriod==='lasttest'){
       const batch = lastTestBatch();
-      if(!batch.length){ el.innerHTML = '<p style="color:var(--text-dim);font-size:0.85rem;">Aucune mesure enregistrée.</p>'; return; }
+      if(!batch.length){ el.innerHTML = `<p style="color:var(--text-dim);font-size:0.85rem;">${t('report.noneRecorded')}</p>`; return; }
       el.innerHTML = `<p class="section-sub" style="margin:2px 0 8px;">${formatBatchHeader(batch)}</p>` + batch.map(reportRowHtml).join('');
       return;
     }
     const cutoff=periodCutoff(reportPeriod);
     const filtered = historyData.filter(e=>!cutoff || new Date(e.date)>=cutoff)
       .slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
-    if(!filtered.length){ el.innerHTML = '<p style="color:var(--text-dim);font-size:0.85rem;">Aucune mesure sur cette période.</p>'; return; }
+    if(!filtered.length){ el.innerHTML = `<p style="color:var(--text-dim);font-size:0.85rem;">${t('report.noneInPeriod')}</p>`; return; }
     el.innerHTML = filtered.map(reportRowHtml).join('');
   }
   function renderReport(){ document.getElementById('reportBox').value = generateReport(); renderReportVisual(); }
@@ -2662,10 +2710,10 @@
     const hint=document.getElementById('copyHint');
     try{
       await navigator.clipboard.writeText(ta.value);
-      flashBtn('btnCopyReport','Copié !'); hint.textContent='';
+      flashBtn('btnCopyReport',t('report.copied')); hint.textContent='';
     }catch(e){
       ta.focus(); ta.select();
-      hint.textContent = "Texte sélectionné : maintiens le doigt dessus puis touche « Copier » dans le menu qui apparaît (ou utilise Télécharger).";
+      hint.textContent = t('report.copyFallbackHint');
     }
   });
   document.getElementById('btnDownloadReport').addEventListener('click', ()=>{
