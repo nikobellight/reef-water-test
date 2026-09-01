@@ -1136,7 +1136,7 @@
       <h1>MON RÉCIF</h1>
       <div class="hero-sub" data-i18n="app.tagline">Suivi récifal</div>
       <div class="app-meta">
-        <span class="ver-pill">v6.10</span>
+        <span class="ver-pill">v6.11</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1157,20 +1157,20 @@
       </div>
 
       <div class="card">
-        <p class="section-title">Dernières mesures</p>
+        <p class="section-title" data-i18n="dash.recentTitle">Dernières mesures</p>
         <p class="section-sub" id="lastMeasureSub">Aucune mesure encore</p>
-        <p class="bar-group-label">Nuancier</p>
+        <p class="bar-group-label" data-i18n="dash.chartGroupLabel">Nuancier</p>
         <div class="brand-row-compact" id="brandRow"></div>
         <p class="brand-note-compact" id="brandNote"></p>
         <div class="bar-row" id="barRowNuancier"></div>
-        <p class="bar-group-label">Titration &amp; mesure directe</p>
+        <p class="bar-group-label" data-i18n="dash.titrationGroupLabel">Titration &amp; mesure directe</p>
         <div class="bar-row" id="barRowAutres"></div>
       </div>
 
       <div class="empty-state" id="dashEmpty" style="display:none;">
         <div class="big">🐠</div>
-        <p>Aucune mesure encore.<br>Commence par un nouveau test.</p>
-        <button class="primary" style="width:auto;" onclick="showView('picker')">➕ Nouveau test</button>
+        <p><span data-i18n="dash.emptyLine1">Aucune mesure encore.</span><br><span data-i18n="dash.emptyLine2">Commence par un nouveau test.</span></p>
+        <button class="primary" style="width:auto;" onclick="showView('picker')" data-i18n="dash.emptyBtn">➕ Nouveau test</button>
       </div>
     </section>
 
@@ -1460,7 +1460,7 @@
   function showSyncError(msg){
     const el = document.getElementById('syncError');
     el.style.display = 'block';
-    el.querySelector('p').textContent = msg ? ('⚠️ '+msg) : '⚠️ Connexion à Supabase impossible.';
+    el.querySelector('p').textContent = msg ? ('⚠️ '+msg) : t('dash.syncErrorDefault');
   }
   async function sbErrorDetail(res){
     let text=''; try{ text = await res.text(); }catch(e){}
@@ -1577,14 +1577,32 @@
       'nav.dashboard': 'Accueil',
       'nav.history': 'Historique',
       'nav.report': 'Rapport',
-      'nav.new': 'Nouveau'
+      'nav.new': 'Nouveau',
+      'dash.recentTitle': 'Dernières mesures',
+      'dash.chartGroupLabel': 'Nuancier',
+      'dash.titrationGroupLabel': 'Titration & mesure directe',
+      'dash.emptyLine1': 'Aucune mesure encore.',
+      'dash.emptyLine2': 'Commence par un nouveau test.',
+      'dash.emptyBtn': '➕ Nouveau test',
+      'dash.noMeasureYet': 'Aucune mesure encore',
+      'dash.lastMeasureOn': 'Dernière mesure le {date}',
+      'dash.syncErrorDefault': '⚠️ Connexion à Supabase impossible.'
     },
     en: {
       'app.tagline': 'Reef Tracking',
       'nav.dashboard': 'Home',
       'nav.history': 'History',
       'nav.report': 'Report',
-      'nav.new': 'New'
+      'nav.new': 'New',
+      'dash.recentTitle': 'Latest readings',
+      'dash.chartGroupLabel': 'Color chart',
+      'dash.titrationGroupLabel': 'Titration & direct reading',
+      'dash.emptyLine1': 'No readings yet.',
+      'dash.emptyLine2': 'Start with a new test.',
+      'dash.emptyBtn': '➕ New test',
+      'dash.noMeasureYet': 'No readings yet',
+      'dash.lastMeasureOn': 'Last reading on {date}',
+      'dash.syncErrorDefault': '⚠️ Unable to connect to Supabase.'
     }
   };
   let currentLang = 'fr';
@@ -1594,12 +1612,15 @@
   }catch(e){}
   // Résolveur sûr : dictionnaire courant -> repli FR -> repli sur la clé brute.
   // Ne lève jamais d'exception, ne renvoie jamais "undefined" à l'écran, même
-  // pour une clé pas encore migrée (Phases 2-4).
-  function t(key){
+  // pour une clé pas encore migrée (Phases 2-4). Interpolation simple {var} en
+  // option, pour les chaînes qui incluent une valeur dynamique (ex: une date).
+  function t(key, vars){
     const dict = I18N[currentLang] || I18N.fr;
-    if(dict && dict[key]!=null) return dict[key];
-    if(I18N.fr && I18N.fr[key]!=null) return I18N.fr[key];
-    return key;
+    let str = (dict && dict[key]!=null) ? dict[key] : ((I18N.fr && I18N.fr[key]!=null) ? I18N.fr[key] : key);
+    if(vars){
+      Object.keys(vars).forEach(k=>{ str = str.replace(new RegExp('\\{'+k+'\\}','g'), vars[k]); });
+    }
+    return str;
   }
   function currentLocale(){ return currentLang==='en' ? 'en-US' : 'fr-FR'; }
   // Applique les traductions à tous les nœuds HTML statiques marqués data-i18n.
@@ -2081,8 +2102,8 @@
       btn.addEventListener('click', ()=>openBadgePicker(Number(btn.dataset.slot)));
     });
     document.getElementById('lastMeasureSub').textContent = mostRecent
-      ? `Dernière mesure le ${new Date(mostRecent.date).toLocaleDateString(currentLocale())}`
-      : 'Aucune mesure encore';
+      ? t('dash.lastMeasureOn', {date: new Date(mostRecent.date).toLocaleDateString(currentLocale())})
+      : t('dash.noMeasureYet');
 
     let any = false;
     function renderBarGroup(keys, containerId){
