@@ -1136,7 +1136,7 @@
       <h1>MON RÉCIF</h1>
       <div class="hero-sub" data-i18n="app.tagline">Suivi récifal</div>
       <div class="app-meta">
-        <span class="ver-pill">v6.18</span>
+        <span class="ver-pill">v6.19</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1695,7 +1695,25 @@
       'report.noneInPeriod': 'Aucune mesure sur cette période.',
       'report.historySection': 'HISTORIQUE DES MESURES (par paramètre, ordre chronologique) :',
       'report.copied': 'Copié !',
-      'report.copyFallbackHint': 'Texte sélectionné : maintiens le doigt dessus puis touche « Copier » dans le menu qui apparaît (ou utilise Télécharger).'
+      'report.copyFallbackHint': 'Texte sélectionné : maintiens le doigt dessus puis touche « Copier » dans le menu qui apparaît (ou utilise Télécharger).',
+      'param.ph': 'pH',
+      'param.nh3': 'Ammoniac (NH3/NH4⁺)',
+      'param.no2': 'Nitrite (NO2⁻)',
+      'param.no3': 'Nitrate (NO3⁻)',
+      'param.po4': 'Phosphate (PO4³⁻)',
+      'param.kh': 'KH / Alcalinité',
+      'param.ca': 'Calcium',
+      'param.mg': 'Magnésium',
+      'param.temp': 'Température',
+      'param.sal': 'Densité',
+      'param.autre': 'Autre',
+      'status.ideal': 'Idéal',
+      'status.lowWarn': 'Un peu bas',
+      'status.highWarn': 'Un peu haut',
+      'status.low': 'Trop bas',
+      'status.high': 'Trop haut',
+      'status.warn': 'Attention',
+      'status.bad': 'Hors norme'
     },
     en: {
       'app.tagline': 'Reef Tracking',
@@ -1820,7 +1838,25 @@
       'report.noneInPeriod': 'No readings for this period.',
       'report.historySection': 'READING HISTORY (by parameter, chronological order):',
       'report.copied': 'Copied!',
-      'report.copyFallbackHint': 'Text selected: press and hold, then tap "Copy" in the menu that appears (or use Download).'
+      'report.copyFallbackHint': 'Text selected: press and hold, then tap "Copy" in the menu that appears (or use Download).',
+      'param.ph': 'pH',
+      'param.nh3': 'Ammonia (NH3/NH4⁺)',
+      'param.no2': 'Nitrite (NO2⁻)',
+      'param.no3': 'Nitrate (NO3⁻)',
+      'param.po4': 'Phosphate (PO4³⁻)',
+      'param.kh': 'KH / Alkalinity',
+      'param.ca': 'Calcium',
+      'param.mg': 'Magnesium',
+      'param.temp': 'Temperature',
+      'param.sal': 'Salinity',
+      'param.autre': 'Other',
+      'status.ideal': 'Ideal',
+      'status.lowWarn': 'Slightly low',
+      'status.highWarn': 'Slightly high',
+      'status.low': 'Too low',
+      'status.high': 'Too high',
+      'status.warn': 'Caution',
+      'status.bad': 'Out of range'
     }
   };
   let currentLang = 'fr';
@@ -1853,6 +1889,13 @@
       el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
     });
   }
+  // Registre de callbacks à rejouer quand la langue change, pour tout ce qui ne peut
+  // pas être un simple textContent (Phase 4 : listes d'options <select> générées une
+  // fois au chargement, bannières sticky déjà peuplées...). Chaque écran qui en a
+  // besoin s'enregistre lui-même via onLangRefresh() au moment de son initialisation.
+  const LANG_REFRESH_HOOKS = [];
+  function onLangRefresh(fn){ LANG_REFRESH_HOOKS.push(fn); }
+  function runLangRefreshHooks(){ LANG_REFRESH_HOOKS.forEach(fn=>{ try{ fn(); }catch(e){} }); }
 
   // Applique la marque active à PARAMS : réécrit swatches + presetValues pour les 5
   // paramètres nuancier. Tout le reste du code continue de lire p.swatches sans savoir
@@ -1929,6 +1972,24 @@
     high:       {cls:'bad',  label:'Trop haut'},
     good:{cls:'good',label:'Idéal'}, warn:{cls:'warn',label:'Attention'}, bad:{cls:'bad',label:'Hors norme'}
   };
+  // Réécrit les labels de PARAMS et STATUS_META depuis le dictionnaire i18n courant —
+  // même principe que applyBrand() pour les swatches : un seul point de vérité relu
+  // à l'init et à chaque changement de langue, tout le reste du code continue de lire
+  // p.label / meta.label sans savoir qu'une langue existe.
+  const PARAM_LABEL_KEYS = {ph:'param.ph', nh3:'param.nh3', no2:'param.no2', no3:'param.no3', po4:'param.po4', kh:'param.kh', ca:'param.ca', mg:'param.mg', temp:'param.temp', sal:'param.sal', autre:'param.autre'};
+  function applyParamLabels(){
+    Object.keys(PARAM_LABEL_KEYS).forEach(k=>{ if(PARAMS[k]) PARAMS[k].label = t(PARAM_LABEL_KEYS[k]); });
+  }
+  function applyStatusLabels(){
+    STATUS_META.ideal.label = t('status.ideal');
+    STATUS_META['low-warn'].label = t('status.lowWarn');
+    STATUS_META['high-warn'].label = t('status.highWarn');
+    STATUS_META.low.label = t('status.low');
+    STATUS_META.high.label = t('status.high');
+    STATUS_META.good.label = t('status.ideal');
+    STATUS_META.warn.label = t('status.warn');
+    STATUS_META.bad.label = t('status.bad');
+  }
   function statusOf(paramKey, value){
     const p = PARAMS[paramKey];
     if(!p || !p.ideal) return null;
@@ -2418,7 +2479,7 @@
     };
     mkChip('', t('history.chipAll'), null);
     Object.keys(PARAMS).filter(k=>k!=='autre').forEach(k=>mkChip(k, SHORT_LABEL[k]||k, PARAMS[k].color));
-    mkChip('autre', 'Autre', '#6E93BE');
+    mkChip('autre', PARAMS.autre.label, '#6E93BE');
   }
   function renderHistory(){
     populateHistoryFilter();
@@ -2448,8 +2509,8 @@
     document.getElementById('miniGrid').innerHTML='';
 
     entries.forEach(e=>{
-      const p=PARAMS[e.param]||{label:'Autre',unit:'',decimals:2};
-      const label = e.param==='autre'?(e.customLabel||'Autre'):p.label;
+      const p=PARAMS[e.param]||{label:PARAMS.autre.label,unit:'',decimals:2};
+      const label = e.param==='autre'?(e.customLabel||PARAMS.autre.label):p.label;
       const meta = statusMeta(e.status);
       const dotColor = e.param==='autre' ? '#6E93BE' : (p.color||'#6E93BE');
       const when = new Date(e.date);
@@ -2618,7 +2679,7 @@
       lines.push(formatBatchHeader(batch));
       lines.push('');
       batch.forEach(e=>{
-        const label = e.param==='autre' ? (e.customLabel||'Autre') : PARAMS[e.param].label;
+        const label = e.param==='autre' ? (e.customLabel||PARAMS.autre.label) : PARAMS[e.param].label;
         const unit = e.param==='autre' ? '' : PARAMS[e.param].unit;
         const meta = statusMeta(e.status);
         lines.push(`- ${label} : ${e.value}${unit?' '+unit:''} (${meta.label.toLowerCase()})`);
@@ -2637,7 +2698,7 @@
     if(batch.length){
       lines.push(formatBatchHeader(batch));
       batch.forEach(e=>{
-        const label = e.param==='autre' ? (e.customLabel||'Autre') : PARAMS[e.param].label;
+        const label = e.param==='autre' ? (e.customLabel||PARAMS.autre.label) : PARAMS[e.param].label;
         const unit = e.param==='autre' ? '' : PARAMS[e.param].unit;
         const meta = statusMeta(e.status);
         lines.push(`- ${label} : ${e.value}${unit?' '+unit:''} (${meta.label.toLowerCase()})`);
@@ -2647,7 +2708,7 @@
 
     lines.push(t('report.historySection'));
     const byParam={};
-    filtered.forEach(e=>{ const key=e.param==='autre'?('autre:'+(e.customLabel||'Autre')):e.param; (byParam[key]=byParam[key]||[]).push(e); });
+    filtered.forEach(e=>{ const key=e.param==='autre'?('autre:'+(e.customLabel||PARAMS.autre.label)):e.param; (byParam[key]=byParam[key]||[]).push(e); });
     const gk=Object.keys(byParam);
     if(gk.length===0) lines.push('  '+t('report.noneInPeriod'));
     gk.forEach(key=>{
@@ -2665,8 +2726,8 @@
   // Carte visuelle (même style que l'historique) au-dessus du texte copiable —
   // pas de plages de référence, juste pastille couleur + libellé + statut + valeur.
   function reportRowHtml(e){
-    const p=PARAMS[e.param]||{label:'Autre',unit:'',decimals:2};
-    const label = e.param==='autre' ? (e.customLabel||'Autre') : p.label;
+    const p=PARAMS[e.param]||{label:PARAMS.autre.label,unit:'',decimals:2};
+    const label = e.param==='autre' ? (e.customLabel||PARAMS.autre.label) : p.label;
     const unit = e.param==='autre' ? '' : (p.unit||'');
     const meta = statusMeta(e.status);
     const dotColor = e.param==='autre' ? '#6E93BE' : (p.color||'#6E93BE');
@@ -2750,7 +2811,7 @@
   // ================= manual "no test" entry (generic) =================
   function openManualEntry(paramKey, customLabelGetter){
     const p = PARAMS[paramKey];
-    const label = paramKey==='autre' ? (customLabelGetter?customLabelGetter():'Autre') : p.label;
+    const label = paramKey==='autre' ? (customLabelGetter?customLabelGetter():PARAMS.autre.label) : p.label;
     openSheet({
       title:t('nuancier.manualTitle',{label}), showSwatch:false, placeholder:t('nuancier.manualPlaceholder',{unit:p.unit||''}), confirmText:t('common.save'),
       onConfirm: async ()=>{
@@ -2777,6 +2838,12 @@
       document.getElementById('titrationBannerValue').textContent = '';
     }
     sel.addEventListener('change', updateBanner); updateBanner();
+    onLangRefresh(function(){
+      const keep = sel.value;
+      sel.innerHTML=['kh','ca','mg'].map(k=>`<option value="${k}">${PARAMS[k].label}</option>`).join('');
+      sel.value = keep;
+      document.getElementById('titrationBannerParam').textContent = PARAMS[sel.value].label;
+    });
 
     let currentTitrationKey=null;
     document.getElementById('btnCalcTitration').addEventListener('click', ()=>{
@@ -2971,6 +3038,11 @@
   const nuancierBanner=document.getElementById('nuancierBanner'), nuancierBannerParam=document.getElementById('nuancierBannerParam'), nuancierBannerValue=document.getElementById('nuancierBannerValue');
 
   chartParamSelect.innerHTML = Object.keys(PARAMS).filter(k=>PARAMS[k].group==='chart').map(k=>`<option value="${k}">${PARAMS[k].label}</option>`).join('');
+  onLangRefresh(function(){
+    const keep = chartParamSelect.value;
+    chartParamSelect.innerHTML = Object.keys(PARAMS).filter(k=>PARAMS[k].group==='chart').map(k=>`<option value="${k}">${PARAMS[k].label}</option>`).join('');
+    if(keep) chartParamSelect.value = keep;
+  });
 
   function clamp(v,mn,mx){ return Math.max(mn, Math.min(mx, v)); }
   function rgbCss(rgb){ return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`; }
@@ -3293,9 +3365,15 @@
     refParam = chartParamSelect.value;
     nuancierBanner.classList.add('show');
     const p=PARAMS[refParam];
-    nuancierBannerParam.textContent = refParam==='autre' ? (chartCustomLabel.value.trim()||'Autre') : p.label;
+    nuancierBannerParam.textContent = refParam==='autre' ? (chartCustomLabel.value.trim()||PARAMS.autre.label) : p.label;
     nuancierBannerValue.textContent = '';
   }
+  onLangRefresh(()=>{
+    if(nuancierBanner.classList.contains('show')){
+      const p=PARAMS[refParam];
+      if(p) nuancierBannerParam.textContent = refParam==='autre' ? (chartCustomLabel.value.trim()||PARAMS.autre.label) : p.label;
+    }
+  });
   chartCustomLabel.addEventListener('input', updateBanner);
 
   chartParamSelect.addEventListener('change', ()=>{
@@ -3304,7 +3382,7 @@
     resetRefState();
   });
   document.getElementById('btnManualEntry').addEventListener('click', ()=>{
-    openManualEntry(refParam, ()=>chartCustomLabel.value.trim()||'Autre');
+    openManualEntry(refParam, ()=>chartCustomLabel.value.trim()||PARAMS.autre.label);
   });
 
   // -------- capture --------
@@ -3575,7 +3653,7 @@
     const p=PARAMS[refParam]; const isCustom=refParam==='autre'; const meta=statusMeta(status);
     document.getElementById('readoutValue').value = value;
     document.getElementById('readoutUnit').textContent = p.unit;
-    document.getElementById('readoutParam').textContent = isCustom ? (chartCustomLabel.value.trim()||'Autre') : p.label;
+    document.getElementById('readoutParam').textContent = isCustom ? (chartCustomLabel.value.trim()||PARAMS.autre.label) : p.label;
     const lowConfBanner = document.getElementById('lowConfBanner');
     const valueEl = document.getElementById('readoutValue'), unitEl = document.getElementById('readoutUnit');
     if(lowConf){
@@ -3659,7 +3737,7 @@
     const saved = await addHistoryEntry({
       param: refParam, value: val, status, source:'nuancier',
       note,
-      customLabel: isCustom ? (chartCustomLabel.value.trim()||'Autre') : undefined
+      customLabel: isCustom ? (chartCustomLabel.value.trim()||PARAMS.autre.label) : undefined
     });
     const savedEl=document.getElementById('savedNote');
     savedEl.textContent = saved? t('common.savedSuccess') : t('common.savedFail');
@@ -3668,17 +3746,23 @@
   });
 
   // ---------- init ----------
+  applyParamLabels();
+  applyStatusLabels();
   applyBrand();
   populateHistoryFilter();
   resetRefState();
   renderBrandSelector();
   renderLangToggle();
   applyI18nDom();
+  runLangRefreshHooks();
   document.getElementById('langToggle').addEventListener('click', async ()=>{
     currentLang = currentLang==='en' ? 'fr' : 'en';
     try{ localStorage.setItem('appLang', currentLang); }catch(e){}
+    applyParamLabels();
+    applyStatusLabels();
     renderLangToggle();
     applyI18nDom();
+    runLangRefreshHooks();
     renderDashboard();
     await saveLang();
   });
@@ -3694,7 +3778,7 @@
   // affichage immédiat, puis on ne re-rend que si le serveur dit autre chose.
   loadActiveBrand().then(changed=>{ if(changed){ applyBrand(); renderBrandSelector(); renderDashboard(); } });
   loadCyclingActive().then(changed=>{ if(changed){ renderCycleToggle(); renderDashboard(); } });
-  loadLang().then(changed=>{ if(changed){ renderLangToggle(); applyI18nDom(); renderDashboard(); } });
+  loadLang().then(changed=>{ if(changed){ applyParamLabels(); applyStatusLabels(); renderLangToggle(); applyI18nDom(); runLangRefreshHooks(); renderDashboard(); } });
 
 })();
 </script>
