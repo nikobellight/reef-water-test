@@ -1136,7 +1136,7 @@
       <h1>MON RÉCIF</h1>
       <div class="hero-sub" data-i18n="app.tagline">Suivi récifal</div>
       <div class="app-meta">
-        <span class="ver-pill">v6.13</span>
+        <span class="ver-pill">v6.14</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1376,7 +1376,7 @@
     <input id="sheetInput" type="text" inputmode="decimal" placeholder="ex. 7,4">
     <p id="sheetError"></p>
     <div class="btn-row">
-      <button class="secondary" id="sheetCancel">Annuler</button>
+      <button class="secondary" id="sheetCancel" data-i18n="common.cancel">Annuler</button>
       <button class="primary" id="sheetConfirm">OK</button>
     </div>
   </div>
@@ -1614,7 +1614,39 @@
       'nuancier.matchLbl': 'CORRESPONDANCE',
       'nuancier.thSwatch': 'Pastille',
       'nuancier.thValue': 'Valeur',
-      'nuancier.btnValidate': '✅ Valider cette mesure'
+      'nuancier.btnValidate': '✅ Valider cette mesure',
+      'nuancier.lowConfLabel': 'Proche de zéro / indétectable avec précision à ce niveau',
+      'nuancier.help.custom': 'Paramètre libre : ajoute chaque pastille une par une depuis cette photo.',
+      'nuancier.help.unavailable': "{param} n'existe pas en nuancier chez {brand}. Change de marque sur l'accueil, ou utilise le paramètre « Autre » pour caler les pastilles à la main depuis ta photo.",
+      'nuancier.help.extremes': 'Vise les 2 pastilles extrêmes du nuancier : les autres sont calculées automatiquement entre les deux.',
+      'nuancier.help.verifyThenSample': 'Vérifie les pastilles ci-dessus, puis vise ton échantillon.',
+      'nuancier.btn.addSwatch': '+ Ajouter une pastille',
+      'nuancier.btn.sample': '🎯 Échantillon',
+      'nuancier.btn.firstSwatch': '🎯 Première pastille ({v})',
+      'nuancier.btn.lastSwatch': '🎯 Dernière pastille ({v})',
+      'nuancier.aim.sample': 'Échantillon',
+      'nuancier.aim.firstSwatch': '1ère pastille ({v})',
+      'nuancier.aim.lastSwatch': 'Dernière pastille ({v})',
+      'nuancier.aim.newSwatch': 'Nouvelle pastille {v}',
+      'nuancier.newSwatchTitle': 'Nouvelle pastille — valeur',
+      'nuancier.newSwatchPlaceholder': 'ex. 0.5',
+      'nuancier.manualTitle': 'Valeur manuelle — {label}',
+      'nuancier.manualPlaceholder': 'ex. 8,2 {unit}',
+      'nuancier.conf.excellent': 'Correspondance excellente',
+      'nuancier.conf.good': 'Bonne correspondance',
+      'nuancier.conf.approx': 'Correspondance approximative',
+      'nuancier.conf.unreliableLighting': 'Peu fiable — reprends la photo (reflets, éclairage coloré, luminosité)',
+      'nuancier.conf.unreliableBrand': 'Peu fiable — écart franc, vérifie que la marque sélectionnée correspond à ton kit',
+      'nuancier.conf.manual': 'Sélection manuelle',
+      'nuancier.prev.last': 'Dernière mesure : {value} {unit}<br>(le {date})',
+      'nuancier.prev.first': 'Première mesure pour ce paramètre',
+      'nuancier.disclaimer': 'Résultat basé sur une comparaison colorimétrique entre pastilles et échantillon pris sur la même photo. Tu peux corriger la valeur ci-dessus avant de valider.',
+      'common.cancel': 'Annuler',
+      'common.save': 'Enregistrer',
+      'common.add': 'Ajouter',
+      'common.invalidNumber': 'Entre une valeur numérique.',
+      'common.savedSuccess': "✅ Enregistré dans l'historique",
+      'common.savedFail': '⚠️ Non enregistré — échec Supabase'
     },
     en: {
       'app.tagline': 'Reef Tracking',
@@ -1658,7 +1690,39 @@
       'nuancier.matchLbl': 'MATCH',
       'nuancier.thSwatch': 'Swatch',
       'nuancier.thValue': 'Value',
-      'nuancier.btnValidate': '✅ Save this reading'
+      'nuancier.btnValidate': '✅ Save this reading',
+      'nuancier.lowConfLabel': 'Near zero / not precisely detectable at this level',
+      'nuancier.help.custom': 'Free parameter: add each swatch one by one from this photo.',
+      'nuancier.help.unavailable': '{param} isn\u2019t available as a chart for {brand}. Switch brand from the home screen, or use the "Other" parameter to place swatches manually from your photo.',
+      'nuancier.help.extremes': 'Target the 2 end swatches of the chart: the others are calculated automatically in between.',
+      'nuancier.help.verifyThenSample': 'Check the swatches above, then target your sample.',
+      'nuancier.btn.addSwatch': '+ Add a swatch',
+      'nuancier.btn.sample': '🎯 Sample',
+      'nuancier.btn.firstSwatch': '🎯 First swatch ({v})',
+      'nuancier.btn.lastSwatch': '🎯 Last swatch ({v})',
+      'nuancier.aim.sample': 'Sample',
+      'nuancier.aim.firstSwatch': 'First swatch ({v})',
+      'nuancier.aim.lastSwatch': 'Last swatch ({v})',
+      'nuancier.aim.newSwatch': 'New swatch {v}',
+      'nuancier.newSwatchTitle': 'New swatch — value',
+      'nuancier.newSwatchPlaceholder': 'e.g. 0.5',
+      'nuancier.manualTitle': 'Manual value — {label}',
+      'nuancier.manualPlaceholder': 'e.g. 8.2 {unit}',
+      'nuancier.conf.excellent': 'Excellent match',
+      'nuancier.conf.good': 'Good match',
+      'nuancier.conf.approx': 'Approximate match',
+      'nuancier.conf.unreliableLighting': 'Unreliable — retake the photo (reflections, colored lighting, brightness)',
+      'nuancier.conf.unreliableBrand': "Unreliable — large gap, check that the selected brand matches your kit",
+      'nuancier.conf.manual': 'Manual selection',
+      'nuancier.prev.last': 'Last reading: {value} {unit}<br>(on {date})',
+      'nuancier.prev.first': 'First reading for this parameter',
+      'nuancier.disclaimer': 'Result based on a color comparison between swatches and sample taken in the same photo. You can adjust the value above before saving.',
+      'common.cancel': 'Cancel',
+      'common.save': 'Save',
+      'common.add': 'Add',
+      'common.invalidNumber': 'Enter a numeric value.',
+      'common.savedSuccess': '✅ Saved to history',
+      'common.savedFail': '⚠️ Not saved — Supabase failed'
     }
   };
   let currentLang = 'fr';
@@ -1750,7 +1814,7 @@
     api:    { nh3: [0, 0.25] },
     elos:   { nh3: [0, 0.1] }
   };
-  const LOW_CONF_LABEL = 'Proche de zéro / indétectable avec précision à ce niveau';
+  const LOW_CONF_LABEL_KEY = 'nuancier.lowConfLabel';
   function lowConfZoneCheck(brandKey, paramKey, best, second){
     const zone = (LOW_CONF_ZONES[brandKey]||{})[paramKey];
     if(!zone || !second) return false;
@@ -2590,10 +2654,10 @@
     const p = PARAMS[paramKey];
     const label = paramKey==='autre' ? (customLabelGetter?customLabelGetter():'Autre') : p.label;
     openSheet({
-      title:`Valeur manuelle — ${label}`, showSwatch:false, placeholder:`ex. 8,2 ${p.unit||''}`, confirmText:'Enregistrer',
+      title:t('nuancier.manualTitle',{label}), showSwatch:false, placeholder:t('nuancier.manualPlaceholder',{unit:p.unit||''}), confirmText:t('common.save'),
       onConfirm: async ()=>{
         const raw=sheetInput.value.trim().replace(',','.'); const val=parseFloat(raw);
-        if(!raw||isNaN(val)){ sheetError.textContent='Entre une valeur numérique.'; return; }
+        if(!raw||isNaN(val)){ sheetError.textContent=t('common.invalidNumber'); return; }
         const status = paramKey==='autre' ? null : statusOf(paramKey, val);
         closeSheet();
         await addHistoryEntry({param:paramKey, value:val, status, source:'manual', customLabel: paramKey==='autre'?label:undefined});
@@ -2854,9 +2918,9 @@
     targetButtons.innerHTML='';
     const p=PARAMS[refParam];
     if(refParam==='autre'){
-      refModeHelp.textContent = "Paramètre libre : ajoute chaque pastille une par une depuis cette photo.";
-      const bAdd=mkBtn('+ Ajouter une pastille', addCustomChip);
-      const bSample=mkBtn('🎯 Échantillon', ()=>armAim('sample','Échantillon'));
+      refModeHelp.textContent = t('nuancier.help.custom');
+      const bAdd=mkBtn(t('nuancier.btn.addSwatch'), addCustomChip);
+      const bSample=mkBtn(t('nuancier.btn.sample'), ()=>armAim('sample', t('nuancier.aim.sample')));
       targetButtons.appendChild(bAdd); targetButtons.appendChild(bSample);
       return;
     }
@@ -2864,19 +2928,19 @@
     // franchement au lieu de calibrer sur les couleurs d'une autre marque, ce qui
     // donnerait un résultat faux sans que rien ne le signale.
     if(p.unavailable){
-      refModeHelp.textContent = `${p.label} n'existe pas en nuancier chez ${brandLabel()}. Change de marque sur l'accueil, ou utilise le paramètre « Autre » pour caler les pastilles à la main depuis ta photo.`;
+      refModeHelp.textContent = t('nuancier.help.unavailable', {param: p.label, brand: brandLabel()});
       return;
     }
     if(!firstSwatchPos || !lastSwatchPos){
-      refModeHelp.textContent = "Vise les 2 pastilles extrêmes du nuancier : les autres sont calculées automatiquement entre les deux.";
+      refModeHelp.textContent = t('nuancier.help.extremes');
       const first=p.presetValues[0], last=p.presetValues[p.presetValues.length-1];
-      const b1=mkBtn(`🎯 Première pastille (${first})`, ()=>armAim('firstSwatch', `1ère pastille (${first})`), !!firstSwatchPos);
-      const b2=mkBtn(`🎯 Dernière pastille (${last})`, ()=>armAim('lastSwatch', `Dernière pastille (${last})`), !!lastSwatchPos);
+      const b1=mkBtn(t('nuancier.btn.firstSwatch',{v:first}), ()=>armAim('firstSwatch', t('nuancier.aim.firstSwatch',{v:first})), !!firstSwatchPos);
+      const b2=mkBtn(t('nuancier.btn.lastSwatch',{v:last}), ()=>armAim('lastSwatch', t('nuancier.aim.lastSwatch',{v:last})), !!lastSwatchPos);
       targetButtons.appendChild(b1); targetButtons.appendChild(b2);
       return;
     }
-    refModeHelp.textContent = "Vérifie les pastilles ci-dessus, puis vise ton échantillon.";
-    const bSample=mkBtn('🎯 Échantillon', ()=>armAim('sample','Échantillon'));
+    refModeHelp.textContent = t('nuancier.help.verifyThenSample');
+    const bSample=mkBtn(t('nuancier.btn.sample'), ()=>armAim('sample', t('nuancier.aim.sample')));
     targetButtons.appendChild(bSample);
   }
   function mkBtn(label, onClick, done){
@@ -3117,12 +3181,12 @@
 
   function addCustomChip(){
     openSheet({
-      title:'Nouvelle pastille — valeur', showSwatch:false, placeholder:'ex. 0.5', confirmText:'Ajouter',
+      title:t('nuancier.newSwatchTitle'), showSwatch:false, placeholder:t('nuancier.newSwatchPlaceholder'), confirmText:t('common.add'),
       onConfirm: ()=>{
         const raw=sheetInput.value.trim().replace(',','.'); const val=parseFloat(raw);
-        if(!raw||isNaN(val)){ sheetError.textContent='Entre une valeur numérique.'; return; }
+        if(!raw||isNaN(val)){ sheetError.textContent=t('common.invalidNumber'); return; }
         closeSheet();
-        armAim({chip:val}, `Nouvelle pastille ${val}`);
+        armAim({chip:val}, t('nuancier.aim.newSwatch',{v:val}));
       }
     });
   }
@@ -3396,11 +3460,11 @@
     // appareil/éclairage — un seuil ΔE absolu est pertinent et cohérent (une calibration
     // correcte donne un ΔE bas, une calibration cassée un ΔE haut).
     let confLabel, confColor;
-    if(best.de<3){ confLabel='Correspondance excellente'; confColor='var(--good)'; }
-    else if(best.de<7){ confLabel='Bonne correspondance'; confColor='var(--good)'; }
-    else if(best.de<14){ confLabel='Correspondance approximative'; confColor='var(--amber)'; }
-    else if(best.de<30){ confLabel='Peu fiable — reprends la photo (reflets, éclairage coloré, luminosité)'; confColor='var(--bad)'; }
-    else{ confLabel='Peu fiable — écart franc, vérifie que la marque sélectionnée correspond à ton kit'; confColor='var(--bad)'; }
+    if(best.de<3){ confLabel=t('nuancier.conf.excellent'); confColor='var(--good)'; }
+    else if(best.de<7){ confLabel=t('nuancier.conf.good'); confColor='var(--good)'; }
+    else if(best.de<14){ confLabel=t('nuancier.conf.approx'); confColor='var(--amber)'; }
+    else if(best.de<30){ confLabel=t('nuancier.conf.unreliableLighting'); confColor='var(--bad)'; }
+    else{ confLabel=t('nuancier.conf.unreliableBrand'); confColor='var(--bad)'; }
 
     const lowConf = refParam!=='autre' && lowConfZoneCheck(activeBrand, refParam, best, second);
     currentLowConf = lowConf;
@@ -3417,7 +3481,7 @@
     const lowConfBanner = document.getElementById('lowConfBanner');
     const valueEl = document.getElementById('readoutValue'), unitEl = document.getElementById('readoutUnit');
     if(lowConf){
-      lowConfBanner.textContent = LOW_CONF_LABEL;
+      lowConfBanner.textContent = t(LOW_CONF_LABEL_KEY);
       lowConfBanner.style.display = 'block';
       valueEl.classList.add('dim'); unitEl.classList.add('dim');
     } else {
@@ -3431,15 +3495,15 @@
       const prev = latestFor(refParam);
       if(prev){
         const when = new Date(prev.date).toLocaleDateString(currentLocale(),{day:'2-digit',month:'2-digit'});
-        prevEl.innerHTML = `Dernière mesure : ${Number(prev.value).toFixed(p.decimals)} ${p.unit}<br>(le ${when})`;
+        prevEl.innerHTML = t('nuancier.prev.last', {value: Number(prev.value).toFixed(p.decimals), unit: p.unit, date: when});
       } else {
-        prevEl.textContent = 'Première mesure pour ce paramètre';
+        prevEl.textContent = t('nuancier.prev.first');
       }
     }
     const gaugeEl=document.getElementById('readoutGauge');
     if(isCustom){ gaugeEl.innerHTML=''; } else { renderGauge(gaugeEl, refParam, value, lowConf); }
     const conf=document.getElementById('confidenceText');
-    conf.textContent = manual ? 'Sélection manuelle' : `ΔE ${best.de.toFixed(1)} · ${confLabel}`;
+    conf.textContent = manual ? t('nuancier.conf.manual') : `ΔE ${best.de.toFixed(1)} · ${confLabel}`;
     conf.style.color = manual ? 'var(--text-dim)' : confColor;
     document.getElementById('cmpSample').style.background = rgbCss(sample);
     document.getElementById('cmpMatch').style.background = rgbCss(best.rgb);
@@ -3453,7 +3517,7 @@
       tbody.appendChild(tr);
     });
     document.getElementById('savedNote').textContent='';
-    document.getElementById('resultDisclaimer').textContent = "Résultat basé sur une comparaison colorimétrique entre pastilles et échantillon pris sur la même photo. Tu peux corriger la valeur ci-dessus avant de valider.";
+    document.getElementById('resultDisclaimer').textContent = t('nuancier.disclaimer');
     nuancierBannerValue.textContent = value+' '+p.unit;
     renderPhotoThumbs();
     resultPanel.style.display='block';
@@ -3493,14 +3557,14 @@
     downloadPhoto(refParam);
     const status = isCustom ? null : (currentLowConf ? 'ideal' : statusOf(refParam, val));
     const baseNote = document.getElementById('confidenceText').textContent;
-    const note = currentLowConf ? `${LOW_CONF_LABEL} — ${baseNote}` : baseNote;
+    const note = currentLowConf ? `${t(LOW_CONF_LABEL_KEY)} — ${baseNote}` : baseNote;
     const saved = await addHistoryEntry({
       param: refParam, value: val, status, source:'nuancier',
       note,
       customLabel: isCustom ? (chartCustomLabel.value.trim()||'Autre') : undefined
     });
     const savedEl=document.getElementById('savedNote');
-    savedEl.textContent = saved? "✅ Enregistré dans l'historique" : '⚠️ Non enregistré — échec Supabase';
+    savedEl.textContent = saved? t('common.savedSuccess') : t('common.savedFail');
     savedEl.style.color = saved? 'var(--good)' : 'var(--bad)';
     if(saved) setTimeout(()=>showView('dashboard'), 900);
   });
