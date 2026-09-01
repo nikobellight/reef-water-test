@@ -395,6 +395,7 @@
   .ver-pill,.mini-pill{
     display:inline-flex;
     align-items:center;
+    gap:4px;
     border-radius:999px;
     min-height:26px;
     padding:0 10px;
@@ -424,6 +425,11 @@
   }
   button.mini-pill:active{
     background:rgba(10,31,49,1);
+  }
+  .lang-flag{
+    display:block;
+    border-radius:2px;
+    flex-shrink:0;
   }
   .hero-status{
     display:inline-flex;
@@ -1130,7 +1136,7 @@
       <h1>MON RÉCIF</h1>
       <div class="hero-sub">Suivi récifal</div>
       <div class="app-meta">
-        <span class="ver-pill">v6.8</span>
+        <span class="ver-pill">v6.9</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1769,10 +1775,18 @@
       });
     }catch(e){ /* silencieux : le local a déjà été écrit */ }
   }
+  // Drapeaux en SVG inline plutôt qu'en emoji Unicode : les indicateurs régionaux
+  // (🇫🇷🇬🇧) ne sont pas rendus comme de vrais drapeaux sur tous les systèmes/polices
+  // (Android notamment tombe souvent en repli sur du texte ou une icône générique).
+  // Un SVG dessiné en dur s'affiche identiquement partout.
+  const FLAG_FR = '<svg class="lang-flag" width="16" height="12" viewBox="0 0 16 12" xmlns="http://www.w3.org/2000/svg"><rect width="16" height="12" fill="#fff"/><rect width="5.34" height="12" fill="#0055A4"/><rect x="10.66" width="5.34" height="12" fill="#EF4135"/></svg>';
+  const FLAG_GB = '<svg class="lang-flag" width="16" height="12" viewBox="0 0 16 12" xmlns="http://www.w3.org/2000/svg"><rect width="16" height="12" fill="#00247d"/><path d="M0,0 L16,12 M16,0 L0,12" stroke="#fff" stroke-width="2.4"/><path d="M0,0 L16,12 M16,0 L0,12" stroke="#cf142b" stroke-width="1.2"/><path d="M8,0 V12 M0,6 H16" stroke="#fff" stroke-width="4.4"/><path d="M8,0 V12 M0,6 H16" stroke="#cf142b" stroke-width="2.4"/></svg>';
   function renderLangToggle(){
     const btn = document.getElementById('langToggle');
     if(!btn) return;
-    btn.textContent = currentLang==='en' ? '🇬🇧 EN' : '🇫🇷 FR';
+    const flag = currentLang==='en' ? FLAG_GB : FLAG_FR;
+    const label = currentLang==='en' ? 'EN' : 'FR';
+    btn.innerHTML = flag + '<span>' + label + '</span>';
     btn.setAttribute('aria-label', currentLang==='en' ? 'Switch to French' : 'Passer en anglais');
   }
 
