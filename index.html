@@ -1136,7 +1136,7 @@
       <h1>MON RÉCIF</h1>
       <div class="hero-sub" data-i18n="app.tagline">Suivi récifal</div>
       <div class="app-meta">
-        <span class="ver-pill">v6.14</span>
+        <span class="ver-pill">v6.15</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1268,25 +1268,25 @@
     <section class="view" id="view-titration">
       <div class="sticky-banner" id="titrationBanner"><span class="sp" id="titrationBannerParam"></span><span class="sv" id="titrationBannerValue"></span></div>
       <div class="card">
-        <p class="step-label active"><span class="dot"></span>Titration Salifert</p>
-        <div class="field"><label class="field-label">Paramètre</label><select id="titrationParamSelect"></select></div>
-        <button class="ghost" id="btnManualEntryTitration" style="margin-bottom:14px;">✏️ Entrer une valeur manuellement (sans test)</button>
+        <p class="step-label active"><span class="dot"></span><span data-i18n="titration.stepLabel">Titration Salifert</span></p>
+        <div class="field"><label class="field-label" data-i18n="titration.paramLabel">Paramètre</label><select id="titrationParamSelect"></select></div>
+        <button class="ghost" id="btnManualEntryTitration" style="margin-bottom:14px;" data-i18n="nuancier.manualEntry">✏️ Entrer une valeur manuellement (sans test)</button>
         <div class="field">
-          <label class="field-label">Lecture de la seringue (ml, 0.00 – 1.00)</label>
-          <div class="reading-row"><input type="number" id="titrationReading" step="0.01" min="0" max="1" placeholder="ex. 0.42"></div>
+          <label class="field-label" data-i18n="titration.readingLabel">Lecture de la seringue (ml, 0.00 – 1.00)</label>
+          <div class="reading-row"><input type="number" id="titrationReading" step="0.01" min="0" max="1" placeholder="ex. 0.42" data-i18n-placeholder="titration.readingPlaceholder"></div>
         </div>
-        <div class="toggle-row"><input type="checkbox" id="titrationLowRes"><label for="titrationLowRes">Mode basse résolution du kit (×2)</label></div>
+        <div class="toggle-row"><input type="checkbox" id="titrationLowRes"><label for="titrationLowRes" data-i18n="titration.lowResLabel">Mode basse résolution du kit (×2)</label></div>
         <p id="titrationError" style="color:var(--bad);font-size:0.8rem;min-height:1em;margin:0 0 10px;"></p>
-        <button class="primary" id="btnCalcTitration">Calculer</button>
-        <p class="mode-help" style="margin-top:12px;">Vérifie ces formules par rapport à la notice papier de ta boîte Salifert (SALCORE).</p>
+        <button class="primary" id="btnCalcTitration" data-i18n="titration.btnCalc">Calculer</button>
+        <p class="mode-help" style="margin-top:12px;" data-i18n="titration.formulaHint">Vérifie ces formules par rapport à la notice papier de ta boîte Salifert (SALCORE).</p>
       </div>
       <div class="card" id="titrationResultPanel" style="display:none;">
-        <p class="step-label done"><span class="dot"></span>Résultat — modifiable avant validation</p>
+        <p class="step-label done"><span class="dot"></span><span data-i18n="nuancier.resultStep">Résultat — modifiable avant validation</span></p>
         <div class="readout"><div><input type="text" inputmode="decimal" class="value-edit" id="titrationResultValue"><span class="u" id="titrationResultUnit"></span></div></div>
         <div id="titrationGauge"></div>
-        <button class="primary" id="btnValidateTitration" style="margin-top:16px;">✅ Valider cette mesure</button>
+        <button class="primary" id="btnValidateTitration" style="margin-top:16px;" data-i18n="nuancier.btnValidate">✅ Valider cette mesure</button>
         <p class="saved-note" id="titrationSavedNote" style="margin-top:10px;"></p>
-        <button class="secondary" style="width:100%;margin-top:12px;" onclick="showView('dashboard')">Voir le tableau de bord</button>
+        <button class="secondary" style="width:100%;margin-top:12px;" onclick="showView('dashboard')" data-i18n="titration.viewDashboard">Voir le tableau de bord</button>
       </div>
     </section>
 
@@ -1646,7 +1646,17 @@
       'common.add': 'Ajouter',
       'common.invalidNumber': 'Entre une valeur numérique.',
       'common.savedSuccess': "✅ Enregistré dans l'historique",
-      'common.savedFail': '⚠️ Non enregistré — échec Supabase'
+      'common.savedFail': '⚠️ Non enregistré — échec Supabase',
+      'common.invalidValue': 'Valeur invalide.',
+      'titration.stepLabel': 'Titration Salifert',
+      'titration.paramLabel': 'Paramètre',
+      'titration.readingLabel': 'Lecture de la seringue (ml, 0.00 – 1.00)',
+      'titration.readingPlaceholder': 'ex. 0.42',
+      'titration.lowResLabel': 'Mode basse résolution du kit (×2)',
+      'titration.btnCalc': 'Calculer',
+      'titration.formulaHint': 'Vérifie ces formules par rapport à la notice papier de ta boîte Salifert (SALCORE).',
+      'titration.viewDashboard': 'Voir le tableau de bord',
+      'titration.readingError': 'Entre une lecture entre 0.00 et 1.00 ml.'
     },
     en: {
       'app.tagline': 'Reef Tracking',
@@ -1722,7 +1732,17 @@
       'common.add': 'Add',
       'common.invalidNumber': 'Enter a numeric value.',
       'common.savedSuccess': '✅ Saved to history',
-      'common.savedFail': '⚠️ Not saved — Supabase failed'
+      'common.savedFail': '⚠️ Not saved — Supabase failed',
+      'common.invalidValue': 'Invalid value.',
+      'titration.stepLabel': 'Salifert titration',
+      'titration.paramLabel': 'Parameter',
+      'titration.readingLabel': 'Syringe reading (ml, 0.00 – 1.00)',
+      'titration.readingPlaceholder': 'e.g. 0.42',
+      'titration.lowResLabel': 'Low-resolution kit mode (×2)',
+      'titration.btnCalc': 'Calculate',
+      'titration.formulaHint': 'Check these formulas against the paper insert of your Salifert box (SALCORE).',
+      'titration.viewDashboard': 'View dashboard',
+      'titration.readingError': 'Enter a reading between 0.00 and 1.00 ml.'
     }
   };
   let currentLang = 'fr';
@@ -2686,7 +2706,7 @@
       const raw=document.getElementById('titrationReading').value.trim().replace(',','.');
       const reading=parseFloat(raw);
       const errEl=document.getElementById('titrationError');
-      if(!raw||isNaN(reading)||reading<0||reading>1){ errEl.textContent='Entre une lecture entre 0.00 et 1.00 ml.'; return; }
+      if(!raw||isNaN(reading)||reading<0||reading>1){ errEl.textContent=t('titration.readingError'); return; }
       errEl.textContent='';
       const lowRes=document.getElementById('titrationLowRes').checked;
       const p=PARAMS[key]; let value=p.calc(reading); if(lowRes) value*=2;
@@ -2708,11 +2728,11 @@
       const raw=document.getElementById('titrationResultValue').value.trim().replace(',','.');
       const value=parseFloat(raw);
       const savedEl=document.getElementById('titrationSavedNote');
-      if(!raw||isNaN(value)){ savedEl.textContent='Valeur invalide.'; savedEl.style.color='var(--bad)'; return; }
+      if(!raw||isNaN(value)){ savedEl.textContent=t('common.invalidValue'); savedEl.style.color='var(--bad)'; return; }
       const status=statusOf(key,value);
       renderGauge(document.getElementById('titrationGauge'), key, value);
       const saved=await addHistoryEntry({param:key,value,status,source:'titration'});
-      savedEl.textContent = saved? "✅ Enregistré dans l'historique" : '⚠️ Non enregistré — échec Supabase';
+      savedEl.textContent = saved? t('common.savedSuccess') : t('common.savedFail');
       savedEl.style.color = saved? 'var(--good)' : 'var(--bad)';
     });
   })();
