@@ -413,6 +413,18 @@
     border:1px solid rgba(69,229,208,.12);
     background:rgba(10,31,49,.65);
   }
+  button.mini-pill{
+    font-family:inherit;
+    cursor:pointer;
+    transition:background .15s,border-color .15s;
+  }
+  button.mini-pill:hover{
+    border-color:rgba(69,229,208,.35);
+    background:rgba(10,31,49,.9);
+  }
+  button.mini-pill:active{
+    background:rgba(10,31,49,1);
+  }
   .hero-status{
     display:inline-flex;
     align-items:center;
@@ -1118,7 +1130,8 @@
       <h1>MON RÉCIF</h1>
       <div class="hero-sub">Suivi récifal</div>
       <div class="app-meta">
-        <span class="ver-pill">v6.7</span>
+        <span class="ver-pill">v6.8</span>
+        <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
         <button type="button" class="cycle-toggle-header" id="cycleToggleBtn"><span class="ic">🔄</span><span class="l1">Nouveau</span><span class="l2">Cycle</span></button>
@@ -1547,6 +1560,28 @@
     if(b && NUANCIERS[b]) activeBrand = b;
   }catch(e){}
 
+  // ================= i18n (Phase 1 — infrastructure seule) =================
+  // Dictionnaire vide pour l'instant côté contenu : les Phases 2-4 y verseront
+  // progressivement les chaînes HTML/JS/données. La mécanique (bascule, persistance
+  // locale + Supabase, format de date) est déjà pleinement fonctionnelle et
+  // testable indépendamment du contenu — c'est l'objet de cette phase.
+  const I18N = { fr:{}, en:{} };
+  let currentLang = 'fr';
+  try{
+    const l = localStorage.getItem('appLang');
+    if(l==='fr' || l==='en') currentLang = l;
+  }catch(e){}
+  // Résolveur sûr : dictionnaire courant -> repli FR -> repli sur la clé brute.
+  // Ne lève jamais d'exception, ne renvoie jamais "undefined" à l'écran, même
+  // pour une clé pas encore migrée (Phases 2-4).
+  function t(key){
+    const dict = I18N[currentLang] || I18N.fr;
+    if(dict && dict[key]!=null) return dict[key];
+    if(I18N.fr && I18N.fr[key]!=null) return I18N.fr[key];
+    return key;
+  }
+  function currentLocale(){ return currentLang==='en' ? 'en-US' : 'fr-FR'; }
+
   // Applique la marque active à PARAMS : réécrit swatches + presetValues pour les 5
   // paramètres nuancier. Tout le reste du code continue de lire p.swatches sans savoir
   // qu'une marque existe — un seul point de vérité, pas de branchement dispersé.
@@ -1706,6 +1741,41 @@
     }catch(e){ /* silencieux : le local a déjà été écrit */ }
   }
 
+  // Langue active : même schéma que la marque active (localStorage fait foi pour
+  // l'affichage immédiat, Supabase pour la synchro entre appareils, échec silencieux
+  // si la table/ligne n'existe pas encore).
+  const LANG_SETTING_KEY = 'app_lang';
+  async function loadLang(){
+    try{
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/app_settings?select=value&key=eq.${LANG_SETTING_KEY}`, {headers: sbHeaders()});
+      if(!res.ok) return false;
+      const rows = await res.json();
+      const v = rows && rows[0] && rows[0].value;
+      if((v==='fr' || v==='en') && v!==currentLang){
+        currentLang = v;
+        try{ localStorage.setItem('appLang', v); }catch(e){}
+        return true;
+      }
+    }catch(e){ /* hors ligne ou table absente : on garde le local */ }
+    return false;
+  }
+  async function saveLang(){
+    try{ localStorage.setItem('appLang', currentLang); }catch(e){}
+    try{
+      await fetch(`${SUPABASE_URL}/rest/v1/app_settings`, {
+        method:'POST',
+        headers: sbHeaders({'Prefer':'resolution=merge-duplicates'}),
+        body: JSON.stringify({key:LANG_SETTING_KEY, value:currentLang})
+      });
+    }catch(e){ /* silencieux : le local a déjà été écrit */ }
+  }
+  function renderLangToggle(){
+    const btn = document.getElementById('langToggle');
+    if(!btn) return;
+    btn.textContent = currentLang==='en' ? '🇬🇧 EN' : '🇫🇷 FR';
+    btn.setAttribute('aria-label', currentLang==='en' ? 'Switch to French' : 'Passer en anglais');
+  }
+
   async function loadHistory(){
     try{
       const res = await fetch(`${SUPABASE_URL}/rest/v1/measurements?select=*&order=created_at.desc`, {headers: sbHeaders()});
@@ -1739,7 +1809,7 @@
   function relDate(iso){
     const d=new Date(iso), diffDays=Math.floor((new Date()-d)/86400000);
     if(diffDays<=0) return "aujourd'hui"; if(diffDays===1) return "hier";
-    if(diffDays<30) return `il y a ${diffDays} j`; return d.toLocaleDateString('fr-FR');
+    if(diffDays<30) return `il y a ${diffDays} j`; return d.toLocaleDateString(currentLocale());
   }
 
   // ================= navigation =================
@@ -1973,7 +2043,7 @@
       btn.addEventListener('click', ()=>openBadgePicker(Number(btn.dataset.slot)));
     });
     document.getElementById('lastMeasureSub').textContent = mostRecent
-      ? `Dernière mesure le ${new Date(mostRecent.date).toLocaleDateString('fr-FR')}`
+      ? `Dernière mesure le ${new Date(mostRecent.date).toLocaleDateString(currentLocale())}`
       : 'Aucune mesure encore';
 
     let any = false;
@@ -2103,8 +2173,8 @@
       const meta = statusMeta(e.status);
       const dotColor = e.param==='autre' ? '#6E93BE' : (p.color||'#6E93BE');
       const when = new Date(e.date);
-      const dateTxt = when.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
-      const timeTxt = when.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      const dateTxt = when.toLocaleDateString(currentLocale(),{day:'2-digit',month:'2-digit'});
+      const timeTxt = when.toLocaleTimeString(currentLocale(),{hour:'2-digit',minute:'2-digit'});
       const row = document.createElement('div'); row.className='hist-row';
       row.innerHTML = `
         <span class="hr-date"><strong>${dateTxt}</strong><small>${timeTxt}</small></span>
@@ -2211,9 +2281,9 @@
       ctx.fill();
     });
     ctx.fillStyle='#6E93BE'; ctx.textAlign='left';
-    ctx.fillText(new Date(series[0].date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}), padL, h-6);
+    ctx.fillText(new Date(series[0].date).toLocaleDateString(currentLocale(),{day:'2-digit',month:'2-digit'}), padL, h-6);
     ctx.textAlign='right';
-    ctx.fillText(new Date(series[series.length-1].date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}), w-padR, h-6);
+    ctx.fillText(new Date(series[series.length-1].date).toLocaleDateString(currentLocale(),{day:'2-digit',month:'2-digit'}), w-padR, h-6);
   }
 
   // ================= report =================
@@ -2250,15 +2320,15 @@
     return batch.slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
   }
   function formatBatchHeader(batch){
-    if(batch.length<=1) return `DERNIER TEST (${new Date(batch[0].date).toLocaleString('fr-FR')}) :`;
+    if(batch.length<=1) return `DERNIER TEST (${new Date(batch[0].date).toLocaleString(currentLocale())}) :`;
     const start=new Date(batch[0].date), end=new Date(batch[batch.length-1].date);
-    return `DERNIER TEST (du ${start.toLocaleString('fr-FR')} au ${end.toLocaleString('fr-FR')}) :`;
+    return `DERNIER TEST (du ${start.toLocaleString(currentLocale())} au ${end.toLocaleString(currentLocale())}) :`;
   }
   function generateReport(){
     if(reportPeriod==='lasttest'){
       const lines=[];
       lines.push('RAPPORT DE SUIVI — AQUARIUM RÉCIFAL');
-      lines.push(`Généré le ${new Date().toLocaleString('fr-FR')}`);
+      lines.push(`Généré le ${new Date().toLocaleString(currentLocale())}`);
       lines.push('');
       const batch = lastTestBatch();
       if(!batch.length){
@@ -2279,7 +2349,7 @@
     const filtered = historyData.filter(e=>!cutoff || new Date(e.date)>=cutoff);
     const lines=[];
     lines.push('RAPPORT DE SUIVI — AQUARIUM RÉCIFAL');
-    lines.push(`Généré le ${new Date().toLocaleString('fr-FR')}`);
+    lines.push(`Généré le ${new Date().toLocaleString(currentLocale())}`);
     lines.push(`Période : ${periodLabelText(reportPeriod)}`);
     lines.push('');
 
@@ -2307,7 +2377,7 @@
       lines.push(''); lines.push(`■ ${label}`);
       entries.forEach(e=>{
         const meta=statusMeta(e.status);
-        lines.push(`  ${new Date(e.date).toLocaleDateString('fr-FR')} — ${e.value}${unit?' '+unit:''} (${meta.label.toLowerCase()})${e.note?' — '+e.note:''}`);
+        lines.push(`  ${new Date(e.date).toLocaleDateString(currentLocale())} — ${e.value}${unit?' '+unit:''} (${meta.label.toLowerCase()})${e.note?' — '+e.note:''}`);
       });
     });
     return lines.join('\n');
@@ -2321,8 +2391,8 @@
     const meta = statusMeta(e.status);
     const dotColor = e.param==='autre' ? '#6E93BE' : (p.color||'#6E93BE');
     const when = new Date(e.date);
-    const dateTxt = when.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
-    const timeTxt = when.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    const dateTxt = when.toLocaleDateString(currentLocale(),{day:'2-digit',month:'2-digit'});
+    const timeTxt = when.toLocaleTimeString(currentLocale(),{hour:'2-digit',minute:'2-digit'});
     const decimals = e.param==='autre' ? 2 : (p.decimals!==undefined?p.decimals:2);
     return `
       <div class="hist-row">
@@ -3242,7 +3312,7 @@
     } else {
       const prev = latestFor(refParam);
       if(prev){
-        const when = new Date(prev.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
+        const when = new Date(prev.date).toLocaleDateString(currentLocale(),{day:'2-digit',month:'2-digit'});
         prevEl.innerHTML = `Dernière mesure : ${Number(prev.value).toFixed(p.decimals)} ${p.unit}<br>(le ${when})`;
       } else {
         prevEl.textContent = 'Première mesure pour ce paramètre';
@@ -3322,6 +3392,14 @@
   populateHistoryFilter();
   resetRefState();
   renderBrandSelector();
+  renderLangToggle();
+  document.getElementById('langToggle').addEventListener('click', async ()=>{
+    currentLang = currentLang==='en' ? 'fr' : 'en';
+    try{ localStorage.setItem('appLang', currentLang); }catch(e){}
+    renderLangToggle();
+    renderDashboard();
+    await saveLang();
+  });
   renderCycleToggle();
   document.getElementById('cycleToggleBtn').addEventListener('click', async ()=>{
     cyclingActive = !cyclingActive;
@@ -3334,6 +3412,7 @@
   // affichage immédiat, puis on ne re-rend que si le serveur dit autre chose.
   loadActiveBrand().then(changed=>{ if(changed){ applyBrand(); renderBrandSelector(); renderDashboard(); } });
   loadCyclingActive().then(changed=>{ if(changed){ renderCycleToggle(); renderDashboard(); } });
+  loadLang().then(changed=>{ if(changed){ renderLangToggle(); renderDashboard(); } });
 
 })();
 </script>
