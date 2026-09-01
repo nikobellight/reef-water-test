@@ -1136,7 +1136,7 @@
       <h1>MON RÉCIF</h1>
       <div class="hero-sub" data-i18n="app.tagline">Suivi récifal</div>
       <div class="app-meta">
-        <span class="ver-pill">v6.11</span>
+        <span class="ver-pill">v6.12</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1175,18 +1175,18 @@
     </section>
 
     <section class="view" id="view-picker">
-      <p class="step-label active"><span class="dot"></span>Nouveau test</p>
+      <p class="step-label active"><span class="dot"></span><span data-i18n="picker.stepLabel">Nouveau test</span></p>
       <button class="picker-btn" onclick="showView('nuancier')">
         <span class="ic">📷</span>
-        <span class="txt"><strong>Nuancier photo</strong><span>pH · Ammoniac · Nitrite · Nitrate · Phosphate</span></span>
+        <span class="txt"><strong data-i18n="picker.chart.title">Nuancier photo</strong><span data-i18n="picker.chart.subtitle">pH · Ammoniac · Nitrite · Nitrate · Phosphate</span></span>
       </button>
       <button class="picker-btn" onclick="showView('titration')">
         <span class="ic">💧</span>
-        <span class="txt"><strong>Titration (Salifert)</strong><span>KH/Alcalinité · Calcium · Magnésium</span></span>
+        <span class="txt"><strong data-i18n="picker.titration.title">Titration (Salifert)</strong><span data-i18n="picker.titration.subtitle">KH/Alcalinité · Calcium · Magnésium</span></span>
       </button>
       <button class="picker-btn" onclick="showView('direct')">
         <span class="ic">🌡️</span>
-        <span class="txt"><strong>Mesure directe</strong><span>Température · Densité</span></span>
+        <span class="txt"><strong data-i18n="picker.direct.title">Mesure directe</strong><span data-i18n="picker.direct.subtitle">Température · Densité</span></span>
       </button>
     </section>
 
@@ -1586,7 +1586,14 @@
       'dash.emptyBtn': '➕ Nouveau test',
       'dash.noMeasureYet': 'Aucune mesure encore',
       'dash.lastMeasureOn': 'Dernière mesure le {date}',
-      'dash.syncErrorDefault': '⚠️ Connexion à Supabase impossible.'
+      'dash.syncErrorDefault': '⚠️ Connexion à Supabase impossible.',
+      'picker.stepLabel': 'Nouveau test',
+      'picker.chart.title': 'Nuancier photo',
+      'picker.chart.subtitle': 'pH · Ammoniac · Nitrite · Nitrate · Phosphate',
+      'picker.titration.title': 'Titration (Salifert)',
+      'picker.titration.subtitle': 'KH/Alcalinité · Calcium · Magnésium',
+      'picker.direct.title': 'Mesure directe',
+      'picker.direct.subtitle': 'Température · Densité'
     },
     en: {
       'app.tagline': 'Reef Tracking',
@@ -1602,7 +1609,14 @@
       'dash.emptyBtn': '➕ New test',
       'dash.noMeasureYet': 'No readings yet',
       'dash.lastMeasureOn': 'Last reading on {date}',
-      'dash.syncErrorDefault': '⚠️ Unable to connect to Supabase.'
+      'dash.syncErrorDefault': '⚠️ Unable to connect to Supabase.',
+      'picker.stepLabel': 'New test',
+      'picker.chart.title': 'Photo color chart',
+      'picker.chart.subtitle': 'pH · Ammonia · Nitrite · Nitrate · Phosphate',
+      'picker.titration.title': 'Titration (Salifert)',
+      'picker.titration.subtitle': 'KH/Alkalinity · Calcium · Magnesium',
+      'picker.direct.title': 'Direct reading',
+      'picker.direct.subtitle': 'Temperature · Salinity (SG)'
     }
   };
   let currentLang = 'fr';
