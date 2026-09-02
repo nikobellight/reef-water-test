@@ -42,7 +42,16 @@
   .health-good .health-score-value{ color:var(--good); }
   .health-warn .health-score-value{ color:var(--amber); }
   .health-bad .health-score-value{ color:var(--bad); }
-  .type-chip-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
+  .type-chip-row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:4px; }
+  .type-chip{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    background:var(--bg-panel-raised); border:1px solid var(--line); border-radius:12px;
+    padding:11px 12px; color:var(--text); font-family:'IBM Plex Mono',monospace;
+    font-size:0.78rem; font-weight:500;
+  }
+  .type-chip svg{ width:20px; height:20px; flex:none; color:var(--text-dim); }
+  .type-chip.active{ background:rgba(46,217,195,.12); border-color:var(--aqua); }
+  .type-chip.active svg{ color:var(--aqua); }
   .health-score-label{
     font-family:'IBM Plex Mono',monospace; font-size:0.72rem; letter-spacing:0.06em;
     text-transform:uppercase; color:var(--text-dim);
@@ -403,28 +412,26 @@
     text-shadow:0 0 28px rgba(69,140,255,.25);
     margin:0;
   }
-  .hero-sub{
-    margin-top:8px;
-    color:#9eb8d4;
-    font-size:.8rem;
-    letter-spacing:.18em;
-    text-transform:uppercase;
+  .tank-switcher-card{
+    display:flex; align-items:center; gap:14px; width:100%; text-align:left;
+    font-family:'Inter',sans-serif;
   }
-  button.hero-sub{
-    display:inline-flex;
-    align-items:center;
-    gap:5px;
-    font-family:inherit;
-    background:none;
-    border:none;
-    padding:4px 8px;
-    cursor:pointer;
-    border-radius:8px;
-    transition:background .15s;
+  .tank-switcher-icon{
+    width:44px; height:44px; flex:none; border-radius:12px;
+    background:var(--bg-deep); border:1px solid var(--aqua);
+    display:flex; align-items:center; justify-content:center; color:var(--aqua);
   }
-  button.hero-sub:hover{ background:rgba(158,184,212,.1); }
-  button.hero-sub:active{ transform:none; background:rgba(158,184,212,.16); }
-  .tank-switcher-chevron{ width:9px; height:7px; color:#9eb8d4; flex:none; }
+  .tank-switcher-icon svg{ width:22px; height:22px; }
+  .tank-switcher-info{ flex:1; min-width:0; }
+  .tank-switcher-name{
+    font-weight:600; font-size:1rem; color:var(--text);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .tank-switcher-meta{
+    font-size:0.78rem; color:var(--text-dim); margin-top:2px;
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .tank-switcher-card .tank-switcher-chevron{ width:11px; height:8px; color:var(--text-dim); flex:none; }
   .app-meta{
     display:flex;
     flex-wrap:wrap;
@@ -1068,7 +1075,9 @@
     .hero-emblem{width:36px;height:36px;border-radius:12px;font-size:1.02rem;margin:0 auto 5px;}
     .app-kicker{font-size:.52rem;margin-bottom:3px;letter-spacing:.18em;}
     header.masthead h1{font-size:1.3rem;}
-    .hero-sub{font-size:.6rem;letter-spacing:.14em;margin-top:3px;}
+    .tank-switcher-icon{width:38px;height:38px;}
+    .tank-switcher-icon svg{width:19px;height:19px;}
+    .tank-switcher-name{font-size:.92rem;}
     .app-meta{gap:6px;margin-top:6px;}
     .ver-pill,.mini-pill{font-size:.55rem;min-height:19px;padding:0 7px;}
     .hero-status{margin-top:7px;padding:5px 10px;font-size:.6rem;gap:6px;}
@@ -1191,12 +1200,8 @@
       <div class="hero-emblem">≋</div>
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
-      <button type="button" class="hero-sub tank-switcher" id="tankSwitcher">
-        <span id="tankSwitcherName">Bac principal</span>
-        <svg class="tank-switcher-chevron" viewBox="0 0 12 8" aria-hidden="true"><path d="M1 1.5 6 6.5 11 1.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
       <div class="app-meta">
-        <span class="ver-pill">v7.0</span>
+        <span class="ver-pill">v7.1</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1208,6 +1213,15 @@
   </header>
 
   <main>
+
+    <button type="button" class="card tank-switcher-card" id="tankSwitcher">
+      <div class="tank-switcher-icon" id="tankSwitcherIcon"></div>
+      <div class="tank-switcher-info">
+        <div class="tank-switcher-name" id="tankSwitcherName">Bac principal</div>
+        <div class="tank-switcher-meta" id="tankSwitcherMeta"></div>
+      </div>
+      <svg class="tank-switcher-chevron" viewBox="0 0 12 8" aria-hidden="true"><path d="M1 1.5 6 6.5 11 1.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
 
     <section class="view active" id="view-dashboard">
       <div class="card health-score-card" id="healthScoreCard" style="display:none;">
@@ -1865,8 +1879,8 @@
       'tank.type.reefMixed': 'Récif mixte',
       'tank.type.sps': 'SPS dominant',
       'tank.type.lps': 'LPS dominant',
-      'tank.type.softies': 'Softies',
-      'tank.type.nano': 'Nano Reef',
+      'tank.type.softies': 'Coraux mous',
+      'tank.type.nano': 'Nano-récif',
       'tank.type.ulns': 'ULNS',
       'tank.type.fishOnly': 'Poissons seuls',
       'tank.ageMonthSingular': '{n} mois',
@@ -2515,7 +2529,17 @@
   let editingTankId = null;
   let tankFormSelectedType = null;
   const TANK_TYPES = ['reefMixed','sps','lps','softies','nano','ulns','fishOnly'];
-  const tankSwitcher=document.getElementById('tankSwitcher'), tankSwitcherName=document.getElementById('tankSwitcherName');
+  const TANK_TYPE_ICONS = {
+    reefMixed: `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="10" r="5.5"/><circle cx="13" cy="10" r="5.5"/></svg>`,
+    sps: `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M10 17V9M10 9L6 4M10 9L14 4M10 12L6.5 8M10 12L13.5 8"/></svg>`,
+    lps: `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 4.5C15.5 4.5 16 12 11 15.5C7 18 4 16 4 16C4 16 3 11 7 7C10.5 3.5 15.5 4.5 15.5 4.5Z"/><path d="M6 15C8 12 10 10 13 6"/></svg>`,
+    softies: `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3C10 3 15 9.5 15 13C15 15.76 12.76 18 10 18C7.24 18 5 15.76 5 13C5 9.5 10 3 10 3Z"/></svg>`,
+    nano: `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><rect x="5" y="5" width="10" height="10" rx="1.5"/></svg>`,
+    ulns: `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M3 8C4.5 6 6 6 7.5 8C9 10 10.5 10 12 8C13.5 6 15 6 16.5 8"/><path d="M3 13C4.5 11 6 11 7.5 13C9 15 10.5 15 12 13C13.5 11 15 11 16.5 13"/></svg>`,
+    fishOnly: `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10C3 10 6.5 6 11 8C13 8.8 14.5 9.3 17 8L15.5 10L17 12C14.5 10.7 13 11.2 11 12C6.5 14 3 10 3 10Z"/><circle cx="6.3" cy="9.3" r="0.6" fill="currentColor" stroke="none"/></svg>`
+  };
+  const TANK_ICON_DEFAULT = `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M6 3H14M7 3V8L4 15C3.6 15.9 4.3 17 5.3 17H14.7C15.7 17 16.4 15.9 16 15L13 8V3"/></svg>`;
+  const tankSwitcher=document.getElementById('tankSwitcher'), tankSwitcherName=document.getElementById('tankSwitcherName'), tankSwitcherIcon=document.getElementById('tankSwitcherIcon'), tankSwitcherMeta=document.getElementById('tankSwitcherMeta');
   const tankPickerOverlay=document.getElementById('tankPickerOverlay'), tankPickerSheet=document.getElementById('tankPickerSheet'), tankPickerList=document.getElementById('tankPickerList');
   const tankFormOverlay=document.getElementById('tankFormOverlay'), tankFormSheet=document.getElementById('tankFormSheet');
   const tankFormName=document.getElementById('tankFormName'), tankFormVolume=document.getElementById('tankFormVolume'), tankFormGear=document.getElementById('tankFormGear'), tankFormStart=document.getElementById('tankFormStart'), tankFormError=document.getElementById('tankFormError');
@@ -2541,8 +2565,8 @@
     TANK_TYPES.forEach(key=>{
       const b = document.createElement('button');
       b.type = 'button';
-      b.className = 'hist-chip' + (selected===key ? ' active' : '');
-      b.textContent = t('tank.type.'+key);
+      b.className = 'type-chip' + (selected===key ? ' active' : '');
+      b.innerHTML = (TANK_TYPE_ICONS[key]||'') + '<span>'+t('tank.type.'+key)+'</span>';
       b.addEventListener('click', ()=>{
         tankFormSelectedType = key;
         renderTankTypeChips(key);
@@ -2554,6 +2578,13 @@
   function renderTankSwitcher(){
     const active = tanks.find(t=>t.id===activeTankId) || tanks[0];
     tankSwitcherName.textContent = active ? active.name : '';
+    const metaParts = [
+      active && active.type ? t('tank.type.'+active.type) : null,
+      active && active.volume ? active.volume+' L' : null
+    ].filter(Boolean);
+    tankSwitcherMeta.textContent = metaParts.join(' · ');
+    tankSwitcherMeta.style.display = metaParts.length ? 'block' : 'none';
+    tankSwitcherIcon.innerHTML = (active && active.type && TANK_TYPE_ICONS[active.type]) ? TANK_TYPE_ICONS[active.type] : TANK_ICON_DEFAULT;
   }
 
   function renderTankPickerList(){
