@@ -1247,7 +1247,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v7.5</span>
+        <span class="ver-pill">v7.6</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1280,14 +1280,14 @@
         <span class="browse-tank-count" id="browseTankEquipmentCount">0</span>
         <span class="browse-tank-label" data-i18n="browseTank.equipment">Équipement</span>
       </button>
-      <button type="button" class="browse-tank-card disabled" disabled>
+      <button type="button" class="browse-tank-card" id="browseTankDosingBtn">
         <div class="browse-tank-icon" id="browseTankDosingIcon"></div>
-        <span class="browse-tank-count">0</span>
+        <span class="browse-tank-count" id="browseTankDosingCount">0</span>
         <span class="browse-tank-label" data-i18n="browseTank.dosing">Dosage</span>
       </button>
-      <button type="button" class="browse-tank-card disabled" disabled>
+      <button type="button" class="browse-tank-card" id="browseTankLightsBtn">
         <div class="browse-tank-icon" id="browseTankLightsIcon"></div>
-        <span class="browse-tank-count">0</span>
+        <span class="browse-tank-count" id="browseTankLightsCount">0</span>
         <span class="browse-tank-label" data-i18n="browseTank.lights">Éclairage</span>
       </button>
     </div>
@@ -1563,6 +1563,28 @@
     </div>
     <div id="equipmentList"></div>
     <button class="secondary" id="tankEquipmentClose" style="width:100%;margin-top:10px;" data-i18n="common.cancel">Annuler</button>
+  </div>
+
+  <div id="tankDosingOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:82;display:none;"></div>
+  <div id="tankDosingSheet" style="position:fixed;left:0;right:0;bottom:0;background:var(--bg-panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 20px 26px;z-index:83;display:none;max-width:640px;margin:0 auto;max-height:86vh;overflow-y:auto;">
+    <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 16px;" id="tankDosingTitle" data-i18n="dosing.title">Dosage</h3>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <span class="livestock-count" id="dosingCount">0</span>
+      <button type="button" class="livestock-add-btn" id="dosingAddBtn">+</button>
+    </div>
+    <div id="dosingList"></div>
+    <button class="secondary" id="tankDosingClose" style="width:100%;margin-top:10px;" data-i18n="common.cancel">Annuler</button>
+  </div>
+
+  <div id="tankLightingOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:84;display:none;"></div>
+  <div id="tankLightingSheet" style="position:fixed;left:0;right:0;bottom:0;background:var(--bg-panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 20px 26px;z-index:85;display:none;max-width:640px;margin:0 auto;max-height:86vh;overflow-y:auto;">
+    <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 16px;" id="tankLightingTitle" data-i18n="lighting.title">Éclairage</h3>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <span class="livestock-count" id="lightingCount">0</span>
+      <button type="button" class="livestock-add-btn" id="lightingAddBtn">+</button>
+    </div>
+    <div id="lightingList"></div>
+    <button class="secondary" id="tankLightingClose" style="width:100%;margin-top:10px;" data-i18n="common.cancel">Annuler</button>
   </div>
 
   <div id="catalogPickerOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:80;display:none;"></div>
@@ -2017,6 +2039,19 @@
       'equipment.cat.controller': 'Contrôleur',
       'equipment.cat.ato': 'ATO',
       'equipment.cat.reactor': 'Réacteur',
+      'dosing.title': 'Dosage',
+      'dosing.productLabel': 'Produit',
+      'dosing.productPlaceholder': 'ex. Alcalinité (KH)',
+      'dosing.doseLabel': 'Dose (ml/jour)',
+      'dosing.timeLabel': 'Heure (optionnel)',
+      'dosing.empty': 'Aucun dosage configuré',
+      'lighting.title': 'Éclairage',
+      'lighting.nameLabel': 'Nom du programme',
+      'lighting.namePlaceholder': 'ex. Rampe principale',
+      'lighting.onLabel': 'Allumage',
+      'lighting.offLabel': 'Extinction',
+      'lighting.intensityLabel': 'Intensité max (%)',
+      'lighting.empty': 'Aucun programme configuré',
       'tank.ageMonthSingular': '{n} mois',
       'tank.ageMonthPlural': '{n} mois',
       'tank.ageYearSingular': '{n} an',
@@ -2251,6 +2286,19 @@
       'equipment.cat.controller': 'Controller',
       'equipment.cat.ato': 'ATO',
       'equipment.cat.reactor': 'Reactor',
+      'dosing.title': 'Dosing',
+      'dosing.productLabel': 'Product',
+      'dosing.productPlaceholder': 'e.g. Alkalinity (KH)',
+      'dosing.doseLabel': 'Dose (ml/day)',
+      'dosing.timeLabel': 'Time (optional)',
+      'dosing.empty': 'No dosing set up yet',
+      'lighting.title': 'Lighting',
+      'lighting.nameLabel': 'Program name',
+      'lighting.namePlaceholder': 'e.g. Main fixture',
+      'lighting.onLabel': 'On',
+      'lighting.offLabel': 'Off',
+      'lighting.intensityLabel': 'Max intensity (%)',
+      'lighting.empty': 'No program set up yet',
       'tank.ageMonthSingular': '{n} month',
       'tank.ageMonthPlural': '{n} months',
       'tank.ageYearSingular': '{n} year',
@@ -2691,7 +2739,7 @@
   // avant de brancher le vrai modèle de données (table `aquariums`, `tank_id` sur les
   // mesures). Un seul bac par défaut ("Bac principal") pour ne rien casser de l'usage
   // actuel tant que la vraie persistance n'existe pas.
-  let tanks = [{id:'default', name:'Bac principal', volume:null, type:null, start:'', livestock:{fish:[],corals:[],inverts:[]}, equipment:[]}];
+  let tanks = [{id:'default', name:'Bac principal', volume:null, type:null, start:'', livestock:{fish:[],corals:[],inverts:[]}, equipment:[], dosing:[], lighting:[]}];
   let activeTankId = 'default';
   let editingTankId = null;
   let tankFormSelectedType = null;
@@ -2743,6 +2791,10 @@
   document.getElementById('browseTankLivestockBtn').addEventListener('click', ()=>openTankLivestock(activeTankId));
   document.getElementById('browseTankEquipmentBtn').classList.add('active');
   document.getElementById('browseTankEquipmentBtn').addEventListener('click', ()=>openTankEquipment(activeTankId));
+  document.getElementById('browseTankDosingBtn').classList.add('active');
+  document.getElementById('browseTankDosingBtn').addEventListener('click', ()=>openTankDosing(activeTankId));
+  document.getElementById('browseTankLightsBtn').classList.add('active');
+  document.getElementById('browseTankLightsBtn').addEventListener('click', ()=>openTankLighting(activeTankId));
   const tankSwitcher=document.getElementById('tankSwitcher'), tankSwitcherName=document.getElementById('tankSwitcherName'), tankSwitcherIcon=document.getElementById('tankSwitcherIcon'), tankSwitcherMeta=document.getElementById('tankSwitcherMeta');
   const tankPickerOverlay=document.getElementById('tankPickerOverlay'), tankPickerSheet=document.getElementById('tankPickerSheet'), tankPickerList=document.getElementById('tankPickerList');
   const tankFormOverlay=document.getElementById('tankFormOverlay'), tankFormSheet=document.getElementById('tankFormSheet');
@@ -2795,6 +2847,10 @@
       document.getElementById('browseTankLivestockCount').textContent = total;
       ensureEquipmentData(active);
       document.getElementById('browseTankEquipmentCount').textContent = active.equipment.length;
+      ensureDosingData(active);
+      document.getElementById('browseTankDosingCount').textContent = active.dosing.length;
+      ensureLightingData(active);
+      document.getElementById('browseTankLightsCount').textContent = active.lighting.length;
     }
   }
 
@@ -3113,6 +3169,194 @@
   document.getElementById('tankEquipmentClose').addEventListener('click', closeTankEquipment);
   tankEquipmentOverlay.addEventListener('click', closeTankEquipment);
 
+  // Dosage par bac (reglages, pas inventaire)
+  const tankDosingOverlay=document.getElementById('tankDosingOverlay'), tankDosingSheet=document.getElementById('tankDosingSheet');
+  let dosingTankId = null;
+  let dosingFormOpen = false;
+
+  function ensureDosingData(tank){
+    if(!tank.dosing) tank.dosing = [];
+  }
+  function renderDosingList(){
+    const tank = tanks.find(t=>t.id===dosingTankId);
+    if(!tank) return;
+    ensureDosingData(tank);
+    document.getElementById('dosingCount').textContent = tank.dosing.length;
+    const listEl = document.getElementById('dosingList');
+    listEl.innerHTML = '';
+
+    if(dosingFormOpen){
+      const form = document.createElement('div');
+      form.className = 'livestock-inline-form';
+      const productInput = document.createElement('input');
+      productInput.type='text'; productInput.placeholder=t('dosing.productPlaceholder');
+      const doseInput = document.createElement('input');
+      doseInput.type='number'; doseInput.min='0'; doseInput.step='0.1'; doseInput.placeholder=t('dosing.doseLabel');
+      const timeInput = document.createElement('input');
+      timeInput.type='time';
+      const btnRow = document.createElement('div');
+      btnRow.className='btn-row';
+      const cancelBtn = document.createElement('button');
+      cancelBtn.type='button'; cancelBtn.className='secondary'; cancelBtn.textContent=t('common.cancel');
+      cancelBtn.addEventListener('click', ()=>{ dosingFormOpen=false; renderDosingList(); });
+      const confirmBtn = document.createElement('button');
+      confirmBtn.type='button'; confirmBtn.className='primary'; confirmBtn.textContent=t('common.add');
+      confirmBtn.addEventListener('click', ()=>{
+        const productVal = productInput.value.trim();
+        if(!productVal) return;
+        const doseVal = doseInput.value ? parseFloat(doseInput.value) : null;
+        const timeVal = timeInput.value || '';
+        tank.dosing.push({id:'do_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), product:productVal, dose:doseVal, time:timeVal});
+        dosingFormOpen = false;
+        renderDosingList();
+        if(tank.id===activeTankId) renderTankSwitcher();
+      });
+      btnRow.appendChild(cancelBtn); btnRow.appendChild(confirmBtn);
+      form.appendChild(productInput); form.appendChild(doseInput); form.appendChild(timeInput); form.appendChild(btnRow);
+      listEl.appendChild(form);
+    }
+
+    if(!tank.dosing.length){
+      const empty = document.createElement('div');
+      empty.className='livestock-empty';
+      empty.textContent = t('dosing.empty');
+      listEl.appendChild(empty);
+    } else {
+      tank.dosing.forEach(item=>{
+        const row = document.createElement('div');
+        row.className='livestock-item';
+        const sub = [item.dose ? item.dose+' ml/j' : null, item.time || null].filter(Boolean).join(' · ');
+        row.innerHTML = `<div class="livestock-item-info"><span class="livestock-item-kind">${item.product}</span>${sub?`<span class="livestock-item-name">${sub}</span>`:''}</div>`;
+        const del = document.createElement('button');
+        del.type='button'; del.className='livestock-item-del'; del.textContent='×';
+        del.setAttribute('aria-label', t('common.delete'));
+        del.addEventListener('click', ()=>{
+          tank.dosing = tank.dosing.filter(i=>i.id!==item.id);
+          renderDosingList();
+          if(tank.id===activeTankId) renderTankSwitcher();
+        });
+        row.appendChild(del);
+        listEl.appendChild(row);
+      });
+    }
+  }
+  function openTankDosing(tankId){
+    const tank = tanks.find(t=>t.id===tankId);
+    if(!tank) return;
+    dosingTankId = tankId;
+    dosingFormOpen = false;
+    ensureDosingData(tank);
+    document.getElementById('tankDosingTitle').textContent = t('dosing.title')+' — '+tank.name;
+    renderDosingList();
+    tankDosingOverlay.style.display='block'; tankDosingSheet.style.display='block';
+  }
+  function closeTankDosing(){
+    tankDosingOverlay.style.display='none'; tankDosingSheet.style.display='none';
+    dosingTankId = null;
+  }
+  document.getElementById('dosingAddBtn').addEventListener('click', ()=>{ dosingFormOpen = !dosingFormOpen; renderDosingList(); });
+  document.getElementById('tankDosingClose').addEventListener('click', closeTankDosing);
+  tankDosingOverlay.addEventListener('click', closeTankDosing);
+
+  // Eclairage par bac (reglages, pas inventaire)
+  const tankLightingOverlay=document.getElementById('tankLightingOverlay'), tankLightingSheet=document.getElementById('tankLightingSheet');
+  let lightingTankId = null;
+  let lightingFormOpen = false;
+
+  function ensureLightingData(tank){
+    if(!tank.lighting) tank.lighting = [];
+  }
+  function renderLightingList(){
+    const tank = tanks.find(t=>t.id===lightingTankId);
+    if(!tank) return;
+    ensureLightingData(tank);
+    document.getElementById('lightingCount').textContent = tank.lighting.length;
+    const listEl = document.getElementById('lightingList');
+    listEl.innerHTML = '';
+
+    if(lightingFormOpen){
+      const form = document.createElement('div');
+      form.className = 'livestock-inline-form';
+      const nameInput = document.createElement('input');
+      nameInput.type='text'; nameInput.placeholder=t('lighting.namePlaceholder');
+      const onRow = document.createElement('div');
+      onRow.className='field-row-2';
+      const onWrap = document.createElement('div');
+      const onLabel = document.createElement('label'); onLabel.className='field-sublabel'; onLabel.textContent=t('lighting.onLabel');
+      const onInput = document.createElement('input'); onInput.type='time';
+      onWrap.appendChild(onLabel); onWrap.appendChild(onInput);
+      const offWrap = document.createElement('div');
+      const offLabel = document.createElement('label'); offLabel.className='field-sublabel'; offLabel.textContent=t('lighting.offLabel');
+      const offInput = document.createElement('input'); offInput.type='time';
+      offWrap.appendChild(offLabel); offWrap.appendChild(offInput);
+      onRow.appendChild(onWrap); onRow.appendChild(offWrap);
+      const intensityInput = document.createElement('input');
+      intensityInput.type='number'; intensityInput.min='0'; intensityInput.max='100'; intensityInput.placeholder=t('lighting.intensityLabel');
+      const btnRow = document.createElement('div');
+      btnRow.className='btn-row';
+      const cancelBtn = document.createElement('button');
+      cancelBtn.type='button'; cancelBtn.className='secondary'; cancelBtn.textContent=t('common.cancel');
+      cancelBtn.addEventListener('click', ()=>{ lightingFormOpen=false; renderLightingList(); });
+      const confirmBtn = document.createElement('button');
+      confirmBtn.type='button'; confirmBtn.className='primary'; confirmBtn.textContent=t('common.add');
+      confirmBtn.addEventListener('click', ()=>{
+        const nameVal = nameInput.value.trim();
+        if(!nameVal) return;
+        const onVal = onInput.value || '';
+        const offVal = offInput.value || '';
+        const intensityVal = intensityInput.value ? parseInt(intensityInput.value,10) : null;
+        tank.lighting.push({id:'li_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), name:nameVal, on:onVal, off:offVal, intensity:intensityVal});
+        lightingFormOpen = false;
+        renderLightingList();
+        if(tank.id===activeTankId) renderTankSwitcher();
+      });
+      btnRow.appendChild(cancelBtn); btnRow.appendChild(confirmBtn);
+      form.appendChild(nameInput); form.appendChild(onRow); form.appendChild(intensityInput); form.appendChild(btnRow);
+      listEl.appendChild(form);
+    }
+
+    if(!tank.lighting.length){
+      const empty = document.createElement('div');
+      empty.className='livestock-empty';
+      empty.textContent = t('lighting.empty');
+      listEl.appendChild(empty);
+    } else {
+      tank.lighting.forEach(item=>{
+        const row = document.createElement('div');
+        row.className='livestock-item';
+        const sub = [(item.on||item.off) ? (item.on||'--')+'–'+(item.off||'--') : null, item.intensity!=null ? item.intensity+'%' : null].filter(Boolean).join(' · ');
+        row.innerHTML = `<div class="livestock-item-info"><span class="livestock-item-kind">${item.name}</span>${sub?`<span class="livestock-item-name">${sub}</span>`:''}</div>`;
+        const del = document.createElement('button');
+        del.type='button'; del.className='livestock-item-del'; del.textContent='×';
+        del.setAttribute('aria-label', t('common.delete'));
+        del.addEventListener('click', ()=>{
+          tank.lighting = tank.lighting.filter(i=>i.id!==item.id);
+          renderLightingList();
+          if(tank.id===activeTankId) renderTankSwitcher();
+        });
+        row.appendChild(del);
+        listEl.appendChild(row);
+      });
+    }
+  }
+  function openTankLighting(tankId){
+    const tank = tanks.find(t=>t.id===tankId);
+    if(!tank) return;
+    lightingTankId = tankId;
+    lightingFormOpen = false;
+    ensureLightingData(tank);
+    document.getElementById('tankLightingTitle').textContent = t('lighting.title')+' — '+tank.name;
+    renderLightingList();
+    tankLightingOverlay.style.display='block'; tankLightingSheet.style.display='block';
+  }
+  function closeTankLighting(){
+    tankLightingOverlay.style.display='none'; tankLightingSheet.style.display='none';
+    lightingTankId = null;
+  }
+  document.getElementById('lightingAddBtn').addEventListener('click', ()=>{ lightingFormOpen = !lightingFormOpen; renderLightingList(); });
+  document.getElementById('tankLightingClose').addEventListener('click', closeTankLighting);
+  tankLightingOverlay.addEventListener('click', closeTankLighting);
+
   function openTankForm(tankId){
     editingTankId = tankId || null;
     const tank = tankId ? tanks.find(t=>t.id===tankId) : null;
@@ -3150,7 +3394,7 @@
       if(tank){ tank.name=name; tank.volume=volume; tank.type=type; tank.start=start; }
     } else {
       const id = 'tank_'+Date.now();
-      tanks.push({id, name, volume, type, start, livestock:{fish:[],corals:[],inverts:[]}, equipment:[]});
+      tanks.push({id, name, volume, type, start, livestock:{fish:[],corals:[],inverts:[]}, equipment:[], dosing:[], lighting:[]});
       activeTankId = id;
     }
     renderTankSwitcher();
