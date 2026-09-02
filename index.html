@@ -1104,6 +1104,14 @@
   .livestock-item-del{ background:none; border:none; color:var(--text-dim); font-size:1.1rem; padding:2px 6px; cursor:pointer; flex:none; }
   .livestock-inline-form{ display:flex; flex-direction:column; gap:8px; margin-bottom:10px; }
   .livestock-inline-form .btn-row{ margin-top:2px; }
+  .catalog-cat-row{ display:flex; gap:6px; overflow-x:auto; padding-bottom:8px; margin-bottom:6px; }
+  .catalog-item-row{
+    display:flex; flex-direction:column; align-items:flex-start; gap:2px; width:100%; text-align:left;
+    background:var(--bg-panel-raised); border:1px solid var(--line); border-radius:10px;
+    padding:10px 12px; margin-bottom:6px; font-family:'Inter',sans-serif;
+  }
+  .catalog-item-name{ font-size:0.88rem; font-weight:500; color:var(--text); }
+  .catalog-item-sub{ font-size:0.72rem; color:var(--text-dim); }
 
   @media (max-width:480px){
     header.masthead{padding:8px 14px 0;}
@@ -1239,7 +1247,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v7.4</span>
+        <span class="ver-pill">v7.5</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1267,9 +1275,9 @@
         <span class="browse-tank-count" id="browseTankLivestockCount">0</span>
         <span class="browse-tank-label" data-i18n="livestock.title">Cheptel</span>
       </button>
-      <button type="button" class="browse-tank-card disabled" disabled>
+      <button type="button" class="browse-tank-card" id="browseTankEquipmentBtn">
         <div class="browse-tank-icon" id="browseTankEquipmentIcon"></div>
-        <span class="browse-tank-count">0</span>
+        <span class="browse-tank-count" id="browseTankEquipmentCount">0</span>
         <span class="browse-tank-label" data-i18n="browseTank.equipment">Équipement</span>
       </button>
       <button type="button" class="browse-tank-card disabled" disabled>
@@ -1544,6 +1552,26 @@
     <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 16px;" id="tankLivestockTitle" data-i18n="livestock.title">Cheptel</h3>
     <div id="livestockSections"></div>
     <button class="secondary" id="tankLivestockClose" style="width:100%;margin-top:4px;" data-i18n="common.cancel">Annuler</button>
+  </div>
+
+  <div id="tankEquipmentOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:78;display:none;"></div>
+  <div id="tankEquipmentSheet" style="position:fixed;left:0;right:0;bottom:0;background:var(--bg-panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 20px 26px;z-index:79;display:none;max-width:640px;margin:0 auto;max-height:86vh;overflow-y:auto;">
+    <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 16px;" id="tankEquipmentTitle" data-i18n="equipment.title">Mon équipement</h3>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <span class="livestock-count" id="equipmentCount">0</span>
+      <button type="button" class="livestock-add-btn" id="equipmentAddBtn">+</button>
+    </div>
+    <div id="equipmentList"></div>
+    <button class="secondary" id="tankEquipmentClose" style="width:100%;margin-top:10px;" data-i18n="common.cancel">Annuler</button>
+  </div>
+
+  <div id="catalogPickerOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:80;display:none;"></div>
+  <div id="catalogPickerSheet" style="position:fixed;left:0;right:0;bottom:0;background:var(--bg-panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 20px 26px;z-index:81;display:none;max-width:640px;margin:0 auto;max-height:86vh;overflow-y:auto;">
+    <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 14px;" id="catalogPickerTitle">Catalogue</h3>
+    <input type="text" id="catalogPickerSearch" placeholder="" data-i18n-placeholder="catalog.searchPlaceholder" style="margin-bottom:10px;">
+    <div class="catalog-cat-row" id="catalogPickerCatRow" style="display:none;"></div>
+    <div id="catalogPickerList"></div>
+    <button class="secondary" id="catalogPickerClose" style="width:100%;margin-top:10px;" data-i18n="common.cancel">Annuler</button>
   </div>
 
   <div id="tankFormOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:74;display:none;"></div>
@@ -1970,6 +1998,25 @@
       'browseTank.equipment': 'Équipement',
       'browseTank.dosing': 'Dosage',
       'browseTank.lights': 'Éclairage',
+      'common.all': 'Tous',
+      'catalog.title.fish': 'Choisir un poisson',
+      'catalog.title.corals': 'Choisir un corail',
+      'catalog.title.inverts': 'Choisir un invertébré',
+      'catalog.title.equipment': 'Ajouter un équipement',
+      'catalog.browse': 'Parcourir le catalogue',
+      'catalog.addCustom': '+ Ajouter personnalisé',
+      'catalog.empty': 'Aucun résultat',
+      'catalog.searchPlaceholder': 'Rechercher...',
+      'equipment.title': 'Mon équipement',
+      'equipment.empty': 'Aucun équipement ajouté',
+      'equipment.cat.pump': 'Pompe',
+      'equipment.cat.light': 'Éclairage',
+      'equipment.cat.skimmer': 'Écumeur',
+      'equipment.cat.heater': 'Chauffage',
+      'equipment.cat.doser': 'Doseur',
+      'equipment.cat.controller': 'Contrôleur',
+      'equipment.cat.ato': 'ATO',
+      'equipment.cat.reactor': 'Réacteur',
       'tank.ageMonthSingular': '{n} mois',
       'tank.ageMonthPlural': '{n} mois',
       'tank.ageYearSingular': '{n} an',
@@ -2185,6 +2232,25 @@
       'browseTank.equipment': 'Equipment',
       'browseTank.dosing': 'Dosing',
       'browseTank.lights': 'Lights',
+      'common.all': 'All',
+      'catalog.title.fish': 'Choose a fish',
+      'catalog.title.corals': 'Choose a coral',
+      'catalog.title.inverts': 'Choose an invertebrate',
+      'catalog.title.equipment': 'Add equipment',
+      'catalog.browse': 'Browse catalog',
+      'catalog.addCustom': '+ Add custom',
+      'catalog.empty': 'No results',
+      'catalog.searchPlaceholder': 'Search...',
+      'equipment.title': 'My equipment',
+      'equipment.empty': 'No equipment added yet',
+      'equipment.cat.pump': 'Pump',
+      'equipment.cat.light': 'Light',
+      'equipment.cat.skimmer': 'Skimmer',
+      'equipment.cat.heater': 'Heater',
+      'equipment.cat.doser': 'Doser',
+      'equipment.cat.controller': 'Controller',
+      'equipment.cat.ato': 'ATO',
+      'equipment.cat.reactor': 'Reactor',
       'tank.ageMonthSingular': '{n} month',
       'tank.ageMonthPlural': '{n} months',
       'tank.ageYearSingular': '{n} year',
@@ -2625,7 +2691,7 @@
   // avant de brancher le vrai modèle de données (table `aquariums`, `tank_id` sur les
   // mesures). Un seul bac par défaut ("Bac principal") pour ne rien casser de l'usage
   // actuel tant que la vraie persistance n'existe pas.
-  let tanks = [{id:'default', name:'Bac principal', volume:null, type:null, start:'', livestock:{fish:[],corals:[],inverts:[]}}];
+  let tanks = [{id:'default', name:'Bac principal', volume:null, type:null, start:'', livestock:{fish:[],corals:[],inverts:[]}, equipment:[]}];
   let activeTankId = 'default';
   let editingTankId = null;
   let tankFormSelectedType = null;
@@ -2640,6 +2706,31 @@
     fishOnly: `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10C3 10 6.5 6 11 8C13 8.8 14.5 9.3 17 8L15.5 10L17 12C14.5 10.7 13 11.2 11 12C6.5 14 3 10 3 10Z"/><circle cx="6.3" cy="9.3" r="0.6" fill="currentColor" stroke="none"/></svg>`
   };
   const TANK_ICON_DEFAULT = `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M6 3H14M7 3V8L4 15C3.6 15.9 4.3 17 5.3 17H14.7C15.7 17 16.4 15.9 16 15L13 8V3"/></svg>`;
+  const FISH_CATALOG = ['Poisson-clown Ocellaris','Poisson-clown Percula','Gramma Royal','Chirurgien Bleu (Paracanthurus)','Chirurgien Jaune (Zebrasoma)','Cardinal de Banggai','Demoiselle à trois bandes','Poisson-ange Nain Flame','Blenny Lawnmower','Gobie Diamant','Gobie Firefish','Hippocampe','Poisson-Mandarin','Chirurgien Naso','Poisson-papillon Copperband'].sort();
+  const CORAL_CATALOG = ['Acropora','Montipora','Seriatopora (Birdsnest)','Stylophora','Euphyllia (Torch)','Euphyllia (Hammer)','Euphyllia (Frogspawn)','Trachyphyllia (Brain)','Favia / Favites','Zoanthus','Palythoa','Ricordea','Discosoma (Mushroom)','Sarcophyton (Cuir doigté)','Sinularia (Cuir)','Xenia'].sort();
+  const INVERT_CATALOG = ["Crevette Nettoyeuse (Lysmata)","Crevette Peppermint","Bernard-l'ermite","Escargot Turbo","Escargot Nassarius","Escargot Cerith","Étoile de mer Serpent","Étoile de mer Sable","Concombre de mer","Oursin","Palourde Bénitier (Tridacna)"].sort();
+  const EQUIPMENT_CATEGORIES = ['pump','light','skimmer','heater','doser','controller','ato','reactor'];
+  const EQUIPMENT_CATALOG = [
+    {cat:'skimmer', brand:'Reef Octopus', name:'Regal 200-S'},
+    {cat:'skimmer', brand:'Bubble Magus', name:'Curve 5'},
+    {cat:'skimmer', brand:'Fauna Marin', name:'Double Cone 200'},
+    {cat:'pump', brand:'EcoTech Marine', name:'Vectra M1'},
+    {cat:'pump', brand:'Sicce', name:'Syncra SDC 9.0'},
+    {cat:'pump', brand:'Jebao', name:'DCP-4000'},
+    {cat:'light', brand:'EcoTech Marine', name:'Radion XR15 G6'},
+    {cat:'light', brand:'Kessil', name:'A360X'},
+    {cat:'light', brand:'AI (Aqua Illumination)', name:'Hydra 32 HD'},
+    {cat:'heater', brand:'Eheim', name:'Jäger 200W'},
+    {cat:'heater', brand:'Hydor', name:'ETH 300W'},
+    {cat:'doser', brand:'Kamoer', name:'X4 Pro'},
+    {cat:'doser', brand:'GHL', name:'Doser 2.1'},
+    {cat:'controller', brand:'Neptune Systems', name:'Apex Controller'},
+    {cat:'controller', brand:'GHL', name:'ProfiLux 4'},
+    {cat:'ato', brand:'Tunze', name:'Osmolator 3155'},
+    {cat:'ato', brand:'Avast Marine', name:'Smart ATO+'},
+    {cat:'reactor', brand:'Reef Octopus', name:'Calcium Reactor CA-150'},
+    {cat:'reactor', brand:'Two Little Fishies', name:'PhosBan Reactor 150'}
+  ];
   const BROWSE_TANK_ICONS = {
     equipment: `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 3.5a3.5 3.5 0 0 0-4.6 4.2L4 12.6V16h3.4l4.9-4.9a3.5 3.5 0 0 0 4.2-4.6l-2.4 2.4-1.9-.5-.5-1.9 2.4-2.4Z"/></svg>`,
     dosing: `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><rect x="7" y="4" width="6" height="12" rx="1"/><path d="M7 10h6"/></svg>`,
@@ -2650,6 +2741,8 @@
   document.getElementById('browseTankDosingIcon').innerHTML = BROWSE_TANK_ICONS.dosing;
   document.getElementById('browseTankLightsIcon').innerHTML = BROWSE_TANK_ICONS.lights;
   document.getElementById('browseTankLivestockBtn').addEventListener('click', ()=>openTankLivestock(activeTankId));
+  document.getElementById('browseTankEquipmentBtn').classList.add('active');
+  document.getElementById('browseTankEquipmentBtn').addEventListener('click', ()=>openTankEquipment(activeTankId));
   const tankSwitcher=document.getElementById('tankSwitcher'), tankSwitcherName=document.getElementById('tankSwitcherName'), tankSwitcherIcon=document.getElementById('tankSwitcherIcon'), tankSwitcherMeta=document.getElementById('tankSwitcherMeta');
   const tankPickerOverlay=document.getElementById('tankPickerOverlay'), tankPickerSheet=document.getElementById('tankPickerSheet'), tankPickerList=document.getElementById('tankPickerList');
   const tankFormOverlay=document.getElementById('tankFormOverlay'), tankFormSheet=document.getElementById('tankFormSheet');
@@ -2700,6 +2793,8 @@
       ensureLivestockData(active);
       const total = active.livestock.fish.length + active.livestock.corals.length + active.livestock.inverts.length;
       document.getElementById('browseTankLivestockCount').textContent = total;
+      ensureEquipmentData(active);
+      document.getElementById('browseTankEquipmentCount').textContent = active.equipment.length;
     }
   }
 
@@ -2797,6 +2892,11 @@
         form.className = 'livestock-inline-form';
         const kindInput = document.createElement('input');
         kindInput.type='text'; kindInput.placeholder=t('livestock.kindPlaceholder.'+kind);
+        const browseBtn = document.createElement('button');
+        browseBtn.type='button'; browseBtn.className='secondary'; browseBtn.textContent=t('catalog.browse');
+        browseBtn.addEventListener('click', ()=>{
+          openCatalogPicker(kind, (item)=>{ kindInput.value = item.name; });
+        });
         const nameInput = document.createElement('input');
         nameInput.type='text'; nameInput.placeholder=t('livestock.namePlaceholder');
         const btnRow = document.createElement('div');
@@ -2816,7 +2916,7 @@
           if(tank.id===activeTankId) renderTankSwitcher();
         });
         btnRow.appendChild(cancelBtn); btnRow.appendChild(confirmBtn);
-        form.appendChild(kindInput); form.appendChild(nameInput); form.appendChild(btnRow);
+        form.appendChild(browseBtn); form.appendChild(kindInput); form.appendChild(nameInput); form.appendChild(btnRow);
         section.appendChild(form);
       }
 
@@ -2863,6 +2963,156 @@
   document.getElementById('tankLivestockClose').addEventListener('click', closeTankLivestock);
   tankLivestockOverlay.addEventListener('click', closeTankLivestock);
 
+  // Picker de catalogue partagé (poissons / coraux / invertébrés / équipement)
+  const catalogPickerOverlay=document.getElementById('catalogPickerOverlay'), catalogPickerSheet=document.getElementById('catalogPickerSheet');
+  const catalogPickerSearch=document.getElementById('catalogPickerSearch'), catalogPickerCatRow=document.getElementById('catalogPickerCatRow'), catalogPickerList=document.getElementById('catalogPickerList');
+  let catalogPickerConfig = null;
+  let catalogPickerActiveCat = 'all';
+
+  function getCatalogSource(kind){
+    if(kind==='fish') return FISH_CATALOG.map(n=>({name:n}));
+    if(kind==='corals') return CORAL_CATALOG.map(n=>({name:n}));
+    if(kind==='inverts') return INVERT_CATALOG.map(n=>({name:n}));
+    if(kind==='equipment') return EQUIPMENT_CATALOG;
+    return [];
+  }
+  function renderCatalogCatChips(){
+    catalogPickerCatRow.innerHTML = '';
+    const cats = ['all'].concat(EQUIPMENT_CATEGORIES);
+    cats.forEach(cat=>{
+      const b = document.createElement('button');
+      b.type='button';
+      b.className = 'hist-chip' + (catalogPickerActiveCat===cat ? ' active' : '');
+      b.textContent = cat==='all' ? t('common.all') : t('equipment.cat.'+cat);
+      b.addEventListener('click', ()=>{ catalogPickerActiveCat=cat; renderCatalogCatChips(); renderCatalogList(); });
+      catalogPickerCatRow.appendChild(b);
+    });
+  }
+  function renderCatalogList(){
+    if(!catalogPickerConfig) return;
+    const kind = catalogPickerConfig.kind;
+    const query = catalogPickerSearch.value.trim().toLowerCase();
+    let items = getCatalogSource(kind);
+    if(kind==='equipment' && catalogPickerActiveCat!=='all'){
+      items = items.filter(i=>i.cat===catalogPickerActiveCat);
+    }
+    if(query){
+      items = items.filter(i=>{
+        const hay = kind==='equipment' ? (i.brand+' '+i.name).toLowerCase() : i.name.toLowerCase();
+        return hay.includes(query);
+      });
+    }
+    catalogPickerList.innerHTML = '';
+    if(!items.length){
+      const empty = document.createElement('div');
+      empty.className='livestock-empty';
+      empty.textContent = t('catalog.empty');
+      catalogPickerList.appendChild(empty);
+    } else {
+      items.forEach(item=>{
+        const row = document.createElement('button');
+        row.type='button'; row.className='catalog-item-row';
+        row.innerHTML = kind==='equipment'
+          ? `<span class="catalog-item-name">${item.name}</span><span class="catalog-item-sub">${item.brand}</span>`
+          : `<span class="catalog-item-name">${item.name}</span>`;
+        row.addEventListener('click', ()=>{
+          catalogPickerConfig.onSelect(item);
+          closeCatalogPicker();
+        });
+        catalogPickerList.appendChild(row);
+      });
+    }
+    const customBtn = document.createElement('button');
+    customBtn.type='button'; customBtn.className='primary'; customBtn.style.width='100%'; customBtn.style.marginTop='10px';
+    customBtn.textContent = t('catalog.addCustom');
+    customBtn.addEventListener('click', ()=>{
+      const val = catalogPickerSearch.value.trim();
+      if(!val) return;
+      catalogPickerConfig.onSelect(kind==='equipment' ? {cat: catalogPickerActiveCat==='all'?'pump':catalogPickerActiveCat, brand:'', name:val} : {name:val});
+      closeCatalogPicker();
+    });
+    catalogPickerList.appendChild(customBtn);
+  }
+  function openCatalogPicker(kind, onSelect){
+    catalogPickerConfig = {kind, onSelect};
+    catalogPickerActiveCat = 'all';
+    catalogPickerSearch.value = '';
+    document.getElementById('catalogPickerTitle').textContent = t('catalog.title.'+kind);
+    catalogPickerCatRow.style.display = kind==='equipment' ? 'flex' : 'none';
+    renderCatalogCatChips();
+    renderCatalogList();
+    catalogPickerOverlay.style.display='block'; catalogPickerSheet.style.display='block';
+  }
+  function closeCatalogPicker(){
+    catalogPickerOverlay.style.display='none'; catalogPickerSheet.style.display='none';
+    catalogPickerConfig = null;
+  }
+  catalogPickerSearch.addEventListener('input', renderCatalogList);
+  document.getElementById('catalogPickerClose').addEventListener('click', closeCatalogPicker);
+  catalogPickerOverlay.addEventListener('click', closeCatalogPicker);
+
+  // Équipement par bac
+  const tankEquipmentOverlay=document.getElementById('tankEquipmentOverlay'), tankEquipmentSheet=document.getElementById('tankEquipmentSheet');
+  let equipmentTankId = null;
+
+  function ensureEquipmentData(tank){
+    if(!tank.equipment) tank.equipment = [];
+  }
+  function renderEquipmentList(){
+    const tank = tanks.find(t=>t.id===equipmentTankId);
+    if(!tank) return;
+    ensureEquipmentData(tank);
+    document.getElementById('equipmentCount').textContent = tank.equipment.length;
+    const listEl = document.getElementById('equipmentList');
+    listEl.innerHTML = '';
+    if(!tank.equipment.length){
+      const empty = document.createElement('div');
+      empty.className='livestock-empty';
+      empty.textContent = t('equipment.empty');
+      listEl.appendChild(empty);
+    } else {
+      tank.equipment.forEach(item=>{
+        const row = document.createElement('div');
+        row.className='livestock-item';
+        row.innerHTML = `<div class="livestock-item-info"><span class="livestock-item-kind">${item.name}</span><span class="livestock-item-name">${item.brand ? item.brand+' · ' : ''}${t('equipment.cat.'+item.cat)}</span></div>`;
+        const del = document.createElement('button');
+        del.type='button'; del.className='livestock-item-del'; del.textContent='×';
+        del.setAttribute('aria-label', t('common.delete'));
+        del.addEventListener('click', ()=>{
+          tank.equipment = tank.equipment.filter(i=>i.id!==item.id);
+          renderEquipmentList();
+          if(tank.id===activeTankId) renderTankSwitcher();
+        });
+        row.appendChild(del);
+        listEl.appendChild(row);
+      });
+    }
+  }
+  function openTankEquipment(tankId){
+    const tank = tanks.find(t=>t.id===tankId);
+    if(!tank) return;
+    equipmentTankId = tankId;
+    ensureEquipmentData(tank);
+    document.getElementById('tankEquipmentTitle').textContent = t('equipment.title')+' — '+tank.name;
+    renderEquipmentList();
+    tankEquipmentOverlay.style.display='block'; tankEquipmentSheet.style.display='block';
+  }
+  function closeTankEquipment(){
+    tankEquipmentOverlay.style.display='none'; tankEquipmentSheet.style.display='none';
+    equipmentTankId = null;
+  }
+  document.getElementById('equipmentAddBtn').addEventListener('click', ()=>{
+    const tank = tanks.find(t=>t.id===equipmentTankId);
+    if(!tank) return;
+    openCatalogPicker('equipment', (item)=>{
+      tank.equipment.push({id:'eq_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), cat:item.cat, brand:item.brand||'', name:item.name});
+      renderEquipmentList();
+      if(tank.id===activeTankId) renderTankSwitcher();
+    });
+  });
+  document.getElementById('tankEquipmentClose').addEventListener('click', closeTankEquipment);
+  tankEquipmentOverlay.addEventListener('click', closeTankEquipment);
+
   function openTankForm(tankId){
     editingTankId = tankId || null;
     const tank = tankId ? tanks.find(t=>t.id===tankId) : null;
@@ -2900,7 +3150,7 @@
       if(tank){ tank.name=name; tank.volume=volume; tank.type=type; tank.start=start; }
     } else {
       const id = 'tank_'+Date.now();
-      tanks.push({id, name, volume, type, start, livestock:{fish:[],corals:[],inverts:[]}});
+      tanks.push({id, name, volume, type, start, livestock:{fish:[],corals:[],inverts:[]}, equipment:[]});
       activeTankId = id;
     }
     renderTankSwitcher();
