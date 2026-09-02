@@ -404,6 +404,21 @@
     letter-spacing:.18em;
     text-transform:uppercase;
   }
+  button.hero-sub{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    font-family:inherit;
+    background:none;
+    border:none;
+    padding:4px 8px;
+    cursor:pointer;
+    border-radius:8px;
+    transition:background .15s;
+  }
+  button.hero-sub:hover{ background:rgba(158,184,212,.1); }
+  button.hero-sub:active{ transform:none; background:rgba(158,184,212,.16); }
+  .tank-switcher-chevron{ width:9px; height:7px; color:#9eb8d4; flex:none; }
   .app-meta{
     display:flex;
     flex-wrap:wrap;
@@ -1016,12 +1031,28 @@
     background:rgba(7,21,36,.38);
   }
 
-  #sheetOverlay,#badgePickerOverlay,#timerOverlay{backdrop-filter:blur(5px);background:rgba(0,4,10,.64)!important;}
-  #sheet,#badgePickerSheet,#timerSheet{
+  #sheetOverlay,#badgePickerOverlay,#timerOverlay,#tankPickerOverlay,#tankFormOverlay{backdrop-filter:blur(5px);background:rgba(0,4,10,.64)!important;}
+  #sheet,#badgePickerSheet,#timerSheet,#tankPickerSheet,#tankFormSheet{
     border-radius:24px 24px 0 0!important;
     border-top-color:rgba(111,163,214,.26)!important;
     box-shadow:0 -18px 60px rgba(0,0,0,.46);
   }
+  .tank-notes{
+    background:var(--bg-panel-raised); border:1px solid var(--line); color:var(--text);
+    border-radius:8px; padding:11px 12px; font-family:'Inter',sans-serif; font-size:0.9rem;
+    width:100%; resize:vertical;
+  }
+  .tank-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:var(--bg-panel-raised); border:1px solid var(--line); border-radius:10px;
+    padding:12px 14px; font-family:'Inter',sans-serif; color:var(--text);
+  }
+  .tank-row.active{ border-color:var(--aqua); background:rgba(46,217,195,.08); }
+  .tank-row .tr-main{ flex:1; background:none; border:none; text-align:left; padding:0; font-family:inherit; color:inherit; cursor:pointer; }
+  .tank-row .tr-name{ font-weight:600; }
+  .tank-row .tr-volume{ font-size:0.78rem; color:var(--text-dim); margin-top:2px; }
+  .tank-row .tr-check{ color:var(--aqua); flex:none; }
+  .tank-row .tr-edit{ background:none; border:none; color:var(--text-dim); font-size:1rem; padding:4px; cursor:pointer; flex:none; }
 
   @media (max-width:480px){
     header.masthead{padding:8px 14px 0;}
@@ -1154,9 +1185,12 @@
       <div class="hero-emblem">≋</div>
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
-      <div class="hero-sub" data-i18n="app.tagline">Suivi récifal</div>
+      <button type="button" class="hero-sub tank-switcher" id="tankSwitcher">
+        <span id="tankSwitcherName">Bac principal</span>
+        <svg class="tank-switcher-chevron" viewBox="0 0 12 8" aria-hidden="true"><path d="M1 1.5 6 6.5 11 1.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
       <div class="app-meta">
-        <span class="ver-pill">v6.26</span>
+        <span class="ver-pill">v6.27</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1413,6 +1447,36 @@
     <button class="secondary" id="badgePickerCancel" style="width:100%;margin-top:14px;" data-i18n="common.cancel">Annuler</button>
   </div>
 
+  <div id="tankPickerOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:72;display:none;"></div>
+  <div id="tankPickerSheet" style="position:fixed;left:0;right:0;bottom:0;background:var(--bg-panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 20px 26px;z-index:73;display:none;max-width:640px;margin:0 auto;max-height:70vh;overflow-y:auto;">
+    <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 14px;" data-i18n="tank.pickerTitle">Mes aquariums</h3>
+    <div id="tankPickerList" style="display:flex;flex-direction:column;gap:8px;"></div>
+    <button class="primary" id="tankAddBtn" style="width:100%;margin-top:14px;" data-i18n="tank.addNew">+ Nouvel aquarium</button>
+    <button class="secondary" id="tankPickerCancel" style="width:100%;margin-top:10px;" data-i18n="common.cancel">Annuler</button>
+  </div>
+
+  <div id="tankFormOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:74;display:none;"></div>
+  <div id="tankFormSheet" style="position:fixed;left:0;right:0;bottom:0;background:var(--bg-panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 20px 26px;z-index:75;display:none;max-width:640px;margin:0 auto;max-height:82vh;overflow-y:auto;">
+    <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 14px;" id="tankFormTitle" data-i18n="tank.formTitleNew">Nouvel aquarium</h3>
+    <div class="field">
+      <label class="field-label" data-i18n="tank.nameLabel">Nom</label>
+      <input type="text" id="tankFormName" placeholder="ex. Bac principal" data-i18n-placeholder="tank.namePlaceholder">
+    </div>
+    <div class="field">
+      <label class="field-label" data-i18n="tank.volumeLabel">Volume (litres)</label>
+      <input type="number" id="tankFormVolume" placeholder="ex. 300" min="0">
+    </div>
+    <div class="field">
+      <label class="field-label" data-i18n="tank.gearLabel">Matériel / notes</label>
+      <textarea id="tankFormGear" rows="3" class="tank-notes" placeholder="ex. Skimmer, osmolateur, éclairage LED..." data-i18n-placeholder="tank.gearPlaceholder"></textarea>
+    </div>
+    <p id="tankFormError" style="color:var(--bad);font-size:0.8rem;min-height:1em;margin:0 0 10px;"></p>
+    <div class="btn-row">
+      <button class="secondary" id="tankFormCancel" data-i18n="common.cancel">Annuler</button>
+      <button class="primary" id="tankFormSave" data-i18n="common.save">Enregistrer</button>
+    </div>
+  </div>
+
   <div id="timerOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:70;display:none;"></div>
   <div id="timerSheet" style="position:fixed;left:0;right:0;bottom:0;background:var(--bg-panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 20px 26px;z-index:71;display:none;max-width:640px;margin:0 auto;">
     <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 14px;" data-i18n="timer.title">Minuteur</h3>
@@ -1593,7 +1657,6 @@
   // testable indépendamment du contenu — c'est l'objet de cette phase.
   const I18N = {
     fr: {
-      'app.tagline': 'Suivi récifal',
       'app.title': 'MON RÉCIF',
       'nav.dashboard': 'Accueil',
       'nav.history': 'Historique',
@@ -1769,10 +1832,19 @@
       'nuancier.scanDeviationWarning': "⚠️ Cette photo s'écarte beaucoup du nuancier de référence (ΔE moyen {de}) — vérifie ton ciblage ou reprends la photo. Compare les carrés pointillés ci-dessous à ta calibration.",
       'common.networkUnavailable': 'réseau indisponible',
       'aim.nonUniform': '⚠️ zone non uniforme',
-      'health.label': 'Santé du bac'
+      'health.label': 'Santé du bac',
+      'tank.pickerTitle': 'Mes aquariums',
+      'tank.addNew': '+ Nouvel aquarium',
+      'tank.formTitleNew': 'Nouvel aquarium',
+      'tank.formTitleEdit': "Modifier l'aquarium",
+      'tank.nameLabel': 'Nom',
+      'tank.namePlaceholder': 'ex. Bac principal',
+      'tank.volumeLabel': 'Volume (litres)',
+      'tank.gearLabel': 'Matériel / notes',
+      'tank.gearPlaceholder': 'ex. Skimmer, osmolateur, éclairage LED...',
+      'tank.nameRequired': 'Le nom est obligatoire.'
     },
     en: {
-      'app.tagline': 'Reef Tracking',
       'app.title': 'MY REEF',
       'nav.dashboard': 'Home',
       'nav.history': 'History',
@@ -1948,7 +2020,17 @@
       'nuancier.scanDeviationWarning': '⚠️ This photo deviates a lot from the reference color chart (avg ΔE {de}) — check your targeting or retake the photo. Compare the dashed squares below to your calibration.',
       'common.networkUnavailable': 'network unavailable',
       'aim.nonUniform': '⚠️ non-uniform area',
-      'health.label': 'Tank health'
+      'health.label': 'Tank health',
+      'tank.pickerTitle': 'My aquariums',
+      'tank.addNew': '+ New aquarium',
+      'tank.formTitleNew': 'New aquarium',
+      'tank.formTitleEdit': 'Edit aquarium',
+      'tank.nameLabel': 'Name',
+      'tank.namePlaceholder': 'e.g. Main tank',
+      'tank.volumeLabel': 'Volume (liters)',
+      'tank.gearLabel': 'Equipment / notes',
+      'tank.gearPlaceholder': 'e.g. Skimmer, ATO, LED lighting...',
+      'tank.nameRequired': 'Name is required.'
     }
   };
   let currentLang = 'fr';
@@ -2377,6 +2459,98 @@
   function closeBadgePicker(){ badgePickerOverlay.style.display='none'; badgePickerSheet.style.display='none'; badgePickerSlot=null; }
   document.getElementById('badgePickerCancel').addEventListener('click', closeBadgePicker);
   badgePickerOverlay.addEventListener('click', closeBadgePicker);
+
+  // ================= sélecteur d'aquarium (maquette visuelle) =================
+  // Étape 1 du chantier multi-bac : données en mémoire seulement, rien n'est encore
+  // envoyé à Supabase et changer de bac actif ne filtre pas encore le dashboard/
+  // historique/rapport — l'objectif ici est uniquement de valider le geste et le look
+  // avant de brancher le vrai modèle de données (table `aquariums`, `tank_id` sur les
+  // mesures). Un seul bac par défaut ("Bac principal") pour ne rien casser de l'usage
+  // actuel tant que la vraie persistance n'existe pas.
+  let tanks = [{id:'default', name:'Bac principal', volume:null, gear:''}];
+  let activeTankId = 'default';
+  let editingTankId = null;
+  const tankSwitcher=document.getElementById('tankSwitcher'), tankSwitcherName=document.getElementById('tankSwitcherName');
+  const tankPickerOverlay=document.getElementById('tankPickerOverlay'), tankPickerSheet=document.getElementById('tankPickerSheet'), tankPickerList=document.getElementById('tankPickerList');
+  const tankFormOverlay=document.getElementById('tankFormOverlay'), tankFormSheet=document.getElementById('tankFormSheet');
+  const tankFormName=document.getElementById('tankFormName'), tankFormVolume=document.getElementById('tankFormVolume'), tankFormGear=document.getElementById('tankFormGear'), tankFormError=document.getElementById('tankFormError');
+
+  function renderTankSwitcher(){
+    const active = tanks.find(t=>t.id===activeTankId) || tanks[0];
+    tankSwitcherName.textContent = active ? active.name : '';
+  }
+
+  function renderTankPickerList(){
+    tankPickerList.innerHTML = '';
+    tanks.forEach(tank=>{
+      const row = document.createElement('div');
+      row.className = 'tank-row' + (tank.id===activeTankId ? ' active' : '');
+      const main = document.createElement('button');
+      main.type='button'; main.className='tr-main';
+      main.innerHTML = `
+        <span class="tr-name">${tank.name}</span>
+        ${tank.volume ? `<div class="tr-volume">${tank.volume} L</div>` : ''}`;
+      main.addEventListener('click', ()=>{
+        activeTankId = tank.id;
+        renderTankSwitcher();
+        closeTankPicker();
+        // Pas encore de filtrage réel des données par bac à ce stade (maquette visuelle) —
+        // le dashboard/historique/rapport continuent d'afficher les mêmes données quel
+        // que soit le bac sélectionné, en attendant la vraie persistance (étape suivante).
+      });
+      row.appendChild(main);
+      if(tank.id===activeTankId){
+        const check = document.createElement('span');
+        check.className='tr-check'; check.textContent='✓';
+        row.appendChild(check);
+      }
+      const editBtn = document.createElement('button');
+      editBtn.type='button'; editBtn.className='tr-edit'; editBtn.textContent='✏️';
+      editBtn.setAttribute('aria-label', t('tank.formTitleEdit'));
+      editBtn.addEventListener('click', (e)=>{ e.stopPropagation(); openTankForm(tank.id); });
+      row.appendChild(editBtn);
+      tankPickerList.appendChild(row);
+    });
+  }
+
+  function openTankPicker(){ renderTankPickerList(); tankPickerOverlay.style.display='block'; tankPickerSheet.style.display='block'; }
+  function closeTankPicker(){ tankPickerOverlay.style.display='none'; tankPickerSheet.style.display='none'; }
+  tankSwitcher.addEventListener('click', openTankPicker);
+  document.getElementById('tankPickerCancel').addEventListener('click', closeTankPicker);
+  tankPickerOverlay.addEventListener('click', closeTankPicker);
+
+  function openTankForm(tankId){
+    editingTankId = tankId || null;
+    const tank = tankId ? tanks.find(t=>t.id===tankId) : null;
+    document.getElementById('tankFormTitle').textContent = tank ? t('tank.formTitleEdit') : t('tank.formTitleNew');
+    tankFormName.value = tank ? tank.name : '';
+    tankFormVolume.value = tank && tank.volume ? tank.volume : '';
+    tankFormGear.value = tank ? tank.gear||'' : '';
+    tankFormError.textContent = '';
+    closeTankPicker();
+    tankFormOverlay.style.display='block'; tankFormSheet.style.display='block';
+  }
+  function closeTankForm(){ tankFormOverlay.style.display='none'; tankFormSheet.style.display='none'; editingTankId=null; }
+  document.getElementById('tankAddBtn').addEventListener('click', ()=>openTankForm(null));
+  document.getElementById('tankFormCancel').addEventListener('click', closeTankForm);
+  tankFormOverlay.addEventListener('click', closeTankForm);
+  document.getElementById('tankFormSave').addEventListener('click', ()=>{
+    const name = tankFormName.value.trim();
+    if(!name){ tankFormError.textContent = t('tank.nameRequired'); return; }
+    const volume = tankFormVolume.value ? parseFloat(tankFormVolume.value) : null;
+    const gear = tankFormGear.value.trim();
+    if(editingTankId){
+      const tank = tanks.find(t=>t.id===editingTankId);
+      if(tank){ tank.name=name; tank.volume=volume; tank.gear=gear; }
+    } else {
+      const id = 'tank_'+Date.now();
+      tanks.push({id, name, volume, gear});
+      activeTankId = id;
+    }
+    renderTankSwitcher();
+    closeTankForm();
+  });
+  renderTankSwitcher();
 
   // Badge de statut en haut de l'app. Deux modes, choisis par toi via le toggle
   // "Mon bac cycle actuellement" (cyclingActive) plutôt que devinés depuis une date —
