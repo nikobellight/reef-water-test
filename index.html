@@ -22,6 +22,25 @@
   header.masthead p{color:var(--text-dim);font-size:0.86rem;line-height:1.5;margin:0;}
   main{max-width:640px;margin:0 auto;padding:0 20px;}
   .card{background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:16px;}
+  .health-score-card{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 20px;
+    border-width:1px; border-style:solid;
+    transition:background .2s, border-color .2s;
+  }
+  .health-score-card.health-good{ background:rgba(62,217,160,.10); border-color:rgba(62,217,160,.35); }
+  .health-score-card.health-warn{ background:rgba(242,166,90,.10); border-color:rgba(242,166,90,.35); }
+  .health-score-card.health-bad{ background:rgba(255,90,95,.10); border-color:rgba(255,90,95,.35); }
+  .health-score-value{
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.9rem; line-height:1;
+  }
+  .health-good .health-score-value{ color:var(--good); }
+  .health-warn .health-score-value{ color:var(--amber); }
+  .health-bad .health-score-value{ color:var(--bad); }
+  .health-score-label{
+    font-family:'IBM Plex Mono',monospace; font-size:0.72rem; letter-spacing:0.06em;
+    text-transform:uppercase; color:var(--text-dim);
+  }
   .step-label{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-dim);margin:0 0 10px;display:flex;align-items:center;gap:8px;}
   .step-label .dot{width:7px;height:7px;border-radius:50%;background:var(--text-dim);flex:none;}
   .step-label.active .dot{background:var(--actinic);box-shadow:0 0 8px var(--actinic);}
@@ -1136,7 +1155,7 @@
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="hero-sub" data-i18n="app.tagline">Suivi récifal</div>
       <div class="app-meta">
-        <span class="ver-pill">v6.24</span>
+        <span class="ver-pill">v6.25</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1150,6 +1169,11 @@
   <main>
 
     <section class="view active" id="view-dashboard">
+      <div class="card health-score-card" id="healthScoreCard" style="display:none;">
+        <div class="health-score-value" id="healthScoreValue">--</div>
+        <div class="health-score-label" data-i18n="health.label">Santé du bac</div>
+      </div>
+
       <div class="card sync-error" id="syncError" style="display:none;"><p>⚠️ Connexion à Supabase impossible.</p></div>
 
       <div class="card highlight-row-card">
@@ -1743,7 +1767,8 @@
       'nuancier.calibWarning': '❌ Zone non exploitable : <strong>{labels}</strong> — probablement cachée par le tube, un reflet ou du texte. Reprends la photo avec le tube décalé, ou corrige-la avec ✏️ ci-dessous.',
       'nuancier.scanDeviationWarning': "⚠️ Cette photo s'écarte beaucoup du nuancier de référence (ΔE moyen {de}) — vérifie ton ciblage ou reprends la photo. Compare les carrés pointillés ci-dessous à ta calibration.",
       'common.networkUnavailable': 'réseau indisponible',
-      'aim.nonUniform': '⚠️ zone non uniforme'
+      'aim.nonUniform': '⚠️ zone non uniforme',
+      'health.label': 'Santé du bac'
     },
     en: {
       'app.tagline': 'Reef Tracking',
@@ -1921,7 +1946,8 @@
       'nuancier.calibWarning': "❌ Unusable area: <strong>{labels}</strong> — likely hidden by the tube, a reflection, or text. Retake the photo with the tube shifted, or correct it with ✏️ below.",
       'nuancier.scanDeviationWarning': '⚠️ This photo deviates a lot from the reference color chart (avg ΔE {de}) — check your targeting or retake the photo. Compare the dashed squares below to your calibration.',
       'common.networkUnavailable': 'network unavailable',
-      'aim.nonUniform': '⚠️ non-uniform area'
+      'aim.nonUniform': '⚠️ non-uniform area',
+      'health.label': 'Tank health'
     }
   };
   let currentLang = 'fr';
@@ -2435,8 +2461,35 @@
     set(bad.length ? 'bad' : 'warn', t('hero.toWatch', {names: names.join(', ')}));
   }
 
+  // Score de santé : moyenne pondérée des statuts de tous les paramètres qui ont au
+  // moins une mesure enregistrée (idéal=100, attention=60, hors norme=20). "Autre" est
+  // ignoré (pas de plage idéale définie), tout comme les paramètres jamais testés — pas
+  // de pénalité artificielle pour un bac tout neuf. Caché tant qu'aucune donnée n'existe.
+  function renderHealthScore(){
+    const card = document.getElementById('healthScoreCard');
+    if(!card) return;
+    const valEl = document.getElementById('healthScoreValue');
+    const weights = {good:100, warn:60, bad:20};
+    let total=0, count=0;
+    Object.keys(PARAMS).forEach(k=>{
+      if(k==='autre' || !PARAMS[k].ideal) return;
+      const latest = latestFor(k);
+      if(!latest || !latest.status) return;
+      const cls = statusMeta(latest.status).cls;
+      total += weights[cls]!=null ? weights[cls] : weights.warn;
+      count++;
+    });
+    if(count===0){ card.style.display='none'; return; }
+    const score = Math.round(total/count);
+    card.style.display='flex';
+    valEl.textContent = score+'%';
+    card.classList.remove('health-good','health-warn','health-bad');
+    card.classList.add(score>=80?'health-good':score>=50?'health-warn':'health-bad');
+  }
+
   function renderDashboard(){
     updateHeroStatus();
+    renderHealthScore();
     const allSorted = historyData.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
     const mostRecent = allSorted[0];
 
