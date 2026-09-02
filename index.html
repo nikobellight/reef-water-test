@@ -1064,6 +1064,33 @@
   .tank-row .tr-volume{ font-size:0.78rem; color:var(--text-dim); margin-top:2px; }
   .tank-row .tr-check{ color:var(--aqua); flex:none; }
   .tank-row .tr-edit{ background:none; border:none; color:var(--text-dim); font-size:1rem; padding:4px; cursor:pointer; flex:none; }
+  .tank-row .tr-livestock{ background:none; border:none; color:var(--text-dim); padding:4px; cursor:pointer; flex:none; display:flex; align-items:center; }
+  .tank-row .tr-livestock svg{ width:18px; height:18px; }
+  .livestock-section{ margin-bottom:20px; }
+  .livestock-section-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+  .livestock-section-label{ display:flex; align-items:center; gap:8px; font-weight:600; font-size:0.92rem; }
+  .livestock-section-label svg{ width:18px; height:18px; flex:none; }
+  .livestock-count{ font-family:'IBM Plex Mono',monospace; font-size:0.72rem; color:var(--text-dim); font-weight:500; }
+  .livestock-add-btn{
+    width:30px; height:30px; border-radius:50%; background:var(--bg-panel-raised);
+    border:1px solid var(--line); color:var(--aqua); font-size:1.1rem; line-height:1;
+    padding:0; display:flex; align-items:center; justify-content:center;
+  }
+  .livestock-empty{
+    font-size:0.8rem; color:var(--text-dim); background:var(--bg-panel-raised);
+    border:1px dashed var(--line); border-radius:10px; padding:14px; text-align:center;
+  }
+  .livestock-item{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    background:var(--bg-panel-raised); border:1px solid var(--line); border-radius:10px;
+    padding:9px 12px; margin-bottom:6px;
+  }
+  .livestock-item-info{ display:flex; flex-direction:column; }
+  .livestock-item-kind{ font-size:0.86rem; font-weight:500; color:var(--text); }
+  .livestock-item-name{ font-size:0.74rem; color:var(--text-dim); margin-top:1px; }
+  .livestock-item-del{ background:none; border:none; color:var(--text-dim); font-size:1.1rem; padding:2px 6px; cursor:pointer; flex:none; }
+  .livestock-inline-form{ display:flex; flex-direction:column; gap:8px; margin-bottom:10px; }
+  .livestock-inline-form .btn-row{ margin-top:2px; }
 
   @media (max-width:480px){
     header.masthead{padding:8px 14px 0;}
@@ -1199,7 +1226,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v7.2</span>
+        <span class="ver-pill">v7.3</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1474,6 +1501,13 @@
     <div id="tankPickerList" style="display:flex;flex-direction:column;gap:8px;"></div>
     <button class="primary" id="tankAddBtn" style="width:100%;margin-top:14px;" data-i18n="tank.addNew">+ Nouvel aquarium</button>
     <button class="secondary" id="tankPickerCancel" style="width:100%;margin-top:10px;" data-i18n="common.cancel">Annuler</button>
+  </div>
+
+  <div id="tankLivestockOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:76;display:none;"></div>
+  <div id="tankLivestockSheet" style="position:fixed;left:0;right:0;bottom:0;background:var(--bg-panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 20px 26px;z-index:77;display:none;max-width:640px;margin:0 auto;max-height:86vh;overflow-y:auto;">
+    <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 16px;" id="tankLivestockTitle" data-i18n="livestock.title">Cheptel</h3>
+    <div id="livestockSections"></div>
+    <button class="secondary" id="tankLivestockClose" style="width:100%;margin-top:4px;" data-i18n="common.cancel">Annuler</button>
   </div>
 
   <div id="tankFormOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:74;display:none;"></div>
@@ -1886,6 +1920,17 @@
       'tank.type.nano': 'Nano-récif',
       'tank.type.ulns': 'ULNS',
       'tank.type.fishOnly': 'Poissons seuls',
+      'livestock.title': 'Cheptel',
+      'livestock.fish': 'Poissons',
+      'livestock.corals': 'Coraux',
+      'livestock.inverts': 'Invertébrés',
+      'livestock.empty.fish': 'Aucun poisson ajouté',
+      'livestock.empty.corals': 'Aucun corail ajouté',
+      'livestock.empty.inverts': 'Aucun invertébré ajouté',
+      'livestock.kindPlaceholder.fish': 'ex. Poisson-clown',
+      'livestock.kindPlaceholder.corals': 'ex. Acropora',
+      'livestock.kindPlaceholder.inverts': 'ex. Crevette nettoyeuse',
+      'livestock.namePlaceholder': 'Nom (optionnel)',
       'tank.ageMonthSingular': '{n} mois',
       'tank.ageMonthPlural': '{n} mois',
       'tank.ageYearSingular': '{n} an',
@@ -2087,6 +2132,17 @@
       'tank.type.nano': 'Nano reef',
       'tank.type.ulns': 'ULNS',
       'tank.type.fishOnly': 'Fish only',
+      'livestock.title': 'Livestock',
+      'livestock.fish': 'Fish',
+      'livestock.corals': 'Corals',
+      'livestock.inverts': 'Invertebrates',
+      'livestock.empty.fish': 'No fish added yet',
+      'livestock.empty.corals': 'No corals added yet',
+      'livestock.empty.inverts': 'No invertebrates added yet',
+      'livestock.kindPlaceholder.fish': 'e.g. Clownfish',
+      'livestock.kindPlaceholder.corals': 'e.g. Acropora',
+      'livestock.kindPlaceholder.inverts': 'e.g. Cleaner shrimp',
+      'livestock.namePlaceholder': 'Name (optional)',
       'tank.ageMonthSingular': '{n} month',
       'tank.ageMonthPlural': '{n} months',
       'tank.ageYearSingular': '{n} year',
@@ -2527,7 +2583,7 @@
   // avant de brancher le vrai modèle de données (table `aquariums`, `tank_id` sur les
   // mesures). Un seul bac par défaut ("Bac principal") pour ne rien casser de l'usage
   // actuel tant que la vraie persistance n'existe pas.
-  let tanks = [{id:'default', name:'Bac principal', volume:null, type:null, start:''}];
+  let tanks = [{id:'default', name:'Bac principal', volume:null, type:null, start:'', livestock:{fish:[],corals:[],inverts:[]}}];
   let activeTankId = 'default';
   let editingTankId = null;
   let tankFormSelectedType = null;
@@ -2619,6 +2675,12 @@
         check.className='tr-check'; check.textContent='✓';
         row.appendChild(check);
       }
+      const livestockBtn = document.createElement('button');
+      livestockBtn.type='button'; livestockBtn.className='tr-livestock';
+      livestockBtn.innerHTML = TANK_TYPE_ICONS.fishOnly;
+      livestockBtn.setAttribute('aria-label', t('livestock.title'));
+      livestockBtn.addEventListener('click', (e)=>{ e.stopPropagation(); closeTankPicker(); openTankLivestock(tank.id); });
+      row.appendChild(livestockBtn);
       const editBtn = document.createElement('button');
       editBtn.type='button'; editBtn.className='tr-edit'; editBtn.textContent='✏️';
       editBtn.setAttribute('aria-label', t('tank.formTitleEdit'));
@@ -2633,6 +2695,120 @@
   tankSwitcher.addEventListener('click', openTankPicker);
   document.getElementById('tankPickerCancel').addEventListener('click', closeTankPicker);
   tankPickerOverlay.addEventListener('click', closeTankPicker);
+
+  // Cheptel par bac (poissons / coraux / invertébrés) — données en mémoire pour l'instant,
+  // comme le reste du modèle tanks[], en attendant la vraie persistance Supabase.
+  const LIVESTOCK_KINDS = ['fish','corals','inverts'];
+  const LIVESTOCK_ICONS = {
+    fish: TANK_TYPE_ICONS.fishOnly,
+    corals: TANK_TYPE_ICONS.sps,
+    inverts: `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M10 15c-2.5 0-4.5-2-4.5-4.5S7.5 6 10 6s4 1.8 4 4-1.6 3.3-3.3 3.3-2.7-1.1-2.7-2.5 1-2.2 2-2.2"/><path d="M4 15c0 1.7 2.7 3 6 3s6-1.3 6-3"/></svg>`
+  };
+  const LIVESTOCK_COLORS = { fish:'var(--good)', corals:'#9B5FB5', inverts:'var(--amber)' };
+  const tankLivestockOverlay=document.getElementById('tankLivestockOverlay'), tankLivestockSheet=document.getElementById('tankLivestockSheet');
+  let livestockTankId = null;
+  let livestockOpenForm = null;
+
+  function ensureLivestockData(tank){
+    if(!tank.livestock) tank.livestock = {fish:[], corals:[], inverts:[]};
+  }
+
+  function renderLivestockSections(){
+    const tank = tanks.find(t=>t.id===livestockTankId);
+    if(!tank) return;
+    ensureLivestockData(tank);
+    const container = document.getElementById('livestockSections');
+    container.innerHTML = '';
+    LIVESTOCK_KINDS.forEach(kind=>{
+      const items = tank.livestock[kind];
+      const section = document.createElement('div');
+      section.className = 'livestock-section';
+
+      const head = document.createElement('div');
+      head.className = 'livestock-section-head';
+      const label = document.createElement('div');
+      label.className = 'livestock-section-label';
+      label.style.color = LIVESTOCK_COLORS[kind];
+      label.innerHTML = LIVESTOCK_ICONS[kind] + `<span style="color:var(--text)">${t('livestock.'+kind)}</span><span class="livestock-count">${items.length}</span>`;
+      head.appendChild(label);
+      const addBtn = document.createElement('button');
+      addBtn.type='button'; addBtn.className='livestock-add-btn'; addBtn.textContent='+';
+      addBtn.setAttribute('aria-label', t('common.add'));
+      addBtn.addEventListener('click', ()=>{
+        livestockOpenForm = (livestockOpenForm===kind) ? null : kind;
+        renderLivestockSections();
+      });
+      head.appendChild(addBtn);
+      section.appendChild(head);
+
+      if(livestockOpenForm===kind){
+        const form = document.createElement('div');
+        form.className = 'livestock-inline-form';
+        const kindInput = document.createElement('input');
+        kindInput.type='text'; kindInput.placeholder=t('livestock.kindPlaceholder.'+kind);
+        const nameInput = document.createElement('input');
+        nameInput.type='text'; nameInput.placeholder=t('livestock.namePlaceholder');
+        const btnRow = document.createElement('div');
+        btnRow.className='btn-row';
+        const cancelBtn = document.createElement('button');
+        cancelBtn.type='button'; cancelBtn.className='secondary'; cancelBtn.textContent=t('common.cancel');
+        cancelBtn.addEventListener('click', ()=>{ livestockOpenForm=null; renderLivestockSections(); });
+        const confirmBtn = document.createElement('button');
+        confirmBtn.type='button'; confirmBtn.className='primary'; confirmBtn.textContent=t('common.add');
+        confirmBtn.addEventListener('click', ()=>{
+          const kindVal = kindInput.value.trim();
+          if(!kindVal) return;
+          const nameVal = nameInput.value.trim();
+          tank.livestock[kind].push({id:'ls_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), kind:kindVal, name:nameVal});
+          livestockOpenForm = null;
+          renderLivestockSections();
+        });
+        btnRow.appendChild(cancelBtn); btnRow.appendChild(confirmBtn);
+        form.appendChild(kindInput); form.appendChild(nameInput); form.appendChild(btnRow);
+        section.appendChild(form);
+      }
+
+      if(!items.length){
+        const empty = document.createElement('div');
+        empty.className='livestock-empty';
+        empty.textContent = t('livestock.empty.'+kind);
+        section.appendChild(empty);
+      } else {
+        items.forEach(item=>{
+          const row = document.createElement('div');
+          row.className='livestock-item';
+          row.innerHTML = `<div class="livestock-item-info"><span class="livestock-item-kind">${item.kind}</span>${item.name?`<span class="livestock-item-name">${item.name}</span>`:''}</div>`;
+          const del = document.createElement('button');
+          del.type='button'; del.className='livestock-item-del'; del.textContent='×';
+          del.setAttribute('aria-label', t('common.delete'));
+          del.addEventListener('click', ()=>{
+            tank.livestock[kind] = tank.livestock[kind].filter(i=>i.id!==item.id);
+            renderLivestockSections();
+          });
+          row.appendChild(del);
+          section.appendChild(row);
+        });
+      }
+      container.appendChild(section);
+    });
+  }
+
+  function openTankLivestock(tankId){
+    const tank = tanks.find(t=>t.id===tankId);
+    if(!tank) return;
+    livestockTankId = tankId;
+    livestockOpenForm = null;
+    ensureLivestockData(tank);
+    document.getElementById('tankLivestockTitle').textContent = t('livestock.title')+' — '+tank.name;
+    renderLivestockSections();
+    tankLivestockOverlay.style.display='block'; tankLivestockSheet.style.display='block';
+  }
+  function closeTankLivestock(){
+    tankLivestockOverlay.style.display='none'; tankLivestockSheet.style.display='none';
+    livestockTankId=null; livestockOpenForm=null;
+  }
+  document.getElementById('tankLivestockClose').addEventListener('click', closeTankLivestock);
+  tankLivestockOverlay.addEventListener('click', closeTankLivestock);
 
   function openTankForm(tankId){
     editingTankId = tankId || null;
@@ -2671,7 +2847,7 @@
       if(tank){ tank.name=name; tank.volume=volume; tank.type=type; tank.start=start; }
     } else {
       const id = 'tank_'+Date.now();
-      tanks.push({id, name, volume, type, start});
+      tanks.push({id, name, volume, type, start, livestock:{fish:[],corals:[],inverts:[]}});
       activeTankId = id;
     }
     renderTankSwitcher();
