@@ -1136,7 +1136,7 @@
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="hero-sub" data-i18n="app.tagline">Suivi récifal</div>
       <div class="app-meta">
-        <span class="ver-pill">v6.23</span>
+        <span class="ver-pill">v6.24</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1636,7 +1636,7 @@
       'nuancier.conf.manual': 'Sélection manuelle',
       'nuancier.prev.last': 'Dernière mesure : {value} {unit}<br>(le {date})',
       'nuancier.prev.first': 'Première mesure pour ce paramètre',
-      'nuancier.disclaimer': 'Résultat basé sur une comparaison colorimétrique entre pastilles et échantillon pris sur la même photo. Tu peux corriger la valeur ci-dessus avant de valider.',
+      'nuancier.disclaimer': "Résultat basé sur une comparaison colorimétrique automatique entre pastilles et échantillon pris sur la même photo. Vérifie toujours ta lecture à l'œil nu sur la carte physique — la précision peut varier selon les conditions de la photo. Tu peux corriger la valeur ci-dessus avant de valider.",
       'common.cancel': 'Annuler',
       'common.save': 'Enregistrer',
       'common.add': 'Ajouter',
@@ -1711,7 +1711,6 @@
       'status.warn': 'Attention',
       'status.bad': 'Hors norme',
       'brand.unavailable': 'Non disponible : {list}.',
-      'brand.genericDisclaimer': "Résultat basé sur une comparaison colorimétrique automatique avec le nuancier de cette marque. Vérifie toujours ta lecture à l'œil nu sur la carte physique — la précision peut varier selon les conditions de la photo.",
       'hero.underControl': 'Récif sous contrôle',
       'hero.ammoniaSpike': "🧪 Pic d'ammoniaque — cycle en cours",
       'hero.nitriteSpike': '🧪 Pic de nitrites — cycle en cours',
@@ -1815,7 +1814,7 @@
       'nuancier.conf.manual': 'Manual selection',
       'nuancier.prev.last': 'Last reading: {value} {unit}<br>(on {date})',
       'nuancier.prev.first': 'First reading for this parameter',
-      'nuancier.disclaimer': 'Result based on a color comparison between swatches and sample taken in the same photo. You can adjust the value above before saving.',
+      'nuancier.disclaimer': "Result based on an automatic color comparison between swatches and sample taken in the same photo. Always double-check your reading by eye against the physical card — accuracy can vary with photo conditions. You can adjust the value above before saving.",
       'common.cancel': 'Cancel',
       'common.save': 'Save',
       'common.add': 'Add',
@@ -1890,7 +1889,6 @@
       'status.warn': 'Caution',
       'status.bad': 'Out of range',
       'brand.unavailable': 'Not available: {list}.',
-      'brand.genericDisclaimer': "Result based on an automatic color comparison with this brand's chart. Always double-check your reading by eye against the physical card — accuracy can vary with photo conditions.",
       'hero.underControl': 'Reef under control',
       'hero.ammoniaSpike': '🧪 Ammonia spike — cycle in progress',
       'hero.nitriteSpike': '🧪 Nitrite spike — cycle in progress',
@@ -2024,12 +2022,18 @@
     salifert: {                 no2: [0, 0.1] }
   };
   const LOW_CONF_LABEL_KEY = 'nuancier.lowConfLabel';
-  function lowConfZoneCheck(brandKey, paramKey, best, second){
+  function lowConfZoneCheck(brandKey, paramKey, best, second, resultValue){
     const zone = (LOW_CONF_ZONES[brandKey]||{})[paramKey];
     if(!zone || !second) return false;
     if(best.de < 2) return false; // match net à une seule pastille : lecture fiable
-    const vals = [best.value, second.value].sort((a,b)=>a-b);
-    return vals[0]===zone[0] && vals[1]===zone[1];
+    // Zone basse : au moins l'une des deux pastilles les plus proches (au sens ΔE) doit
+    // être le point zéro de la marque, et le résultat interpolé doit rester dans la zone
+    // déclarée — peu importe quelle est exactement la deuxième pastille retenue par le
+    // classement ΔE (elle n'est pas toujours la borne haute de la zone : sur une photo
+    // réelle, un écart de couleur très subtil peut faire ressortir une pastille plus
+    // éloignée sur l'échelle comme "deuxième plus proche").
+    const touchesZero = best.value===zone[0] || second.value===zone[0];
+    return touchesZero && resultValue>=zone[0] && resultValue<=zone[1];
   }
 
   const STATUS_META = {
@@ -2280,9 +2284,7 @@
     });
     const b = NUANCIERS[activeBrand] || NUANCIERS[DEFAULT_BRAND];
     const missing = CHART_PARAMS.filter(k=>!b.params[k]).map(k=>SHORT_LABEL[k]);
-    let txt = t('brand.genericDisclaimer');
-    if(missing.length) txt += ' ' + t('brand.unavailable', {list: missing.join(', ')});
-    noteEl.textContent = txt;
+    noteEl.textContent = missing.length ? t('brand.unavailable', {list: missing.join(', ')}) : '';
   }
 
   // Dégradé simplifié à 3 couleurs clés (bas / milieu / haut du nuancier) pour un
@@ -3710,7 +3712,7 @@
     else if(best.de<30){ confLabel=t('nuancier.conf.unreliableLighting'); confColor='var(--bad)'; }
     else{ confLabel=t('nuancier.conf.unreliableBrand'); confColor='var(--bad)'; }
 
-    const lowConf = refParam!=='autre' && lowConfZoneCheck(activeBrand, refParam, best, second);
+    const lowConf = refParam!=='autre' && lowConfZoneCheck(activeBrand, refParam, best, second, resultValue);
     currentLowConf = lowConf;
     const status = refParam==='autre' ? null : statusOf(refParam, resultValue);
     showResult({value:resultValue, status, best, sample:sampleForMatch, entries, confLabel, confColor, manual:false, lowConf});
