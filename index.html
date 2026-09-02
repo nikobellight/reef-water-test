@@ -31,12 +31,18 @@
   .health-score-card.health-good{ background:rgba(62,217,160,.10); border-color:rgba(62,217,160,.35); }
   .health-score-card.health-warn{ background:rgba(242,166,90,.10); border-color:rgba(242,166,90,.35); }
   .health-score-card.health-bad{ background:rgba(255,90,95,.10); border-color:rgba(255,90,95,.35); }
+  .health-score-main{ display:flex; align-items:center; gap:10px; }
+  .health-score-heart{ width:22px; height:22px; flex:none; }
+  .health-good .health-score-heart{ color:var(--good); }
+  .health-warn .health-score-heart{ color:var(--amber); }
+  .health-bad .health-score-heart{ color:var(--bad); }
   .health-score-value{
     font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.9rem; line-height:1;
   }
   .health-good .health-score-value{ color:var(--good); }
   .health-warn .health-score-value{ color:var(--amber); }
   .health-bad .health-score-value{ color:var(--bad); }
+  .type-chip-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
   .health-score-label{
     font-family:'IBM Plex Mono',monospace; font-size:0.72rem; letter-spacing:0.06em;
     text-transform:uppercase; color:var(--text-dim);
@@ -1190,7 +1196,7 @@
         <svg class="tank-switcher-chevron" viewBox="0 0 12 8" aria-hidden="true"><path d="M1 1.5 6 6.5 11 1.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
       <div class="app-meta">
-        <span class="ver-pill">v6.27</span>
+        <span class="ver-pill">v7.0</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1205,7 +1211,10 @@
 
     <section class="view active" id="view-dashboard">
       <div class="card health-score-card" id="healthScoreCard" style="display:none;">
-        <div class="health-score-value" id="healthScoreValue">--</div>
+        <div class="health-score-main">
+          <svg class="health-score-heart" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-6.7-4.35-9.33-8.2C1.02 10.6 1.4 7.4 3.8 5.6c2.06-1.55 4.77-1.1 6.2 1 .38.56.7 1.2 2 1.2 1.3 0 1.62-.64 2-1.2 1.43-2.1 4.14-2.55 6.2-1 2.4 1.8 2.78 5 1.13 7.2C18.7 16.65 12 21 12 21z"/></svg>
+          <div class="health-score-value" id="healthScoreValue">--</div>
+        </div>
         <div class="health-score-label" data-i18n="health.label">Santé du bac</div>
       </div>
 
@@ -1463,8 +1472,16 @@
       <input type="text" id="tankFormName" placeholder="ex. Bac principal" data-i18n-placeholder="tank.namePlaceholder">
     </div>
     <div class="field">
+      <label class="field-label" data-i18n="tank.typeLabel">Type de bac</label>
+      <div class="type-chip-row" id="tankFormTypeChips"></div>
+    </div>
+    <div class="field">
       <label class="field-label" data-i18n="tank.volumeLabel">Volume (litres)</label>
       <input type="number" id="tankFormVolume" placeholder="ex. 300" min="0">
+    </div>
+    <div class="field">
+      <label class="field-label" data-i18n="tank.startLabel">Mise en route</label>
+      <input type="month" id="tankFormStart">
     </div>
     <div class="field">
       <label class="field-label" data-i18n="tank.gearLabel">Matériel / notes</label>
@@ -1842,7 +1859,20 @@
       'tank.volumeLabel': 'Volume (litres)',
       'tank.gearLabel': 'Matériel / notes',
       'tank.gearPlaceholder': 'ex. Skimmer, osmolateur, éclairage LED...',
-      'tank.nameRequired': 'Le nom est obligatoire.'
+      'tank.nameRequired': 'Le nom est obligatoire.',
+      'tank.typeLabel': 'Type de bac',
+      'tank.startLabel': 'Mise en route',
+      'tank.type.reefMixed': 'Récif mixte',
+      'tank.type.sps': 'SPS dominant',
+      'tank.type.lps': 'LPS dominant',
+      'tank.type.softies': 'Softies',
+      'tank.type.nano': 'Nano Reef',
+      'tank.type.ulns': 'ULNS',
+      'tank.type.fishOnly': 'Poissons seuls',
+      'tank.ageMonthSingular': '{n} mois',
+      'tank.ageMonthPlural': '{n} mois',
+      'tank.ageYearSingular': '{n} an',
+      'tank.ageYearPlural': '{n} ans'
     },
     en: {
       'app.title': 'MY REEF',
@@ -2030,7 +2060,20 @@
       'tank.volumeLabel': 'Volume (liters)',
       'tank.gearLabel': 'Equipment / notes',
       'tank.gearPlaceholder': 'e.g. Skimmer, ATO, LED lighting...',
-      'tank.nameRequired': 'Name is required.'
+      'tank.nameRequired': 'Name is required.',
+      'tank.typeLabel': 'Tank type',
+      'tank.startLabel': 'Start date',
+      'tank.type.reefMixed': 'Mixed reef',
+      'tank.type.sps': 'SPS dominant',
+      'tank.type.lps': 'LPS dominant',
+      'tank.type.softies': 'Softies',
+      'tank.type.nano': 'Nano reef',
+      'tank.type.ulns': 'ULNS',
+      'tank.type.fishOnly': 'Fish only',
+      'tank.ageMonthSingular': '{n} month',
+      'tank.ageMonthPlural': '{n} months',
+      'tank.ageYearSingular': '{n} year',
+      'tank.ageYearPlural': '{n} years'
     }
   };
   let currentLang = 'fr';
@@ -2467,13 +2510,46 @@
   // avant de brancher le vrai modèle de données (table `aquariums`, `tank_id` sur les
   // mesures). Un seul bac par défaut ("Bac principal") pour ne rien casser de l'usage
   // actuel tant que la vraie persistance n'existe pas.
-  let tanks = [{id:'default', name:'Bac principal', volume:null, gear:''}];
+  let tanks = [{id:'default', name:'Bac principal', volume:null, gear:'', type:null, start:''}];
   let activeTankId = 'default';
   let editingTankId = null;
+  let tankFormSelectedType = null;
+  const TANK_TYPES = ['reefMixed','sps','lps','softies','nano','ulns','fishOnly'];
   const tankSwitcher=document.getElementById('tankSwitcher'), tankSwitcherName=document.getElementById('tankSwitcherName');
   const tankPickerOverlay=document.getElementById('tankPickerOverlay'), tankPickerSheet=document.getElementById('tankPickerSheet'), tankPickerList=document.getElementById('tankPickerList');
   const tankFormOverlay=document.getElementById('tankFormOverlay'), tankFormSheet=document.getElementById('tankFormSheet');
-  const tankFormName=document.getElementById('tankFormName'), tankFormVolume=document.getElementById('tankFormVolume'), tankFormGear=document.getElementById('tankFormGear'), tankFormError=document.getElementById('tankFormError');
+  const tankFormName=document.getElementById('tankFormName'), tankFormVolume=document.getElementById('tankFormVolume'), tankFormGear=document.getElementById('tankFormGear'), tankFormStart=document.getElementById('tankFormStart'), tankFormError=document.getElementById('tankFormError');
+
+  function tankAgeLabel(startStr){
+    if(!startStr) return '';
+    const parts = startStr.split('-');
+    const y = parseInt(parts[0],10), m = parseInt(parts[1],10);
+    if(!y || !m) return '';
+    const now = new Date();
+    let months = (now.getFullYear()-y)*12 + (now.getMonth()-(m-1));
+    if(months < 0) months = 0;
+    if(months < 12){
+      return t(months===1?'tank.ageMonthSingular':'tank.ageMonthPlural', {n:months});
+    }
+    const years = Math.floor(months/12);
+    return t(years===1?'tank.ageYearSingular':'tank.ageYearPlural', {n:years});
+  }
+
+  function renderTankTypeChips(selected){
+    const row = document.getElementById('tankFormTypeChips');
+    row.innerHTML = '';
+    TANK_TYPES.forEach(key=>{
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'hist-chip' + (selected===key ? ' active' : '');
+      b.textContent = t('tank.type.'+key);
+      b.addEventListener('click', ()=>{
+        tankFormSelectedType = key;
+        renderTankTypeChips(key);
+      });
+      row.appendChild(b);
+    });
+  }
 
   function renderTankSwitcher(){
     const active = tanks.find(t=>t.id===activeTankId) || tanks[0];
@@ -2487,9 +2563,14 @@
       row.className = 'tank-row' + (tank.id===activeTankId ? ' active' : '');
       const main = document.createElement('button');
       main.type='button'; main.className='tr-main';
+      const metaParts = [
+        tank.type ? t('tank.type.'+tank.type) : null,
+        tank.start ? tankAgeLabel(tank.start) : null,
+        tank.volume ? tank.volume+' L' : null
+      ].filter(Boolean);
       main.innerHTML = `
         <span class="tr-name">${tank.name}</span>
-        ${tank.volume ? `<div class="tr-volume">${tank.volume} L</div>` : ''}`;
+        ${metaParts.length ? `<div class="tr-volume">${metaParts.join(' · ')}</div>` : ''}`;
       main.addEventListener('click', ()=>{
         activeTankId = tank.id;
         renderTankSwitcher();
@@ -2526,6 +2607,9 @@
     tankFormName.value = tank ? tank.name : '';
     tankFormVolume.value = tank && tank.volume ? tank.volume : '';
     tankFormGear.value = tank ? tank.gear||'' : '';
+    tankFormStart.value = tank ? tank.start||'' : '';
+    tankFormSelectedType = tank ? tank.type||null : null;
+    renderTankTypeChips(tankFormSelectedType);
     tankFormError.textContent = '';
     closeTankPicker();
     tankFormOverlay.style.display='block'; tankFormSheet.style.display='block';
@@ -2539,12 +2623,14 @@
     if(!name){ tankFormError.textContent = t('tank.nameRequired'); return; }
     const volume = tankFormVolume.value ? parseFloat(tankFormVolume.value) : null;
     const gear = tankFormGear.value.trim();
+    const start = tankFormStart.value || '';
+    const type = tankFormSelectedType || null;
     if(editingTankId){
       const tank = tanks.find(t=>t.id===editingTankId);
-      if(tank){ tank.name=name; tank.volume=volume; tank.gear=gear; }
+      if(tank){ tank.name=name; tank.volume=volume; tank.gear=gear; tank.type=type; tank.start=start; }
     } else {
       const id = 'tank_'+Date.now();
-      tanks.push({id, name, volume, gear});
+      tanks.push({id, name, volume, gear, type, start});
       activeTankId = id;
     }
     renderTankSwitcher();
