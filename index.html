@@ -52,6 +52,9 @@
   .type-chip svg{ width:20px; height:20px; flex:none; color:var(--text-dim); }
   .type-chip.active{ background:rgba(46,217,195,.12); border-color:var(--aqua); }
   .type-chip.active svg{ color:var(--aqua); }
+  .field-row{ display:flex; gap:12px; }
+  .field-half{ flex:1; min-width:0; }
+  .field-sublabel{ display:block; font-size:0.74rem; color:var(--text-dim); margin:0 0 6px; font-family:'IBM Plex Mono',monospace; }
   .health-score-label{
     font-family:'IBM Plex Mono',monospace; font-size:0.72rem; letter-spacing:0.06em;
     text-transform:uppercase; color:var(--text-dim);
@@ -1050,11 +1053,6 @@
     border-top-color:rgba(111,163,214,.26)!important;
     box-shadow:0 -18px 60px rgba(0,0,0,.46);
   }
-  .tank-notes{
-    background:var(--bg-panel-raised); border:1px solid var(--line); color:var(--text);
-    border-radius:8px; padding:11px 12px; font-family:'Inter',sans-serif; font-size:0.9rem;
-    width:100%; resize:vertical;
-  }
   .tank-row{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
     background:var(--bg-panel-raised); border:1px solid var(--line); border-radius:10px;
@@ -1201,7 +1199,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v7.1</span>
+        <span class="ver-pill">v7.2</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1495,11 +1493,16 @@
     </div>
     <div class="field">
       <label class="field-label" data-i18n="tank.startLabel">Mise en route</label>
-      <input type="month" id="tankFormStart">
-    </div>
-    <div class="field">
-      <label class="field-label" data-i18n="tank.gearLabel">Matériel / notes</label>
-      <textarea id="tankFormGear" rows="3" class="tank-notes" placeholder="ex. Skimmer, osmolateur, éclairage LED..." data-i18n-placeholder="tank.gearPlaceholder"></textarea>
+      <div class="field-row">
+        <div class="field-half">
+          <label class="field-sublabel" data-i18n="tank.monthLabel">Mois</label>
+          <input type="number" id="tankFormMonth" placeholder="1-12" min="1" max="12">
+        </div>
+        <div class="field-half">
+          <label class="field-sublabel" data-i18n="tank.yearLabel">Année</label>
+          <input type="number" id="tankFormYear" placeholder="ex. 2024" min="1990" max="2100">
+        </div>
+      </div>
     </div>
     <p id="tankFormError" style="color:var(--bad);font-size:0.8rem;min-height:1em;margin:0 0 10px;"></p>
     <div class="btn-row">
@@ -1871,10 +1874,10 @@
       'tank.nameLabel': 'Nom',
       'tank.namePlaceholder': 'ex. Bac principal',
       'tank.volumeLabel': 'Volume (litres)',
-      'tank.gearLabel': 'Matériel / notes',
-      'tank.gearPlaceholder': 'ex. Skimmer, osmolateur, éclairage LED...',
       'tank.nameRequired': 'Le nom est obligatoire.',
       'tank.typeLabel': 'Type de bac',
+      'tank.monthLabel': 'Mois',
+      'tank.yearLabel': 'Année',
       'tank.startLabel': 'Mise en route',
       'tank.type.reefMixed': 'Récif mixte',
       'tank.type.sps': 'SPS dominant',
@@ -2072,10 +2075,10 @@
       'tank.nameLabel': 'Name',
       'tank.namePlaceholder': 'e.g. Main tank',
       'tank.volumeLabel': 'Volume (liters)',
-      'tank.gearLabel': 'Equipment / notes',
-      'tank.gearPlaceholder': 'e.g. Skimmer, ATO, LED lighting...',
       'tank.nameRequired': 'Name is required.',
       'tank.typeLabel': 'Tank type',
+      'tank.monthLabel': 'Month',
+      'tank.yearLabel': 'Year',
       'tank.startLabel': 'Start date',
       'tank.type.reefMixed': 'Mixed reef',
       'tank.type.sps': 'SPS dominant',
@@ -2524,7 +2527,7 @@
   // avant de brancher le vrai modèle de données (table `aquariums`, `tank_id` sur les
   // mesures). Un seul bac par défaut ("Bac principal") pour ne rien casser de l'usage
   // actuel tant que la vraie persistance n'existe pas.
-  let tanks = [{id:'default', name:'Bac principal', volume:null, gear:'', type:null, start:''}];
+  let tanks = [{id:'default', name:'Bac principal', volume:null, type:null, start:''}];
   let activeTankId = 'default';
   let editingTankId = null;
   let tankFormSelectedType = null;
@@ -2542,7 +2545,7 @@
   const tankSwitcher=document.getElementById('tankSwitcher'), tankSwitcherName=document.getElementById('tankSwitcherName'), tankSwitcherIcon=document.getElementById('tankSwitcherIcon'), tankSwitcherMeta=document.getElementById('tankSwitcherMeta');
   const tankPickerOverlay=document.getElementById('tankPickerOverlay'), tankPickerSheet=document.getElementById('tankPickerSheet'), tankPickerList=document.getElementById('tankPickerList');
   const tankFormOverlay=document.getElementById('tankFormOverlay'), tankFormSheet=document.getElementById('tankFormSheet');
-  const tankFormName=document.getElementById('tankFormName'), tankFormVolume=document.getElementById('tankFormVolume'), tankFormGear=document.getElementById('tankFormGear'), tankFormStart=document.getElementById('tankFormStart'), tankFormError=document.getElementById('tankFormError');
+  const tankFormName=document.getElementById('tankFormName'), tankFormVolume=document.getElementById('tankFormVolume'), tankFormMonth=document.getElementById('tankFormMonth'), tankFormYear=document.getElementById('tankFormYear'), tankFormError=document.getElementById('tankFormError');
 
   function tankAgeLabel(startStr){
     if(!startStr) return '';
@@ -2637,8 +2640,14 @@
     document.getElementById('tankFormTitle').textContent = tank ? t('tank.formTitleEdit') : t('tank.formTitleNew');
     tankFormName.value = tank ? tank.name : '';
     tankFormVolume.value = tank && tank.volume ? tank.volume : '';
-    tankFormGear.value = tank ? tank.gear||'' : '';
-    tankFormStart.value = tank ? tank.start||'' : '';
+    if(tank && tank.start){
+      const parts = tank.start.split('-');
+      tankFormYear.value = parts[0] || '';
+      tankFormMonth.value = parts[1] ? parseInt(parts[1],10) : '';
+    } else {
+      tankFormMonth.value = '';
+      tankFormYear.value = '';
+    }
     tankFormSelectedType = tank ? tank.type||null : null;
     renderTankTypeChips(tankFormSelectedType);
     tankFormError.textContent = '';
@@ -2653,15 +2662,16 @@
     const name = tankFormName.value.trim();
     if(!name){ tankFormError.textContent = t('tank.nameRequired'); return; }
     const volume = tankFormVolume.value ? parseFloat(tankFormVolume.value) : null;
-    const gear = tankFormGear.value.trim();
-    const start = tankFormStart.value || '';
+    const monthVal = tankFormMonth.value ? parseInt(tankFormMonth.value,10) : null;
+    const yearVal = tankFormYear.value ? parseInt(tankFormYear.value,10) : null;
+    const start = (monthVal && yearVal) ? String(yearVal).padStart(4,'0')+'-'+String(monthVal).padStart(2,'0') : '';
     const type = tankFormSelectedType || null;
     if(editingTankId){
       const tank = tanks.find(t=>t.id===editingTankId);
-      if(tank){ tank.name=name; tank.volume=volume; tank.gear=gear; tank.type=type; tank.start=start; }
+      if(tank){ tank.name=name; tank.volume=volume; tank.type=type; tank.start=start; }
     } else {
       const id = 'tank_'+Date.now();
-      tanks.push({id, name, volume, gear, type, start});
+      tanks.push({id, name, volume, type, start});
       activeTankId = id;
     }
     renderTankSwitcher();
