@@ -1247,7 +1247,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v7.7</span>
+        <span class="ver-pill">v7.8</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -2027,6 +2027,11 @@
       'catalog.title.equipment': 'Ajouter un équipement',
       'catalog.browse': 'Parcourir le catalogue',
       'catalog.addCustom': '+ Ajouter personnalisé',
+      'catalog.customNamePlaceholder.fish': 'Nom du poisson',
+      'catalog.customNamePlaceholder.corals': 'Nom du corail',
+      'catalog.customNamePlaceholder.inverts': "Nom de l'invertébré",
+      'catalog.customNamePlaceholder.equipment': 'Nom du modèle',
+      'catalog.customBrandPlaceholder': 'Marque (optionnel)',
       'catalog.empty': 'Aucun résultat',
       'catalog.searchPlaceholder': 'Rechercher...',
       'equipment.title': 'Mon équipement',
@@ -2276,6 +2281,11 @@
       'catalog.title.equipment': 'Add equipment',
       'catalog.browse': 'Browse catalog',
       'catalog.addCustom': '+ Add custom',
+      'catalog.customNamePlaceholder.fish': 'Fish name',
+      'catalog.customNamePlaceholder.corals': 'Coral name',
+      'catalog.customNamePlaceholder.inverts': 'Invertebrate name',
+      'catalog.customNamePlaceholder.equipment': 'Model name',
+      'catalog.customBrandPlaceholder': 'Brand (optional)',
       'catalog.empty': 'No results',
       'catalog.searchPlaceholder': 'Search...',
       'equipment.title': 'My equipment',
@@ -3028,6 +3038,7 @@
   const catalogPickerSearch=document.getElementById('catalogPickerSearch'), catalogPickerCatRow=document.getElementById('catalogPickerCatRow'), catalogPickerList=document.getElementById('catalogPickerList');
   let catalogPickerConfig = null;
   let catalogPickerActiveCat = 'all';
+  let catalogCustomFormOpen = false;
 
   function getCatalogSource(kind){
     if(kind==='fish') return FISH_CATALOG.map(n=>({name:n}));
@@ -3082,20 +3093,52 @@
         catalogPickerList.appendChild(row);
       });
     }
-    const customBtn = document.createElement('button');
-    customBtn.type='button'; customBtn.className='primary'; customBtn.style.width='100%'; customBtn.style.marginTop='10px';
-    customBtn.textContent = t('catalog.addCustom');
-    customBtn.addEventListener('click', ()=>{
-      const val = catalogPickerSearch.value.trim();
-      if(!val) return;
-      catalogPickerConfig.onSelect(kind==='equipment' ? {cat: catalogPickerActiveCat==='all'?'pump':catalogPickerActiveCat, brand:'', name:val} : {name:val});
-      closeCatalogPicker();
-    });
-    catalogPickerList.appendChild(customBtn);
+    if(catalogCustomFormOpen){
+      const form = document.createElement('div');
+      form.className = 'livestock-inline-form';
+      const nameInput = document.createElement('input');
+      nameInput.type='text';
+      nameInput.placeholder = t('catalog.customNamePlaceholder.'+kind);
+      nameInput.value = catalogPickerSearch.value.trim();
+      let brandInput = null;
+      if(kind==='equipment'){
+        brandInput = document.createElement('input');
+        brandInput.type='text'; brandInput.placeholder=t('catalog.customBrandPlaceholder');
+      }
+      const btnRow = document.createElement('div');
+      btnRow.className='btn-row';
+      const cancelBtn = document.createElement('button');
+      cancelBtn.type='button'; cancelBtn.className='secondary'; cancelBtn.textContent=t('common.cancel');
+      cancelBtn.addEventListener('click', ()=>{ catalogCustomFormOpen=false; renderCatalogList(); });
+      const confirmBtn = document.createElement('button');
+      confirmBtn.type='button'; confirmBtn.className='primary'; confirmBtn.textContent=t('common.add');
+      confirmBtn.addEventListener('click', ()=>{
+        const nameVal = nameInput.value.trim();
+        if(!nameVal) return;
+        const item = kind==='equipment'
+          ? {cat: catalogPickerActiveCat==='all'?'pump':catalogPickerActiveCat, brand:(brandInput.value.trim()||''), name:nameVal}
+          : {name:nameVal};
+        catalogPickerConfig.onSelect(item);
+        catalogCustomFormOpen = false;
+        closeCatalogPicker();
+      });
+      btnRow.appendChild(cancelBtn); btnRow.appendChild(confirmBtn);
+      form.appendChild(nameInput);
+      if(brandInput) form.appendChild(brandInput);
+      form.appendChild(btnRow);
+      catalogPickerList.appendChild(form);
+    } else {
+      const customBtn = document.createElement('button');
+      customBtn.type='button'; customBtn.className='primary'; customBtn.style.width='100%'; customBtn.style.marginTop='10px';
+      customBtn.textContent = t('catalog.addCustom');
+      customBtn.addEventListener('click', ()=>{ catalogCustomFormOpen = true; renderCatalogList(); });
+      catalogPickerList.appendChild(customBtn);
+    }
   }
   function openCatalogPicker(kind, onSelect){
     catalogPickerConfig = {kind, onSelect};
     catalogPickerActiveCat = 'all';
+    catalogCustomFormOpen = false;
     catalogPickerSearch.value = '';
     document.getElementById('catalogPickerTitle').textContent = t('catalog.title.'+kind);
     catalogPickerCatRow.style.display = kind==='equipment' ? 'flex' : 'none';
