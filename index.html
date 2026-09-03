@@ -1247,7 +1247,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v7.6</span>
+        <span class="ver-pill">v7.7</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -2050,6 +2050,8 @@
       'lighting.namePlaceholder': 'ex. Rampe principale',
       'lighting.onLabel': 'Allumage',
       'lighting.offLabel': 'Extinction',
+      'lighting.whiteLabel': 'Blanc (%)',
+      'lighting.blueLabel': 'Bleu (%)',
       'lighting.intensityLabel': 'Intensité max (%)',
       'lighting.empty': 'Aucun programme configuré',
       'tank.ageMonthSingular': '{n} mois',
@@ -2297,6 +2299,8 @@
       'lighting.namePlaceholder': 'e.g. Main fixture',
       'lighting.onLabel': 'On',
       'lighting.offLabel': 'Off',
+      'lighting.whiteLabel': 'White (%)',
+      'lighting.blueLabel': 'Blue (%)',
       'lighting.intensityLabel': 'Max intensity (%)',
       'lighting.empty': 'No program set up yet',
       'tank.ageMonthSingular': '{n} month',
@@ -3193,7 +3197,7 @@
       const doseInput = document.createElement('input');
       doseInput.type='number'; doseInput.min='0'; doseInput.step='0.1'; doseInput.placeholder=t('dosing.doseLabel');
       const timeInput = document.createElement('input');
-      timeInput.type='time';
+      timeInput.type='text'; timeInput.placeholder='ex. 08:30';
       const btnRow = document.createElement('div');
       btnRow.className='btn-row';
       const cancelBtn = document.createElement('button');
@@ -3283,13 +3287,24 @@
       onRow.className='field-row-2';
       const onWrap = document.createElement('div');
       const onLabel = document.createElement('label'); onLabel.className='field-sublabel'; onLabel.textContent=t('lighting.onLabel');
-      const onInput = document.createElement('input'); onInput.type='time';
+      const onInput = document.createElement('input'); onInput.type='text'; onInput.placeholder='ex. 08:00';
       onWrap.appendChild(onLabel); onWrap.appendChild(onInput);
       const offWrap = document.createElement('div');
       const offLabel = document.createElement('label'); offLabel.className='field-sublabel'; offLabel.textContent=t('lighting.offLabel');
-      const offInput = document.createElement('input'); offInput.type='time';
+      const offInput = document.createElement('input'); offInput.type='text'; offInput.placeholder='ex. 20:00';
       offWrap.appendChild(offLabel); offWrap.appendChild(offInput);
       onRow.appendChild(onWrap); onRow.appendChild(offWrap);
+      const colorRow = document.createElement('div');
+      colorRow.className='field-row-2';
+      const whiteWrap = document.createElement('div');
+      const whiteLabel = document.createElement('label'); whiteLabel.className='field-sublabel'; whiteLabel.textContent=t('lighting.whiteLabel');
+      const whiteInput = document.createElement('input'); whiteInput.type='number'; whiteInput.min='0'; whiteInput.max='100'; whiteInput.placeholder='0-100';
+      whiteWrap.appendChild(whiteLabel); whiteWrap.appendChild(whiteInput);
+      const blueWrap = document.createElement('div');
+      const blueLabel = document.createElement('label'); blueLabel.className='field-sublabel'; blueLabel.textContent=t('lighting.blueLabel');
+      const blueInput = document.createElement('input'); blueInput.type='number'; blueInput.min='0'; blueInput.max='100'; blueInput.placeholder='0-100';
+      blueWrap.appendChild(blueLabel); blueWrap.appendChild(blueInput);
+      colorRow.appendChild(whiteWrap); colorRow.appendChild(blueWrap);
       const intensityInput = document.createElement('input');
       intensityInput.type='number'; intensityInput.min='0'; intensityInput.max='100'; intensityInput.placeholder=t('lighting.intensityLabel');
       const btnRow = document.createElement('div');
@@ -3302,16 +3317,18 @@
       confirmBtn.addEventListener('click', ()=>{
         const nameVal = nameInput.value.trim();
         if(!nameVal) return;
-        const onVal = onInput.value || '';
-        const offVal = offInput.value || '';
+        const onVal = onInput.value.trim();
+        const offVal = offInput.value.trim();
+        const whiteVal = whiteInput.value ? parseInt(whiteInput.value,10) : null;
+        const blueVal = blueInput.value ? parseInt(blueInput.value,10) : null;
         const intensityVal = intensityInput.value ? parseInt(intensityInput.value,10) : null;
-        tank.lighting.push({id:'li_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), name:nameVal, on:onVal, off:offVal, intensity:intensityVal});
+        tank.lighting.push({id:'li_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), name:nameVal, on:onVal, off:offVal, white:whiteVal, blue:blueVal, intensity:intensityVal});
         lightingFormOpen = false;
         renderLightingList();
         if(tank.id===activeTankId) renderTankSwitcher();
       });
       btnRow.appendChild(cancelBtn); btnRow.appendChild(confirmBtn);
-      form.appendChild(nameInput); form.appendChild(onRow); form.appendChild(intensityInput); form.appendChild(btnRow);
+      form.appendChild(nameInput); form.appendChild(onRow); form.appendChild(colorRow); form.appendChild(intensityInput); form.appendChild(btnRow);
       listEl.appendChild(form);
     }
 
@@ -3324,7 +3341,10 @@
       tank.lighting.forEach(item=>{
         const row = document.createElement('div');
         row.className='livestock-item';
-        const sub = [(item.on||item.off) ? (item.on||'--')+'–'+(item.off||'--') : null, item.intensity!=null ? item.intensity+'%' : null].filter(Boolean).join(' · ');
+        const colorBits = [];
+        if(item.white!=null) colorBits.push(t('lighting.whiteLabel').replace(' (%)','')+' '+item.white+'%');
+        if(item.blue!=null) colorBits.push(t('lighting.blueLabel').replace(' (%)','')+' '+item.blue+'%');
+        const sub = [(item.on||item.off) ? (item.on||'--')+'–'+(item.off||'--') : null, colorBits.length?colorBits.join(' / '):null, item.intensity!=null ? item.intensity+'%' : null].filter(Boolean).join(' · ');
         row.innerHTML = `<div class="livestock-item-info"><span class="livestock-item-kind">${item.name}</span>${sub?`<span class="livestock-item-name">${sub}</span>`:''}</div>`;
         const del = document.createElement('button');
         del.type='button'; del.className='livestock-item-del'; del.textContent='×';
