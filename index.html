@@ -1268,7 +1268,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v8.0</span>
+        <span class="ver-pill">v8.1</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -3725,6 +3725,16 @@
     }
     renderTankSwitcher();
     closeTankForm();
+  });
+  onLangRefresh(function(){
+    renderTankSwitcher();
+    renderTankTypeChips(tankFormSelectedType);
+    renderTankPickerList();
+    renderLivestockSections();
+    renderEquipmentList();
+    renderDosingList();
+    renderLightingList();
+    renderCatalogList();
   });
   renderTankSwitcher();
 
