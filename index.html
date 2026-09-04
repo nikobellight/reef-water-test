@@ -1247,7 +1247,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v7.8</span>
+        <span class="ver-pill">v7.9</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -2036,6 +2036,8 @@
       'catalog.searchPlaceholder': 'Rechercher...',
       'equipment.title': 'Mon équipement',
       'equipment.empty': 'Aucun équipement ajouté',
+      'equipment.channelsLabel': 'Canaux (séparés par des virgules)',
+      'equipment.channelsPlaceholder': 'ex. WW, Rouge, Vert, Bleu, Bleu Royal, UV',
       'equipment.cat.pump': 'Pompe',
       'equipment.cat.light': 'Éclairage',
       'equipment.cat.skimmer': 'Écumeur',
@@ -2059,6 +2061,8 @@
       'lighting.blueLabel': 'Bleu (%)',
       'lighting.intensityLabel': 'Intensité max (%)',
       'lighting.empty': 'Aucun programme configuré',
+      'lighting.noFixture': "Ajoute d'abord une rampe dans Équipement (catégorie Éclairage).",
+      'lighting.openEquipment': 'Ouvrir Équipement',
       'tank.ageMonthSingular': '{n} mois',
       'tank.ageMonthPlural': '{n} mois',
       'tank.ageYearSingular': '{n} an',
@@ -2290,6 +2294,8 @@
       'catalog.searchPlaceholder': 'Search...',
       'equipment.title': 'My equipment',
       'equipment.empty': 'No equipment added yet',
+      'equipment.channelsLabel': 'Channels (comma-separated)',
+      'equipment.channelsPlaceholder': 'e.g. WW, Red, Green, Blue, Royal Blue, UV',
       'equipment.cat.pump': 'Pump',
       'equipment.cat.light': 'Light',
       'equipment.cat.skimmer': 'Skimmer',
@@ -2313,6 +2319,8 @@
       'lighting.blueLabel': 'Blue (%)',
       'lighting.intensityLabel': 'Max intensity (%)',
       'lighting.empty': 'No program set up yet',
+      'lighting.noFixture': 'Add a fixture in Equipment (Light category) first.',
+      'lighting.openEquipment': 'Open Equipment',
       'tank.ageMonthSingular': '{n} month',
       'tank.ageMonthPlural': '{n} months',
       'tank.ageYearSingular': '{n} year',
@@ -2779,9 +2787,9 @@
     {cat:'pump', brand:'EcoTech Marine', name:'Vectra M1'},
     {cat:'pump', brand:'Sicce', name:'Syncra SDC 9.0'},
     {cat:'pump', brand:'Jebao', name:'DCP-4000'},
-    {cat:'light', brand:'EcoTech Marine', name:'Radion XR15 G6'},
-    {cat:'light', brand:'Kessil', name:'A360X'},
-    {cat:'light', brand:'AI (Aqua Illumination)', name:'Hydra 32 HD'},
+    {cat:'light', brand:'EcoTech Marine', name:'Radion XR15 G6', channels:['UV','Violet','Royal Blue','Blue','Green','Red','White']},
+    {cat:'light', brand:'Kessil', name:'A360X', channels:[]},
+    {cat:'light', brand:'AI (Aqua Illumination)', name:'Hydra 32 HD', channels:['UV','Violet','Royal Blue','Blue','Green','Red','White']},
     {cat:'heater', brand:'Eheim', name:'Jäger 200W'},
     {cat:'heater', brand:'Hydor', name:'ETH 300W'},
     {cat:'doser', brand:'Kamoer', name:'X4 Pro'},
@@ -3101,9 +3109,29 @@
       nameInput.placeholder = t('catalog.customNamePlaceholder.'+kind);
       nameInput.value = catalogPickerSearch.value.trim();
       let brandInput = null;
+      let catSelect = null;
+      let channelsInput = null;
+      let channelsWrap = null;
       if(kind==='equipment'){
         brandInput = document.createElement('input');
         brandInput.type='text'; brandInput.placeholder=t('catalog.customBrandPlaceholder');
+        catSelect = document.createElement('select');
+        EQUIPMENT_CATEGORIES.forEach(cat=>{
+          const opt = document.createElement('option');
+          opt.value = cat; opt.textContent = t('equipment.cat.'+cat);
+          catSelect.appendChild(opt);
+        });
+        catSelect.value = (catalogPickerActiveCat!=='all') ? catalogPickerActiveCat : 'pump';
+        channelsWrap = document.createElement('div');
+        const channelsLabel = document.createElement('label');
+        channelsLabel.className='field-sublabel'; channelsLabel.textContent=t('equipment.channelsLabel');
+        channelsInput = document.createElement('input');
+        channelsInput.type='text'; channelsInput.placeholder=t('equipment.channelsPlaceholder');
+        channelsWrap.appendChild(channelsLabel); channelsWrap.appendChild(channelsInput);
+        channelsWrap.style.display = catSelect.value==='light' ? 'block' : 'none';
+        catSelect.addEventListener('change', ()=>{
+          channelsWrap.style.display = catSelect.value==='light' ? 'block' : 'none';
+        });
       }
       const btnRow = document.createElement('div');
       btnRow.className='btn-row';
@@ -3115,9 +3143,16 @@
       confirmBtn.addEventListener('click', ()=>{
         const nameVal = nameInput.value.trim();
         if(!nameVal) return;
-        const item = kind==='equipment'
-          ? {cat: catalogPickerActiveCat==='all'?'pump':catalogPickerActiveCat, brand:(brandInput.value.trim()||''), name:nameVal}
-          : {name:nameVal};
+        let item;
+        if(kind==='equipment'){
+          const catVal = catSelect.value;
+          const channelsVal = (catVal==='light' && channelsInput.value.trim())
+            ? channelsInput.value.split(',').map(s=>s.trim()).filter(Boolean)
+            : [];
+          item = {cat: catVal, brand:(brandInput.value.trim()||''), name:nameVal, channels:channelsVal};
+        } else {
+          item = {name:nameVal};
+        }
         catalogPickerConfig.onSelect(item);
         catalogCustomFormOpen = false;
         closeCatalogPicker();
@@ -3125,6 +3160,8 @@
       btnRow.appendChild(cancelBtn); btnRow.appendChild(confirmBtn);
       form.appendChild(nameInput);
       if(brandInput) form.appendChild(brandInput);
+      if(catSelect) form.appendChild(catSelect);
+      if(channelsWrap) form.appendChild(channelsWrap);
       form.appendChild(btnRow);
       catalogPickerList.appendChild(form);
     } else {
@@ -3160,6 +3197,7 @@
 
   function ensureEquipmentData(tank){
     if(!tank.equipment) tank.equipment = [];
+    tank.equipment.forEach(item=>{ if(!item.channels) item.channels = []; });
   }
   function renderEquipmentList(){
     const tank = tanks.find(t=>t.id===equipmentTankId);
@@ -3177,7 +3215,9 @@
       tank.equipment.forEach(item=>{
         const row = document.createElement('div');
         row.className='livestock-item';
-        row.innerHTML = `<div class="livestock-item-info"><span class="livestock-item-kind">${item.name}</span><span class="livestock-item-name">${item.brand ? item.brand+' · ' : ''}${t('equipment.cat.'+item.cat)}</span></div>`;
+        const metaBits = [item.brand||null, t('equipment.cat.'+item.cat)];
+        if(item.channels && item.channels.length) metaBits.push(item.channels.join(' / '));
+        row.innerHTML = `<div class="livestock-item-info"><span class="livestock-item-kind">${item.name}</span><span class="livestock-item-name">${metaBits.filter(Boolean).join(' · ')}</span></div>`;
         const del = document.createElement('button');
         del.type='button'; del.className='livestock-item-del'; del.textContent='×';
         del.setAttribute('aria-label', t('common.delete'));
@@ -3208,7 +3248,7 @@
     const tank = tanks.find(t=>t.id===equipmentTankId);
     if(!tank) return;
     openCatalogPicker('equipment', (item)=>{
-      tank.equipment.push({id:'eq_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), cat:item.cat, brand:item.brand||'', name:item.name});
+      tank.equipment.push({id:'eq_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), cat:item.cat, brand:item.brand||'', name:item.name, channels:item.channels||[]});
       renderEquipmentList();
       if(tank.id===activeTankId) renderTankSwitcher();
     });
@@ -3313,19 +3353,52 @@
   function ensureLightingData(tank){
     if(!tank.lighting) tank.lighting = [];
   }
+  let lightingSelectedFixtureId = null;
   function renderLightingList(){
     const tank = tanks.find(t=>t.id===lightingTankId);
     if(!tank) return;
     ensureLightingData(tank);
+    ensureEquipmentData(tank);
     document.getElementById('lightingCount').textContent = tank.lighting.length;
     const listEl = document.getElementById('lightingList');
     listEl.innerHTML = '';
+    const fixtures = tank.equipment.filter(e=>e.cat==='light');
 
-    if(lightingFormOpen){
+    if(lightingFormOpen && !fixtures.length){
       const form = document.createElement('div');
       form.className = 'livestock-inline-form';
-      const nameInput = document.createElement('input');
-      nameInput.type='text'; nameInput.placeholder=t('lighting.namePlaceholder');
+      const msg = document.createElement('div');
+      msg.className='livestock-empty';
+      msg.textContent = t('lighting.noFixture');
+      const goBtn = document.createElement('button');
+      goBtn.type='button'; goBtn.className='primary'; goBtn.style.width='100%'; goBtn.style.marginTop='10px';
+      goBtn.textContent = t('lighting.openEquipment');
+      goBtn.addEventListener('click', ()=>{
+        lightingFormOpen = false;
+        closeTankLighting();
+        openTankEquipment(tank.id);
+      });
+      form.appendChild(msg); form.appendChild(goBtn);
+      listEl.appendChild(form);
+    } else if(lightingFormOpen && fixtures.length){
+      if(!lightingSelectedFixtureId || !fixtures.find(f=>f.id===lightingSelectedFixtureId)){
+        lightingSelectedFixtureId = fixtures[0].id;
+      }
+      const form = document.createElement('div');
+      form.className = 'livestock-inline-form';
+
+      const fixtureRow = document.createElement('div');
+      fixtureRow.className = 'type-chip-row';
+      fixtures.forEach(f=>{
+        const b = document.createElement('button');
+        b.type='button';
+        b.className = 'hist-chip' + (lightingSelectedFixtureId===f.id ? ' active' : '');
+        b.textContent = f.name;
+        b.addEventListener('click', ()=>{ lightingSelectedFixtureId = f.id; renderLightingList(); });
+        fixtureRow.appendChild(b);
+      });
+      form.appendChild(fixtureRow);
+
       const onRow = document.createElement('div');
       onRow.className='field-row-2';
       const onWrap = document.createElement('div');
@@ -3337,19 +3410,28 @@
       const offInput = document.createElement('input'); offInput.type='text'; offInput.placeholder='ex. 20:00';
       offWrap.appendChild(offLabel); offWrap.appendChild(offInput);
       onRow.appendChild(onWrap); onRow.appendChild(offWrap);
-      const colorRow = document.createElement('div');
-      colorRow.className='field-row-2';
-      const whiteWrap = document.createElement('div');
-      const whiteLabel = document.createElement('label'); whiteLabel.className='field-sublabel'; whiteLabel.textContent=t('lighting.whiteLabel');
-      const whiteInput = document.createElement('input'); whiteInput.type='number'; whiteInput.min='0'; whiteInput.max='100'; whiteInput.placeholder='0-100';
-      whiteWrap.appendChild(whiteLabel); whiteWrap.appendChild(whiteInput);
-      const blueWrap = document.createElement('div');
-      const blueLabel = document.createElement('label'); blueLabel.className='field-sublabel'; blueLabel.textContent=t('lighting.blueLabel');
-      const blueInput = document.createElement('input'); blueInput.type='number'; blueInput.min='0'; blueInput.max='100'; blueInput.placeholder='0-100';
-      blueWrap.appendChild(blueLabel); blueWrap.appendChild(blueInput);
-      colorRow.appendChild(whiteWrap); colorRow.appendChild(blueWrap);
+      form.appendChild(onRow);
+
+      const selectedFixture = fixtures.find(f=>f.id===lightingSelectedFixtureId);
+      const channelInputs = {};
+      if(selectedFixture && selectedFixture.channels && selectedFixture.channels.length){
+        const channelsGrid = document.createElement('div');
+        channelsGrid.className = 'field-row-2';
+        selectedFixture.channels.forEach(ch=>{
+          const wrap = document.createElement('div');
+          const label = document.createElement('label'); label.className='field-sublabel'; label.textContent=ch;
+          const input = document.createElement('input'); input.type='number'; input.min='0'; input.max='100'; input.placeholder='0-100';
+          wrap.appendChild(label); wrap.appendChild(input);
+          channelsGrid.appendChild(wrap);
+          channelInputs[ch] = input;
+        });
+        form.appendChild(channelsGrid);
+      }
+
       const intensityInput = document.createElement('input');
       intensityInput.type='number'; intensityInput.min='0'; intensityInput.max='100'; intensityInput.placeholder=t('lighting.intensityLabel');
+      form.appendChild(intensityInput);
+
       const btnRow = document.createElement('div');
       btnRow.className='btn-row';
       const cancelBtn = document.createElement('button');
@@ -3358,20 +3440,21 @@
       const confirmBtn = document.createElement('button');
       confirmBtn.type='button'; confirmBtn.className='primary'; confirmBtn.textContent=t('common.add');
       confirmBtn.addEventListener('click', ()=>{
-        const nameVal = nameInput.value.trim();
-        if(!nameVal) return;
         const onVal = onInput.value.trim();
         const offVal = offInput.value.trim();
-        const whiteVal = whiteInput.value ? parseInt(whiteInput.value,10) : null;
-        const blueVal = blueInput.value ? parseInt(blueInput.value,10) : null;
+        const channelValues = {};
+        Object.keys(channelInputs).forEach(ch=>{
+          const v = channelInputs[ch].value;
+          if(v) channelValues[ch] = parseInt(v,10);
+        });
         const intensityVal = intensityInput.value ? parseInt(intensityInput.value,10) : null;
-        tank.lighting.push({id:'li_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), name:nameVal, on:onVal, off:offVal, white:whiteVal, blue:blueVal, intensity:intensityVal});
+        tank.lighting.push({id:'li_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), equipmentId:selectedFixture.id, equipmentName:selectedFixture.name, on:onVal, off:offVal, channelValues, intensity:intensityVal});
         lightingFormOpen = false;
         renderLightingList();
         if(tank.id===activeTankId) renderTankSwitcher();
       });
       btnRow.appendChild(cancelBtn); btnRow.appendChild(confirmBtn);
-      form.appendChild(nameInput); form.appendChild(onRow); form.appendChild(colorRow); form.appendChild(intensityInput); form.appendChild(btnRow);
+      form.appendChild(btnRow);
       listEl.appendChild(form);
     }
 
@@ -3384,11 +3467,9 @@
       tank.lighting.forEach(item=>{
         const row = document.createElement('div');
         row.className='livestock-item';
-        const colorBits = [];
-        if(item.white!=null) colorBits.push(t('lighting.whiteLabel').replace(' (%)','')+' '+item.white+'%');
-        if(item.blue!=null) colorBits.push(t('lighting.blueLabel').replace(' (%)','')+' '+item.blue+'%');
-        const sub = [(item.on||item.off) ? (item.on||'--')+'–'+(item.off||'--') : null, colorBits.length?colorBits.join(' / '):null, item.intensity!=null ? item.intensity+'%' : null].filter(Boolean).join(' · ');
-        row.innerHTML = `<div class="livestock-item-info"><span class="livestock-item-kind">${item.name}</span>${sub?`<span class="livestock-item-name">${sub}</span>`:''}</div>`;
+        const channelBits = item.channelValues ? Object.keys(item.channelValues).map(ch=>ch+' '+item.channelValues[ch]+'%') : [];
+        const sub = [(item.on||item.off) ? (item.on||'--')+'–'+(item.off||'--') : null, channelBits.length?channelBits.join(' / '):null, item.intensity!=null ? item.intensity+'%' : null].filter(Boolean).join(' · ');
+        row.innerHTML = `<div class="livestock-item-info"><span class="livestock-item-kind">${item.equipmentName||item.name||''}</span>${sub?`<span class="livestock-item-name">${sub}</span>`:''}</div>`;
         const del = document.createElement('button');
         del.type='button'; del.className='livestock-item-del'; del.textContent='×';
         del.setAttribute('aria-label', t('common.delete'));
@@ -3407,6 +3488,7 @@
     if(!tank) return;
     lightingTankId = tankId;
     lightingFormOpen = false;
+    lightingSelectedFixtureId = null;
     ensureLightingData(tank);
     document.getElementById('tankLightingTitle').textContent = t('lighting.title')+' — '+tank.name;
     renderLightingList();
