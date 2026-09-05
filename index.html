@@ -1064,7 +1064,7 @@
   .tank-row .tr-volume{ font-size:0.78rem; color:var(--text-dim); margin-top:2px; }
   .tank-row .tr-check{ color:var(--aqua); flex:none; }
   .tank-row .tr-edit{ background:none; border:none; color:var(--text-dim); font-size:1rem; padding:4px; cursor:pointer; flex:none; }
-  .browse-tank-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:16px; }
+  .browse-tank-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:16px; }
   .browse-tank-card{
     display:flex; flex-direction:column; align-items:center; gap:6px;
     background:var(--bg-panel-raised); border:1px solid var(--line); border-radius:12px;
@@ -1268,7 +1268,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v8.1</span>
+        <span class="ver-pill">v8.2</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1310,6 +1310,11 @@
         <div class="browse-tank-icon" id="browseTankLightsIcon"></div>
         <span class="browse-tank-count" id="browseTankLightsCount">0</span>
         <span class="browse-tank-label" data-i18n="browseTank.lights">Éclairage</span>
+      </button>
+      <button type="button" class="browse-tank-card" id="browseTankFeedingBtn">
+        <div class="browse-tank-icon" id="browseTankFeedingIcon"></div>
+        <span class="browse-tank-count" id="browseTankFeedingCount">0</span>
+        <span class="browse-tank-label" data-i18n="browseTank.feeding">Nourriture</span>
       </button>
     </div>
 
@@ -1617,6 +1622,31 @@
     </div>
     <div id="lightingList"></div>
     <button class="secondary" id="tankLightingClose" style="width:100%;margin-top:10px;" data-i18n="common.cancel">Annuler</button>
+  </div>
+
+  <div id="tankFeedingOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:86;display:none;"></div>
+  <div id="tankFeedingSheet" style="position:fixed;left:0;right:0;bottom:0;background:var(--bg-panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 20px 26px;z-index:87;display:none;max-width:640px;margin:0 auto;max-height:86vh;overflow-y:auto;">
+    <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 16px;" id="tankFeedingTitle" data-i18n="feeding.title">Nourriture</h3>
+
+    <div class="livestock-section-head">
+      <div class="livestock-section-label" style="color:var(--amber);">
+        <span data-i18n="feeding.scheduleLabel" style="color:var(--text);">Planning</span>
+        <span class="livestock-count" id="feedingScheduleCount">0</span>
+      </div>
+      <button type="button" class="livestock-add-btn" id="feedingScheduleAddBtn">+</button>
+    </div>
+    <div id="feedingScheduleList"></div>
+
+    <div class="livestock-section-head" style="margin-top:20px;">
+      <div class="livestock-section-label" style="color:var(--amber);">
+        <span data-i18n="feeding.logLabel" style="color:var(--text);">Journal</span>
+        <span class="livestock-count" id="feedingLogCount">0</span>
+      </div>
+      <button type="button" class="livestock-add-btn" id="feedingLogAddBtn">+</button>
+    </div>
+    <div id="feedingLogList"></div>
+
+    <button class="secondary" id="tankFeedingClose" style="width:100%;margin-top:10px;" data-i18n="common.cancel">Annuler</button>
   </div>
 
   <div id="catalogPickerOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:80;display:none;"></div>
@@ -2122,6 +2152,23 @@
       'lighting.empty': 'Aucun programme configuré',
       'lighting.noFixture': "Ajoute d'abord une rampe dans Équipement (catégorie Éclairage).",
       'lighting.openEquipment': 'Ouvrir Équipement',
+      'browseTank.feeding': 'Nourriture',
+      'feeding.title': 'Nourriture',
+      'feeding.scheduleLabel': 'Planning',
+      'feeding.logLabel': 'Journal',
+      'feeding.productPlaceholder': 'ex. Granulés, Nori...',
+      'feeding.frequencyPlaceholder': 'ex. 2x/jour',
+      'feeding.scheduleEmpty': 'Aucun planning configuré',
+      'feeding.logEmpty': 'Aucune entrée au journal',
+      'feeding.detailPlaceholder': 'Détail (optionnel)',
+      'feeding.dayLabel': 'Jour',
+      'feeding.monthLabel': 'Mois',
+      'feeding.yearLabel': 'Année',
+      'feeding.type.food': 'Nourriture',
+      'feeding.type.phyto': 'Phytoplancton',
+      'feeding.type.copepods': 'Copépodes',
+      'feeding.type.rotifers': 'Rotifères',
+      'feeding.type.other': 'Autre',
       'tank.ageMonthSingular': '{n} mois',
       'tank.ageMonthPlural': '{n} mois',
       'tank.ageYearSingular': '{n} an',
@@ -2407,6 +2454,23 @@
       'lighting.empty': 'No program set up yet',
       'lighting.noFixture': 'Add a fixture in Equipment (Light category) first.',
       'lighting.openEquipment': 'Open Equipment',
+      'browseTank.feeding': 'Feeding',
+      'feeding.title': 'Feeding',
+      'feeding.scheduleLabel': 'Schedule',
+      'feeding.logLabel': 'Log',
+      'feeding.productPlaceholder': 'e.g. Pellets, Nori...',
+      'feeding.frequencyPlaceholder': 'e.g. 2x/day',
+      'feeding.scheduleEmpty': 'No schedule set up yet',
+      'feeding.logEmpty': 'No log entries yet',
+      'feeding.detailPlaceholder': 'Detail (optional)',
+      'feeding.dayLabel': 'Day',
+      'feeding.monthLabel': 'Month',
+      'feeding.yearLabel': 'Year',
+      'feeding.type.food': 'Food',
+      'feeding.type.phyto': 'Phytoplankton',
+      'feeding.type.copepods': 'Copepods',
+      'feeding.type.rotifers': 'Rotifers',
+      'feeding.type.other': 'Other',
       'tank.ageMonthSingular': '{n} month',
       'tank.ageMonthPlural': '{n} months',
       'tank.ageYearSingular': '{n} year',
@@ -2847,7 +2911,7 @@
   // avant de brancher le vrai modèle de données (table `aquariums`, `tank_id` sur les
   // mesures). Un seul bac par défaut ("Bac principal") pour ne rien casser de l'usage
   // actuel tant que la vraie persistance n'existe pas.
-  let tanks = [{id:'default', name:'Bac principal', volume:null, type:null, start:'', livestock:{fish:[],corals:[],inverts:[]}, equipment:[], dosing:[], lighting:[], journeyOverride:null}];
+  let tanks = [{id:'default', name:'Bac principal', volume:null, type:null, start:'', livestock:{fish:[],corals:[],inverts:[]}, equipment:[], dosing:[], lighting:[], journeyOverride:null, feedingSchedule:[], feedingLog:[]}];
   let activeTankId = 'default';
   let editingTankId = null;
   let tankFormSelectedType = null;
@@ -2890,12 +2954,14 @@
   const BROWSE_TANK_ICONS = {
     equipment: `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 3.5a3.5 3.5 0 0 0-4.6 4.2L4 12.6V16h3.4l4.9-4.9a3.5 3.5 0 0 0 4.2-4.6l-2.4 2.4-1.9-.5-.5-1.9 2.4-2.4Z"/></svg>`,
     dosing: `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><rect x="7" y="4" width="6" height="12" rx="1"/><path d="M7 10h6"/></svg>`,
-    lights: `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3.5a4.5 4.5 0 0 0-2.5 8.25c.5.4.8 1 .8 1.65v.6h3.4v-.6c0-.65.3-1.25.8-1.65A4.5 4.5 0 0 0 10 3.5Z"/><path d="M8.3 16.5h3.4M8.7 18h2.6"/></svg>`
+    lights: `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3.5a4.5 4.5 0 0 0-2.5 8.25c.5.4.8 1 .8 1.65v.6h3.4v-.6c0-.65.3-1.25.8-1.65A4.5 4.5 0 0 0 10 3.5Z"/><path d="M8.3 16.5h3.4M8.7 18h2.6"/></svg>`,
+    feeding: `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="10" cy="7" rx="7" ry="2.5"/><path d="M3 7v3c0 3 3 5 7 5s7-2 7-5V7"/></svg>`
   };
   document.getElementById('browseTankLivestockIcon').innerHTML = TANK_TYPE_ICONS.fishOnly;
   document.getElementById('browseTankEquipmentIcon').innerHTML = BROWSE_TANK_ICONS.equipment;
   document.getElementById('browseTankDosingIcon').innerHTML = BROWSE_TANK_ICONS.dosing;
   document.getElementById('browseTankLightsIcon').innerHTML = BROWSE_TANK_ICONS.lights;
+  document.getElementById('browseTankFeedingIcon').innerHTML = BROWSE_TANK_ICONS.feeding;
   document.getElementById('browseTankLivestockBtn').addEventListener('click', ()=>openTankLivestock(activeTankId));
   document.getElementById('browseTankEquipmentBtn').classList.add('active');
   document.getElementById('browseTankEquipmentBtn').addEventListener('click', ()=>openTankEquipment(activeTankId));
@@ -2903,6 +2969,8 @@
   document.getElementById('browseTankDosingBtn').addEventListener('click', ()=>openTankDosing(activeTankId));
   document.getElementById('browseTankLightsBtn').classList.add('active');
   document.getElementById('browseTankLightsBtn').addEventListener('click', ()=>openTankLighting(activeTankId));
+  document.getElementById('browseTankFeedingBtn').classList.add('active');
+  document.getElementById('browseTankFeedingBtn').addEventListener('click', ()=>openTankFeeding(activeTankId));
   const tankSwitcher=document.getElementById('tankSwitcher'), tankSwitcherName=document.getElementById('tankSwitcherName'), tankSwitcherIcon=document.getElementById('tankSwitcherIcon'), tankSwitcherMeta=document.getElementById('tankSwitcherMeta');
   const tankPickerOverlay=document.getElementById('tankPickerOverlay'), tankPickerSheet=document.getElementById('tankPickerSheet'), tankPickerList=document.getElementById('tankPickerList');
   const tankFormOverlay=document.getElementById('tankFormOverlay'), tankFormSheet=document.getElementById('tankFormSheet');
@@ -3053,6 +3121,8 @@
       document.getElementById('browseTankDosingCount').textContent = active.dosing.length;
       ensureLightingData(active);
       document.getElementById('browseTankLightsCount').textContent = active.lighting.length;
+      ensureFeedingData(active);
+      document.getElementById('browseTankFeedingCount').textContent = active.feedingSchedule.length + active.feedingLog.length;
       renderJourneyCard();
     }
   }
@@ -3683,6 +3753,186 @@
   document.getElementById('tankLightingClose').addEventListener('click', closeTankLighting);
   tankLightingOverlay.addEventListener('click', closeTankLighting);
 
+  // Nourriture par bac : planning recurrent + journal date des introductions
+  const FEEDING_TYPES = ['food','phyto','copepods','rotifers','other'];
+  const tankFeedingOverlay=document.getElementById('tankFeedingOverlay'), tankFeedingSheet=document.getElementById('tankFeedingSheet');
+  let feedingTankId = null;
+  let feedingScheduleFormOpen = false;
+  let feedingLogFormOpen = false;
+  let feedingLogSelectedType = 'food';
+
+  function ensureFeedingData(tank){
+    if(!tank.feedingSchedule) tank.feedingSchedule = [];
+    if(!tank.feedingLog) tank.feedingLog = [];
+  }
+
+  function renderFeedingSections(){
+    const tank = tanks.find(t=>t.id===feedingTankId);
+    if(!tank) return;
+    ensureFeedingData(tank);
+
+    // Planning
+    document.getElementById('feedingScheduleCount').textContent = tank.feedingSchedule.length;
+    const scheduleList = document.getElementById('feedingScheduleList');
+    scheduleList.innerHTML = '';
+    if(feedingScheduleFormOpen){
+      const form = document.createElement('div');
+      form.className = 'livestock-inline-form';
+      const productInput = document.createElement('input');
+      productInput.type='text'; productInput.placeholder=t('feeding.productPlaceholder');
+      const freqInput = document.createElement('input');
+      freqInput.type='text'; freqInput.placeholder=t('feeding.frequencyPlaceholder');
+      const btnRow = document.createElement('div');
+      btnRow.className='btn-row';
+      const cancelBtn = document.createElement('button');
+      cancelBtn.type='button'; cancelBtn.className='secondary'; cancelBtn.textContent=t('common.cancel');
+      cancelBtn.addEventListener('click', ()=>{ feedingScheduleFormOpen=false; renderFeedingSections(); });
+      const confirmBtn = document.createElement('button');
+      confirmBtn.type='button'; confirmBtn.className='primary'; confirmBtn.textContent=t('common.add');
+      confirmBtn.addEventListener('click', ()=>{
+        const productVal = productInput.value.trim();
+        if(!productVal) return;
+        const freqVal = freqInput.value.trim();
+        tank.feedingSchedule.push({id:'fs_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), product:productVal, frequency:freqVal});
+        feedingScheduleFormOpen = false;
+        renderFeedingSections();
+        if(tank.id===activeTankId) renderTankSwitcher();
+      });
+      btnRow.appendChild(cancelBtn); btnRow.appendChild(confirmBtn);
+      form.appendChild(productInput); form.appendChild(freqInput); form.appendChild(btnRow);
+      scheduleList.appendChild(form);
+    }
+    if(!tank.feedingSchedule.length){
+      const empty = document.createElement('div');
+      empty.className='livestock-empty';
+      empty.textContent = t('feeding.scheduleEmpty');
+      scheduleList.appendChild(empty);
+    } else {
+      tank.feedingSchedule.forEach(item=>{
+        const row = document.createElement('div');
+        row.className='livestock-item';
+        row.innerHTML = `<div class="livestock-item-info"><span class="livestock-item-kind">${item.product}</span>${item.frequency?`<span class="livestock-item-name">${item.frequency}</span>`:''}</div>`;
+        const del = document.createElement('button');
+        del.type='button'; del.className='livestock-item-del'; del.textContent='×';
+        del.setAttribute('aria-label', t('common.delete'));
+        del.addEventListener('click', ()=>{
+          tank.feedingSchedule = tank.feedingSchedule.filter(i=>i.id!==item.id);
+          renderFeedingSections();
+          if(tank.id===activeTankId) renderTankSwitcher();
+        });
+        row.appendChild(del);
+        scheduleList.appendChild(row);
+      });
+    }
+
+    // Journal
+    document.getElementById('feedingLogCount').textContent = tank.feedingLog.length;
+    const logList = document.getElementById('feedingLogList');
+    logList.innerHTML = '';
+    if(feedingLogFormOpen){
+      const now = new Date();
+      const form = document.createElement('div');
+      form.className = 'livestock-inline-form';
+      const dateRow = document.createElement('div');
+      dateRow.className = 'field-row-2';
+      const dayWrap = document.createElement('div');
+      const dayLabel = document.createElement('label'); dayLabel.className='field-sublabel'; dayLabel.textContent=t('feeding.dayLabel');
+      const dayInput = document.createElement('input'); dayInput.type='number'; dayInput.min='1'; dayInput.max='31'; dayInput.value=now.getDate();
+      dayWrap.appendChild(dayLabel); dayWrap.appendChild(dayInput);
+      const monthWrap = document.createElement('div');
+      const monthLabel = document.createElement('label'); monthLabel.className='field-sublabel'; monthLabel.textContent=t('feeding.monthLabel');
+      const monthInput = document.createElement('input'); monthInput.type='number'; monthInput.min='1'; monthInput.max='12'; monthInput.value=now.getMonth()+1;
+      monthWrap.appendChild(monthLabel); monthWrap.appendChild(monthInput);
+      dateRow.appendChild(dayWrap); dateRow.appendChild(monthWrap);
+      const yearWrap = document.createElement('div');
+      const yearLabel = document.createElement('label'); yearLabel.className='field-sublabel'; yearLabel.textContent=t('feeding.yearLabel');
+      const yearInput = document.createElement('input'); yearInput.type='number'; yearInput.min='1990'; yearInput.max='2100'; yearInput.value=now.getFullYear();
+      yearWrap.appendChild(yearLabel); yearWrap.appendChild(yearInput);
+
+      const typeRow = document.createElement('div');
+      typeRow.className = 'type-chip-row';
+      FEEDING_TYPES.forEach(key=>{
+        const b = document.createElement('button');
+        b.type='button';
+        b.className = 'hist-chip' + (feedingLogSelectedType===key ? ' active' : '');
+        b.textContent = t('feeding.type.'+key);
+        b.addEventListener('click', ()=>{ feedingLogSelectedType = key; renderFeedingSections(); });
+        typeRow.appendChild(b);
+      });
+
+      const detailInput = document.createElement('input');
+      detailInput.type='text'; detailInput.placeholder=t('feeding.detailPlaceholder');
+
+      const btnRow = document.createElement('div');
+      btnRow.className='btn-row';
+      const cancelBtn = document.createElement('button');
+      cancelBtn.type='button'; cancelBtn.className='secondary'; cancelBtn.textContent=t('common.cancel');
+      cancelBtn.addEventListener('click', ()=>{ feedingLogFormOpen=false; renderFeedingSections(); });
+      const confirmBtn = document.createElement('button');
+      confirmBtn.type='button'; confirmBtn.className='primary'; confirmBtn.textContent=t('common.add');
+      confirmBtn.addEventListener('click', ()=>{
+        const dayVal = parseInt(dayInput.value,10) || now.getDate();
+        const monthVal = parseInt(monthInput.value,10) || (now.getMonth()+1);
+        const yearVal = parseInt(yearInput.value,10) || now.getFullYear();
+        const detailVal = detailInput.value.trim();
+        tank.feedingLog.push({id:'fl_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), day:dayVal, month:monthVal, year:yearVal, type:feedingLogSelectedType, detail:detailVal});
+        feedingLogFormOpen = false;
+        renderFeedingSections();
+        if(tank.id===activeTankId) renderTankSwitcher();
+      });
+      btnRow.appendChild(cancelBtn); btnRow.appendChild(confirmBtn);
+      form.appendChild(dateRow); form.appendChild(yearWrap); form.appendChild(typeRow); form.appendChild(detailInput); form.appendChild(btnRow);
+      logList.appendChild(form);
+    }
+    if(!tank.feedingLog.length){
+      const empty = document.createElement('div');
+      empty.className='livestock-empty';
+      empty.textContent = t('feeding.logEmpty');
+      logList.appendChild(empty);
+    } else {
+      const sorted = tank.feedingLog.slice().sort((a,b)=>{
+        return (b.year*10000+b.month*100+b.day) - (a.year*10000+a.month*100+a.day);
+      });
+      sorted.forEach(item=>{
+        const row = document.createElement('div');
+        row.className='livestock-item';
+        const dateStr = String(item.day).padStart(2,'0')+'/'+String(item.month).padStart(2,'0')+'/'+item.year;
+        const sub = [t('feeding.type.'+item.type), item.detail||null].filter(Boolean).join(' · ');
+        row.innerHTML = `<div class="livestock-item-info"><span class="livestock-item-kind">${dateStr}</span><span class="livestock-item-name">${sub}</span></div>`;
+        const del = document.createElement('button');
+        del.type='button'; del.className='livestock-item-del'; del.textContent='×';
+        del.setAttribute('aria-label', t('common.delete'));
+        del.addEventListener('click', ()=>{
+          tank.feedingLog = tank.feedingLog.filter(i=>i.id!==item.id);
+          renderFeedingSections();
+          if(tank.id===activeTankId) renderTankSwitcher();
+        });
+        row.appendChild(del);
+        logList.appendChild(row);
+      });
+    }
+  }
+  function openTankFeeding(tankId){
+    const tank = tanks.find(t=>t.id===tankId);
+    if(!tank) return;
+    feedingTankId = tankId;
+    feedingScheduleFormOpen = false;
+    feedingLogFormOpen = false;
+    feedingLogSelectedType = 'food';
+    ensureFeedingData(tank);
+    document.getElementById('tankFeedingTitle').textContent = t('feeding.title')+' — '+tank.name;
+    renderFeedingSections();
+    tankFeedingOverlay.style.display='block'; tankFeedingSheet.style.display='block';
+  }
+  function closeTankFeeding(){
+    tankFeedingOverlay.style.display='none'; tankFeedingSheet.style.display='none';
+    feedingTankId = null;
+  }
+  document.getElementById('feedingScheduleAddBtn').addEventListener('click', ()=>{ feedingScheduleFormOpen = !feedingScheduleFormOpen; renderFeedingSections(); });
+  document.getElementById('feedingLogAddBtn').addEventListener('click', ()=>{ feedingLogFormOpen = !feedingLogFormOpen; renderFeedingSections(); });
+  document.getElementById('tankFeedingClose').addEventListener('click', closeTankFeeding);
+  tankFeedingOverlay.addEventListener('click', closeTankFeeding);
+
   function openTankForm(tankId){
     editingTankId = tankId || null;
     const tank = tankId ? tanks.find(t=>t.id===tankId) : null;
@@ -3720,7 +3970,7 @@
       if(tank){ tank.name=name; tank.volume=volume; tank.type=type; tank.start=start; }
     } else {
       const id = 'tank_'+Date.now();
-      tanks.push({id, name, volume, type, start, livestock:{fish:[],corals:[],inverts:[]}, equipment:[], dosing:[], lighting:[], journeyOverride:null});
+      tanks.push({id, name, volume, type, start, livestock:{fish:[],corals:[],inverts:[]}, equipment:[], dosing:[], lighting:[], journeyOverride:null, feedingSchedule:[], feedingLog:[]});
       activeTankId = id;
     }
     renderTankSwitcher();
@@ -3735,6 +3985,7 @@
     renderDosingList();
     renderLightingList();
     renderCatalogList();
+    renderFeedingSections();
   });
   renderTankSwitcher();
 
