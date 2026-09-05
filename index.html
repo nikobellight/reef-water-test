@@ -1269,7 +1269,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v8.4</span>
+        <span class="ver-pill">v8.5</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -2136,6 +2136,13 @@
       'equipment.cat.controller': 'Contrôleur',
       'equipment.cat.ato': 'ATO',
       'equipment.cat.reactor': 'Réacteur',
+      'equipment.cat.awc': "Changeur d'eau",
+      'equipment.cat.uv': 'Stérilisateur UV',
+      'equipment.cat.chiller': 'Refroidisseur',
+      'equipment.cat.wavemaker': 'Brasseur de courant',
+      'equipment.cat.rodi': 'Osmoseur (RO/DI)',
+      'equipment.cat.refractometer': 'Testeur de salinité',
+      'equipment.cat.autofeeder': 'Nourrisseur automatique',
       'dosing.title': 'Dosage',
       'dosing.productLabel': 'Produit',
       'dosing.productPlaceholder': 'ex. Alcalinité (KH)',
@@ -2438,6 +2445,13 @@
       'equipment.cat.controller': 'Controller',
       'equipment.cat.ato': 'ATO',
       'equipment.cat.reactor': 'Reactor',
+      'equipment.cat.awc': 'Water Changer',
+      'equipment.cat.uv': 'UV Sterilizer',
+      'equipment.cat.chiller': 'Chiller',
+      'equipment.cat.wavemaker': 'Wavemaker',
+      'equipment.cat.rodi': 'RO/DI System',
+      'equipment.cat.refractometer': 'Salinity Tester',
+      'equipment.cat.autofeeder': 'Auto Feeder',
       'dosing.title': 'Dosing',
       'dosing.productLabel': 'Product',
       'dosing.productPlaceholder': 'e.g. Alkalinity (KH)',
@@ -2927,10 +2941,10 @@
     fishOnly: `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10C3 10 6.5 6 11 8C13 8.8 14.5 9.3 17 8L15.5 10L17 12C14.5 10.7 13 11.2 11 12C6.5 14 3 10 3 10Z"/><circle cx="6.3" cy="9.3" r="0.6" fill="currentColor" stroke="none"/></svg>`
   };
   const TANK_ICON_DEFAULT = `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M6 3H14M7 3V8L4 15C3.6 15.9 4.3 17 5.3 17H14.7C15.7 17 16.4 15.9 16 15L13 8V3"/></svg>`;
-  const FISH_CATALOG = ['Poisson-clown Ocellaris','Poisson-clown Percula','Poisson-clown Skunk','Poisson-clown Maroon','Gramma Royal','Chirurgien Bleu (Paracanthurus)','Chirurgien Jaune (Zebrasoma)','Chirurgien Naso','Chirurgien Sailfin','Cardinal de Banggai','Cardinal Pyjama','Demoiselle à trois bandes','Demoiselle Chromis Verte','Demoiselle à queue jaune','Poisson-ange Nain Flame','Poisson-ange Nain Coral Beauty','Poisson-ange Nain Bicolor','Blenny Lawnmower','Blenny Tête de lion','Gobie Diamant','Gobie Firefish','Gobie Néon','Gobie Watchman Jaune','Hippocampe','Poisson-Mandarin','Poisson-papillon Copperband','Poisson-papillon Raton Laveur','Labre Nettoyeur','Labre Fairy','Labre Melanurus','Rabbitfish Foxface','Dottyback Orchid','Dottyback Bicolor','Anthias Lyretail','Poisson-Coffre Jaune','Poisson-Faucon Longnez','Poisson-Lion Nain','Jawfish Perlé','Poisson-Ballon Porc-épic'].sort();
-  const CORAL_CATALOG = ['Acropora','Montipora','Seriatopora (Birdsnest)','Stylophora','Pocillopora','Euphyllia (Torch)','Euphyllia (Hammer)','Euphyllia (Frogspawn)','Euphyllia (Grape)','Trachyphyllia (Brain ouvert)','Lobophyllia (Brain fermé)','Favia / Favites','Acanthastrea','Blastomussa','Duncanopsammia (Duncan)','Catalaphyllia (Elegance)','Fungia (Corail champignon)','Goniopora','Zoanthus','Palythoa','Ricordea','Discosoma (Mushroom)','Rhodactis (Mushroom)','Sarcophyton (Cuir doigté)','Sinularia (Cuir)','Xenia','Anthelia','Capnella','Nephthea','Clavularia (Corail étoile)','Tubipora (Orgue de mer)','Cladiella','Briareum'].sort();
-  const INVERT_CATALOG = ["Crevette Nettoyeuse (Lysmata amboinensis)","Crevette Peppermint","Crevette Harlequin","Crevette Pistolet","Crevette Feu (Lysmata debelius)","Bernard-l'ermite Bleu","Bernard-l'ermite Rouge","Escargot Turbo","Escargot Nassarius","Escargot Cerith","Escargot Astrea","Étoile de mer Serpent","Étoile de mer Sable","Étoile de mer Chocolat","Concombre de mer","Oursin Longspine","Oursin Pincushion","Palourde Bénitier (Tridacna crocea)","Palourde Bénitier (Tridacna maxima)","Crabe Porcelaine","Crabe Émeraude","Anémone Bulle (Bubble Tip)","Anémone Tapis","Nudibranche Berghia","Copépodes (culture)"].sort();
-  const EQUIPMENT_CATEGORIES = ['pump','light','skimmer','heater','doser','controller','ato','reactor'];
+  const FISH_CATALOG = ['Poisson-clown Ocellaris','Poisson-clown Percula','Poisson-clown Skunk','Poisson-clown Maroon','Gramma Royal','Chirurgien Bleu (Paracanthurus)','Chirurgien Jaune (Zebrasoma)','Chirurgien Naso','Chirurgien Sailfin','Chirurgien Achille','Chirurgien Sohal','Chirurgien Clown','Chirurgien Chevron','Chirurgien Scopas','Chirurgien Kole','Chirurgien Tomini','Chirurgien Convict','Chirurgien Épaule Orange','Cardinal de Banggai','Cardinal Pyjama','Demoiselle à trois bandes','Demoiselle Chromis Verte','Demoiselle à queue jaune','Poisson-ange Nain Flame','Poisson-ange Nain Coral Beauty','Poisson-ange Nain Bicolor','Poisson-ange Lyretail (Genicanthus)','Poisson-ange Cherub','Poisson-ange Flameback','Poisson-ange Empereur','Poisson-ange Reine','Blenny Lawnmower','Blenny Tête de lion','Gobie Diamant','Gobie Firefish','Gobie Néon','Gobie Watchman Jaune','Hippocampe','Poisson-Mandarin','Poisson-papillon Copperband','Poisson-papillon Raton Laveur','Labre Nettoyeur','Labre Fairy','Labre Melanurus','Labre Flasher','Labre Six-Line','Labre Coris Jaune','Rabbitfish Foxface','Dottyback Orchid','Dottyback Bicolor','Anthias Lyretail','Poisson-Coffre Jaune','Poisson-Faucon Longnez','Poisson-Lion Nain','Jawfish Perlé','Poisson-Ballon Porc-épic'].sort();
+  const CORAL_CATALOG = ['Acropora','Montipora','Seriatopora (Birdsnest)','Stylophora','Pocillopora','Euphyllia (Torch)','Euphyllia (Hammer)','Euphyllia (Frogspawn)','Euphyllia (Grape)','Trachyphyllia (Brain ouvert)','Lobophyllia (Brain fermé)','Favia / Favites','Acanthastrea','Micromussa','Blastomussa','Duncanopsammia (Duncan)','Catalaphyllia (Elegance)','Plerogyra (Bubble Coral)','Echinophyllia (Chalice)','Symphyllia','Goniastrea','Fungia (Corail champignon)','Goniopora','Zoanthus','Palythoa','Ricordea','Discosoma (Mushroom)','Rhodactis (Mushroom)','Sarcophyton (Cuir doigté)','Sinularia (Cuir)','Xenia','Anthelia','Capnella','Nephthea','Clavularia (Corail étoile)','Tubipora (Orgue de mer)','Cladiella','Briareum'].sort();
+  const INVERT_CATALOG = ["Crevette Nettoyeuse (Lysmata amboinensis)","Crevette Peppermint","Crevette Harlequin","Crevette Pistolet","Crevette Feu (Lysmata debelius)","Crevette Bandée (Coral Banded)","Bernard-l'ermite Bleu","Bernard-l'ermite Rouge","Escargot Turbo","Escargot Nassarius","Escargot Cerith","Escargot Astrea","Escargot Trochus","Conque Combattante (Fighting Conch)","Lièvre de mer (Sea Hare)","Étoile de mer Serpent","Étoile de mer Sable","Étoile de mer Chocolat","Concombre de mer","Oursin Longspine","Oursin Pincushion","Palourde Bénitier (Tridacna crocea)","Palourde Bénitier (Tridacna maxima)","Crabe Porcelaine","Crabe Émeraude","Crabe Flèche (Arrow Crab)","Anémone Bulle (Bubble Tip)","Anémone Tapis","Nudibranche Berghia","Copépodes (culture)"].sort();
+  const EQUIPMENT_CATEGORIES = ['pump','light','skimmer','heater','doser','controller','ato','reactor','awc','uv','chiller','wavemaker','rodi','refractometer','autofeeder'];
   const EQUIPMENT_CATALOG = [
     // Pompes
     {cat:'pump', brand:'EcoTech Marine', name:'Vectra M1'},
@@ -3034,7 +3048,57 @@
     {cat:'reactor', brand:'My Reef Creations', name:'Calcium Reactor'},
     {cat:'reactor', brand:'AquaMaxx', name:'Media Reactor'},
     {cat:'reactor', brand:'Avast Marine', name:'SeaBones v2'},
-    {cat:'reactor', brand:'D-D', name:'Reef-Flo Reactor'}
+    {cat:'reactor', brand:'D-D', name:'Reef-Flo Reactor'},
+    // Changeur d'eau (AWC)
+    {cat:'awc', brand:'AutoAqua', name:'AWC Touch Duo'},
+    {cat:'awc', brand:'AutoAqua', name:'Smart AWC Duo G2'},
+    {cat:'awc', brand:'GHL', name:'Doser 2.1 (AWC)'},
+    {cat:'awc', brand:'Kamoer', name:'X2SR'},
+    {cat:'awc', brand:'Neptune Systems', name:'DOS (AWC)'},
+    // Stérilisateur UV
+    {cat:'uv', brand:'AquaUV', name:'Classic 57W'},
+    {cat:'uv', brand:'Emperor Aquatics', name:'HO 120W'},
+    {cat:'uv', brand:'Lifegard Aquatics', name:'Pro-Max 90W'},
+    {cat:'uv', brand:'JBJ', name:'UV Sterilizer'},
+    {cat:'uv', brand:'Coralife', name:'Turbo-Twist UV'},
+    {cat:'uv', brand:'Pentair', name:'Vecton UV'},
+    // Refroidisseur (Chiller)
+    {cat:'chiller', brand:'JBJ', name:'Arctica 1/4 HP'},
+    {cat:'chiller', brand:'Teco', name:'TANK 751'},
+    {cat:'chiller', brand:'Aqua Euro USA', name:'Chiller'},
+    {cat:'chiller', brand:'Active Aqua', name:'Chiller'},
+    {cat:'chiller', brand:'Coolworks', name:'Ice Probe'},
+    // Brasseur de courant (Wavemaker)
+    {cat:'wavemaker', brand:'EcoTech Marine', name:'Vortech MP40'},
+    {cat:'wavemaker', brand:'EcoTech Marine', name:'Vortech MP10'},
+    {cat:'wavemaker', brand:'AI (Aqua Illumination)', name:'Nero 5'},
+    {cat:'wavemaker', brand:'AI (Aqua Illumination)', name:'Nero 3'},
+    {cat:'wavemaker', brand:'Maxspect', name:'Gyre XF230'},
+    {cat:'wavemaker', brand:'Jebao / Jecod', name:'RW-20'},
+    {cat:'wavemaker', brand:'Jebao / Jecod', name:'OW-30'},
+    {cat:'wavemaker', brand:'Tunze', name:'Nanostream 6055'},
+    {cat:'wavemaker', brand:'Sicce', name:'Voyager 3'},
+    {cat:'wavemaker', brand:'IceCap', name:'Gyre 2K'},
+    {cat:'wavemaker', brand:'Hydor', name:'Koralia'},
+    {cat:'wavemaker', brand:'Neptune Systems', name:'WAV'},
+    // Osmoseur (RO/DI)
+    {cat:'rodi', brand:'SpectraPure', name:'MaxCap RO/DI'},
+    {cat:'rodi', brand:'Bulk Reef Supply (BRS)', name:'5-Stage RO/DI'},
+    {cat:'rodi', brand:'Aquatic Life', name:'RO Buddie'},
+    {cat:'rodi', brand:'iSpring', name:'RO System'},
+    // Testeur de salinité / Réfractomètre
+    {cat:'refractometer', brand:'Milwaukee', name:'MA887 Digital'},
+    {cat:'refractometer', brand:'Hanna Instruments', name:'HI96822 Checker'},
+    {cat:'refractometer', brand:'Tropic Marin', name:'Hydrometer'},
+    {cat:'refractometer', brand:'Vee Gee Scientific', name:'STX-3'},
+    {cat:'refractometer', brand:'Red Sea', name:'Refractometer'},
+    // Nourrisseur automatique
+    {cat:'autofeeder', brand:'Eheim', name:'Everyday Fish Feeder'},
+    {cat:'autofeeder', brand:'Eheim', name:'TWINfeeder'},
+    {cat:'autofeeder', brand:'Neptune Systems', name:'AFS Automatic Feeding System'},
+    {cat:'autofeeder', brand:'Lifegard Aquatics', name:'Intelli-Feed'},
+    {cat:'autofeeder', brand:'Avast Marine', name:'The Plank'},
+    {cat:'autofeeder', brand:'inD Aquatics', name:'aF4 Frozen Feeder'}
   ];
   const BROWSE_TANK_ICONS = {
     equipment: `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 3.5a3.5 3.5 0 0 0-4.6 4.2L4 12.6V16h3.4l4.9-4.9a3.5 3.5 0 0 0 4.2-4.6l-2.4 2.4-1.9-.5-.5-1.9 2.4-2.4Z"/></svg>`,
