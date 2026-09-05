@@ -1269,7 +1269,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v8.5</span>
+        <span class="ver-pill">v8.6</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -2927,6 +2927,31 @@
   // mesures). Un seul bac par défaut ("Bac principal") pour ne rien casser de l'usage
   // actuel tant que la vraie persistance n'existe pas.
   let tanks = [{id:'default', name:'Bac principal', volume:null, type:null, start:'', livestock:{fish:[],corals:[],inverts:[]}, equipment:[], dosing:[], lighting:[], journeyOverride:null, feedingSchedule:[], feedingLog:[]}];
+
+  // Persistance Supabase des bacs (multi-aquarium) : un blob JSON par bac, table 'tanks'.
+  // Test perso pour l'instant (pas de user_id) ; prêt à etre rattache a un compte/offre payante plus tard.
+  async function loadTanksFromSupabase(){
+    try{
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/tanks?select=id,data`, {headers: sbHeaders()});
+      if(!res.ok) return false;
+      const rows = await res.json();
+      if(!Array.isArray(rows) || !rows.length) return false;
+      tanks = rows.map(r => Object.assign({id:r.id}, r.data));
+      if(!tanks.find(t=>t.id===activeTankId)) activeTankId = tanks[0].id;
+      return true;
+    }catch(e){ console.error(e); return false; }
+  }
+  async function syncTankToSupabase(tank){
+    if(!tank) return;
+    const {id, ...data} = tank;
+    try{
+      await fetch(`${SUPABASE_URL}/rest/v1/tanks`, {
+        method:'POST',
+        headers: sbHeaders({'Prefer':'resolution=merge-duplicates'}),
+        body: JSON.stringify({id: tank.id, data})
+      });
+    }catch(e){ console.error(e); }
+  }
   let activeTankId = 'default';
   let editingTankId = null;
   let tankFormSelectedType = null;
@@ -3218,14 +3243,14 @@
         b.type='button';
         b.className = 'hist-chip' + (tank.journeyOverride===p.key ? ' active' : '');
         b.textContent = t('journey.phase.'+p.key+'.title');
-        b.addEventListener('click', ()=>{ tank.journeyOverride = p.key; journeyEditOpen=false; renderJourneyCard(); });
+        b.addEventListener('click', ()=>{ tank.journeyOverride = p.key; journeyEditOpen=false; renderJourneyCard(); syncTankToSupabase(tank); });
         chipRow.appendChild(b);
       });
       const autoBtn = document.createElement('button');
       autoBtn.type='button';
       autoBtn.className = 'hist-chip' + (!tank.journeyOverride ? ' active' : '');
       autoBtn.textContent = t('journey.auto');
-      autoBtn.addEventListener('click', ()=>{ tank.journeyOverride = null; journeyEditOpen=false; renderJourneyCard(); });
+      autoBtn.addEventListener('click', ()=>{ tank.journeyOverride = null; journeyEditOpen=false; renderJourneyCard(); syncTankToSupabase(tank); });
       chipRow.appendChild(autoBtn);
       editSection.appendChild(chipRow);
     } else {
@@ -3392,6 +3417,7 @@
           livestockOpenForm = null;
           renderLivestockSections();
           if(tank.id===activeTankId) renderTankSwitcher();
+          syncTankToSupabase(tank);
         });
         btnRow.appendChild(cancelBtn); btnRow.appendChild(confirmBtn);
         form.appendChild(browseBtn); form.appendChild(kindInput); form.appendChild(nameInput); form.appendChild(btnRow);
@@ -3415,6 +3441,7 @@
             tank.livestock[kind] = tank.livestock[kind].filter(i=>i.id!==item.id);
             renderLivestockSections();
             if(tank.id===activeTankId) renderTankSwitcher();
+          syncTankToSupabase(tank);
           });
           row.appendChild(del);
           section.appendChild(row);
@@ -3625,6 +3652,7 @@
           tank.equipment = tank.equipment.filter(i=>i.id!==item.id);
           renderEquipmentList();
           if(tank.id===activeTankId) renderTankSwitcher();
+          syncTankToSupabase(tank);
         });
         row.appendChild(del);
         listEl.appendChild(row);
@@ -3651,6 +3679,7 @@
       tank.equipment.push({id:'eq_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), cat:item.cat, brand:item.brand||'', name:item.name, channels:item.channels||[]});
       renderEquipmentList();
       if(tank.id===activeTankId) renderTankSwitcher();
+          syncTankToSupabase(tank);
     });
   });
   document.getElementById('tankEquipmentClose').addEventListener('click', closeTankEquipment);
@@ -3697,6 +3726,7 @@
         dosingFormOpen = false;
         renderDosingList();
         if(tank.id===activeTankId) renderTankSwitcher();
+          syncTankToSupabase(tank);
       });
       btnRow.appendChild(cancelBtn); btnRow.appendChild(confirmBtn);
       form.appendChild(productInput); form.appendChild(doseInput); form.appendChild(timeInput); form.appendChild(btnRow);
@@ -3721,6 +3751,7 @@
           tank.dosing = tank.dosing.filter(i=>i.id!==item.id);
           renderDosingList();
           if(tank.id===activeTankId) renderTankSwitcher();
+          syncTankToSupabase(tank);
         });
         row.appendChild(del);
         listEl.appendChild(row);
@@ -3852,6 +3883,7 @@
         lightingFormOpen = false;
         renderLightingList();
         if(tank.id===activeTankId) renderTankSwitcher();
+          syncTankToSupabase(tank);
       });
       btnRow.appendChild(cancelBtn); btnRow.appendChild(confirmBtn);
       form.appendChild(btnRow);
@@ -3877,6 +3909,7 @@
           tank.lighting = tank.lighting.filter(i=>i.id!==item.id);
           renderLightingList();
           if(tank.id===activeTankId) renderTankSwitcher();
+          syncTankToSupabase(tank);
         });
         row.appendChild(del);
         listEl.appendChild(row);
@@ -3946,6 +3979,7 @@
         feedingScheduleFormOpen = false;
         renderFeedingSections();
         if(tank.id===activeTankId) renderTankSwitcher();
+          syncTankToSupabase(tank);
       });
       btnRow.appendChild(cancelBtn); btnRow.appendChild(confirmBtn);
       form.appendChild(productInput); form.appendChild(freqInput); form.appendChild(btnRow);
@@ -3968,6 +4002,7 @@
           tank.feedingSchedule = tank.feedingSchedule.filter(i=>i.id!==item.id);
           renderFeedingSections();
           if(tank.id===activeTankId) renderTankSwitcher();
+          syncTankToSupabase(tank);
         });
         row.appendChild(del);
         scheduleList.appendChild(row);
@@ -4028,6 +4063,7 @@
         feedingLogFormOpen = false;
         renderFeedingSections();
         if(tank.id===activeTankId) renderTankSwitcher();
+          syncTankToSupabase(tank);
       });
       btnRow.appendChild(cancelBtn); btnRow.appendChild(confirmBtn);
       form.appendChild(dateRow); form.appendChild(yearWrap); form.appendChild(typeRow); form.appendChild(detailInput); form.appendChild(btnRow);
@@ -4055,6 +4091,7 @@
           tank.feedingLog = tank.feedingLog.filter(i=>i.id!==item.id);
           renderFeedingSections();
           if(tank.id===activeTankId) renderTankSwitcher();
+          syncTankToSupabase(tank);
         });
         row.appendChild(del);
         logList.appendChild(row);
@@ -4114,15 +4151,20 @@
     const yearVal = tankFormYear.value ? parseInt(tankFormYear.value,10) : null;
     const start = (monthVal && yearVal) ? String(yearVal).padStart(4,'0')+'-'+String(monthVal).padStart(2,'0') : '';
     const type = tankFormSelectedType || null;
+    let savedTank;
     if(editingTankId){
       const tank = tanks.find(t=>t.id===editingTankId);
       if(tank){ tank.name=name; tank.volume=volume; tank.type=type; tank.start=start; }
+      savedTank = tank;
     } else {
       const id = 'tank_'+Date.now();
-      tanks.push({id, name, volume, type, start, livestock:{fish:[],corals:[],inverts:[]}, equipment:[], dosing:[], lighting:[], journeyOverride:null, feedingSchedule:[], feedingLog:[]});
+      const newTank = {id, name, volume, type, start, livestock:{fish:[],corals:[],inverts:[]}, equipment:[], dosing:[], lighting:[], journeyOverride:null, feedingSchedule:[], feedingLog:[]};
+      tanks.push(newTank);
       activeTankId = id;
+      savedTank = newTank;
     }
     renderTankSwitcher();
+    syncTankToSupabase(savedTank);
     closeTankForm();
   });
   onLangRefresh(function(){
@@ -4137,6 +4179,7 @@
     renderFeedingSections();
   });
   renderTankSwitcher();
+  loadTanksFromSupabase().then(loaded=>{ if(loaded) renderTankSwitcher(); });
 
   // Badge de statut en haut de l'app. Deux modes, choisis par toi via le toggle
   // "Mon bac cycle actuellement" (cyclingActive) plutôt que devinés depuis une date —
