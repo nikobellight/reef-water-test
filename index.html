@@ -1269,7 +1269,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v8.6</span>
+        <span class="ver-pill">v8.7</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -2143,6 +2143,14 @@
       'equipment.cat.rodi': 'Osmoseur (RO/DI)',
       'equipment.cat.refractometer': 'Testeur de salinité',
       'equipment.cat.autofeeder': 'Nourrisseur automatique',
+      'equipment.cat.filter': 'Filtre (HOB/Canister)',
+      'equipment.cat.ats': 'Filtre à algues (ATS)',
+      'equipment.cat.multitest': 'Testeur auto multi-paramètres',
+      'equipment.cat.magnet': 'Nettoyeur magnétique',
+      'equipment.cat.parmeter': 'PAR-mètre',
+      'equipment.cat.ups': 'Onduleur',
+      'equipment.cat.icp': 'ICP',
+      'equipment.cat.glue': 'Colle corail',
       'dosing.title': 'Dosage',
       'dosing.productLabel': 'Produit',
       'dosing.productPlaceholder': 'ex. Alcalinité (KH)',
@@ -2452,6 +2460,14 @@
       'equipment.cat.rodi': 'RO/DI System',
       'equipment.cat.refractometer': 'Salinity Tester',
       'equipment.cat.autofeeder': 'Auto Feeder',
+      'equipment.cat.filter': 'Filter (HOB/Canister)',
+      'equipment.cat.ats': 'Algae Turf Scrubber (ATS)',
+      'equipment.cat.multitest': 'Auto Multi-Parameter Tester',
+      'equipment.cat.magnet': 'Magnetic Cleaner',
+      'equipment.cat.parmeter': 'PAR Meter',
+      'equipment.cat.ups': 'UPS / Backup Power',
+      'equipment.cat.icp': 'ICP',
+      'equipment.cat.glue': 'Coral Glue',
       'dosing.title': 'Dosing',
       'dosing.productLabel': 'Product',
       'dosing.productPlaceholder': 'e.g. Alkalinity (KH)',
@@ -2969,7 +2985,7 @@
   const FISH_CATALOG = ['Poisson-clown Ocellaris','Poisson-clown Percula','Poisson-clown Skunk','Poisson-clown Maroon','Gramma Royal','Chirurgien Bleu (Paracanthurus)','Chirurgien Jaune (Zebrasoma)','Chirurgien Naso','Chirurgien Sailfin','Chirurgien Achille','Chirurgien Sohal','Chirurgien Clown','Chirurgien Chevron','Chirurgien Scopas','Chirurgien Kole','Chirurgien Tomini','Chirurgien Convict','Chirurgien Épaule Orange','Cardinal de Banggai','Cardinal Pyjama','Demoiselle à trois bandes','Demoiselle Chromis Verte','Demoiselle à queue jaune','Poisson-ange Nain Flame','Poisson-ange Nain Coral Beauty','Poisson-ange Nain Bicolor','Poisson-ange Lyretail (Genicanthus)','Poisson-ange Cherub','Poisson-ange Flameback','Poisson-ange Empereur','Poisson-ange Reine','Blenny Lawnmower','Blenny Tête de lion','Gobie Diamant','Gobie Firefish','Gobie Néon','Gobie Watchman Jaune','Hippocampe','Poisson-Mandarin','Poisson-papillon Copperband','Poisson-papillon Raton Laveur','Labre Nettoyeur','Labre Fairy','Labre Melanurus','Labre Flasher','Labre Six-Line','Labre Coris Jaune','Rabbitfish Foxface','Dottyback Orchid','Dottyback Bicolor','Anthias Lyretail','Poisson-Coffre Jaune','Poisson-Faucon Longnez','Poisson-Lion Nain','Jawfish Perlé','Poisson-Ballon Porc-épic'].sort();
   const CORAL_CATALOG = ['Acropora','Montipora','Seriatopora (Birdsnest)','Stylophora','Pocillopora','Euphyllia (Torch)','Euphyllia (Hammer)','Euphyllia (Frogspawn)','Euphyllia (Grape)','Trachyphyllia (Brain ouvert)','Lobophyllia (Brain fermé)','Favia / Favites','Acanthastrea','Micromussa','Blastomussa','Duncanopsammia (Duncan)','Catalaphyllia (Elegance)','Plerogyra (Bubble Coral)','Echinophyllia (Chalice)','Symphyllia','Goniastrea','Fungia (Corail champignon)','Goniopora','Zoanthus','Palythoa','Ricordea','Discosoma (Mushroom)','Rhodactis (Mushroom)','Sarcophyton (Cuir doigté)','Sinularia (Cuir)','Xenia','Anthelia','Capnella','Nephthea','Clavularia (Corail étoile)','Tubipora (Orgue de mer)','Cladiella','Briareum'].sort();
   const INVERT_CATALOG = ["Crevette Nettoyeuse (Lysmata amboinensis)","Crevette Peppermint","Crevette Harlequin","Crevette Pistolet","Crevette Feu (Lysmata debelius)","Crevette Bandée (Coral Banded)","Bernard-l'ermite Bleu","Bernard-l'ermite Rouge","Escargot Turbo","Escargot Nassarius","Escargot Cerith","Escargot Astrea","Escargot Trochus","Conque Combattante (Fighting Conch)","Lièvre de mer (Sea Hare)","Étoile de mer Serpent","Étoile de mer Sable","Étoile de mer Chocolat","Concombre de mer","Oursin Longspine","Oursin Pincushion","Palourde Bénitier (Tridacna crocea)","Palourde Bénitier (Tridacna maxima)","Crabe Porcelaine","Crabe Émeraude","Crabe Flèche (Arrow Crab)","Anémone Bulle (Bubble Tip)","Anémone Tapis","Nudibranche Berghia","Copépodes (culture)"].sort();
-  const EQUIPMENT_CATEGORIES = ['pump','light','skimmer','heater','doser','controller','ato','reactor','awc','uv','chiller','wavemaker','rodi','refractometer','autofeeder'];
+  const EQUIPMENT_CATEGORIES = ['pump','light','skimmer','heater','doser','controller','ato','reactor','awc','uv','chiller','wavemaker','rodi','refractometer','autofeeder','filter','ats','multitest','magnet','parmeter','ups','icp','glue'];
   const EQUIPMENT_CATALOG = [
     // Pompes
     {cat:'pump', brand:'EcoTech Marine', name:'Vectra M1'},
@@ -3123,7 +3139,51 @@
     {cat:'autofeeder', brand:'Neptune Systems', name:'AFS Automatic Feeding System'},
     {cat:'autofeeder', brand:'Lifegard Aquatics', name:'Intelli-Feed'},
     {cat:'autofeeder', brand:'Avast Marine', name:'The Plank'},
-    {cat:'autofeeder', brand:'inD Aquatics', name:'aF4 Frozen Feeder'}
+    {cat:'autofeeder', brand:'inD Aquatics', name:'aF4 Frozen Feeder'},
+    // Filtre (HOB/Canister)
+    {cat:'filter', brand:'FZone', name:'Filter Kit'},
+    {cat:'filter', brand:'Nicrew', name:'Slim Filter'},
+    {cat:'filter', brand:'Nicrew', name:'Magi Filter'},
+    {cat:'filter', brand:'hygger', name:'HOB Filter'},
+    {cat:'filter', brand:'Aqueon', name:'QuietFlow'},
+    {cat:'filter', brand:'Fluval', name:'Canister 207'},
+    {cat:'filter', brand:'Marineland', name:'Penguin'},
+    {cat:'filter', brand:'Tetra', name:'Whisper'},
+    // Filtre à algues (ATS)
+    {cat:'ats', brand:'Santa Monica Filtration', name:'Typhon ATS'},
+    {cat:'ats', brand:'IceCap', name:'ATS Pro'},
+    {cat:'ats', brand:'Adaptive Reef', name:'DIY ATS Kit'},
+    // Testeur automatique multi-paramètres
+    {cat:'multitest', brand:'Neptune Systems', name:'Trident'},
+    {cat:'multitest', brand:'Focustronic', name:'Alkatronic'},
+    {cat:'multitest', brand:'Focustronic', name:'Mastertronic'},
+    {cat:'multitest', brand:'Focustronic', name:'KH Director'},
+    {cat:'multitest', brand:'Reef Factory', name:'KH Keeper'},
+    {cat:'multitest', brand:'Reef Factory', name:'ReefBot'},
+    // Nettoyeur magnétique
+    {cat:'magnet', brand:'Flipper', name:'Nano'},
+    {cat:'magnet', brand:'Flipper', name:'Standard'},
+    {cat:'magnet', brand:'Flipper', name:'Max'},
+    {cat:'magnet', brand:'Mag-Float', name:'Standard'},
+    {cat:'magnet', brand:'IceCap', name:'Magnetic Cleaner'},
+    // PAR-mètre
+    {cat:'parmeter', brand:'Apogee', name:'MQ-510 Quantum Meter'},
+    // Onduleur / batterie de secours
+    {cat:'ups', brand:'APC', name:'Back-UPS'},
+    {cat:'ups', brand:'CyberPower', name:'Standby UPS'},
+    {cat:'ups', brand:'EcoTech Marine', name:'Batterie DC VorTech'},
+    {cat:'ups', brand:'PennPlax', name:'Silent Air B-11'},
+    // ICP (analyse labo)
+    {cat:'icp', brand:'Triton', name:'ICP-OES'},
+    {cat:'icp', brand:'Fauna Marin', name:'Balling/ICP'},
+    {cat:'icp', brand:'ATI', name:'ICP-OES'},
+    {cat:'icp', brand:'Oceamo', name:'ICP Test'},
+    // Colle / époxy corail
+    {cat:'glue', brand:'Two Little Fishies', name:'AquaStik'},
+    {cat:'glue', brand:'Two Little Fishies', name:'Reef Glue'},
+    {cat:'glue', brand:'Seachem', name:'CoralCrete'},
+    {cat:'glue', brand:'Bulk Reef Supply (BRS)', name:'Super Glue Gel'},
+    {cat:'glue', brand:'Tunze', name:'Coral Gum'}
   ];
   const BROWSE_TANK_ICONS = {
     equipment: `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 3.5a3.5 3.5 0 0 0-4.6 4.2L4 12.6V16h3.4l4.9-4.9a3.5 3.5 0 0 0 4.2-4.6l-2.4 2.4-1.9-.5-.5-1.9 2.4-2.4Z"/></svg>`,
