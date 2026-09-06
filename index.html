@@ -1286,11 +1286,10 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v8.8</span>
+        <span class="ver-pill">v8.9</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
-        <button type="button" class="cycle-toggle-header" id="cycleToggleBtn"><span class="ic">🔄</span><span class="l1">Nouveau</span><span class="l2">Cycle</span></button>
         <div class="hero-status" id="heroStatus"><span class="dot"></span><span class="txt" data-i18n="hero.underControl">Récif sous contrôle</span></div>
         <span class="hero-status-row-spacer"></span>
       </div>
@@ -1623,7 +1622,8 @@
   <div id="tankDosingOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:82;display:none;"></div>
   <div id="tankDosingSheet" style="position:fixed;left:0;right:0;bottom:0;background:var(--bg-panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 20px 26px;z-index:83;display:none;max-width:640px;margin:0 auto;max-height:86vh;overflow-y:auto;">
     <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 16px;" id="tankDosingTitle" data-i18n="dosing.title">Dosage</h3>
-    <div class="phyto-reminder-card" id="phytoReminderCard">
+    <button type="button" id="phytoRevealBtn" class="link-btn" style="background:none;border:none;color:var(--text-dim);font-size:0.78rem;padding:0;margin-bottom:10px;cursor:pointer;text-decoration:underline;" data-i18n="dosing.phytoRevealLink">+ Rappel Phytoplancton</button>
+    <div class="phyto-reminder-card" id="phytoReminderCard" style="display:none;">
       <div class="phyto-reminder-row">
         <span class="phyto-reminder-label" data-i18n="dosing.phytoTitle">Rappel Phytoplancton</span>
         <button type="button" class="hist-chip" id="phytoDosedBtn" data-i18n="dosing.phytoDosedBtn">Phyto dosé</button>
@@ -1696,7 +1696,10 @@
     </div>
     <div class="field">
       <label class="field-label" data-i18n="tank.volumeLabel">Volume (litres)</label>
-      <input type="number" id="tankFormVolume" placeholder="ex. 300" min="0">
+      <div class="field-row">
+        <input type="number" id="tankFormVolume" placeholder="ex. 300" min="0">
+        <div class="type-chip-row" id="tankFormVolumeUnitChips" style="flex:none;width:auto;"></div>
+      </div>
     </div>
     <div class="field">
       <label class="field-label" data-i18n="tank.startLabel">Mise en route</label>
@@ -2139,12 +2142,16 @@
       'catalog.title.corals': 'Choisir un corail',
       'catalog.title.inverts': 'Choisir un invertébré',
       'catalog.title.equipment': 'Ajouter un équipement',
+      'catalog.title.dosing_salt': 'Choisir un sel',
+      'catalog.title.dosing_phyto': 'Choisir un phytoplancton',
       'catalog.browse': 'Parcourir le catalogue',
       'catalog.addCustom': '+ Ajouter personnalisé',
       'catalog.customNamePlaceholder.fish': 'Nom du poisson',
       'catalog.customNamePlaceholder.corals': 'Nom du corail',
       'catalog.customNamePlaceholder.inverts': "Nom de l'invertébré",
       'catalog.customNamePlaceholder.equipment': 'Nom du modèle',
+      'catalog.customNamePlaceholder.dosing_salt': 'Nom du sel',
+      'catalog.customNamePlaceholder.dosing_phyto': 'Nom du produit',
       'catalog.customBrandPlaceholder': 'Marque (optionnel)',
       'catalog.empty': 'Aucun résultat',
       'catalog.searchPlaceholder': 'Rechercher...',
@@ -2180,9 +2187,19 @@
       'equipment.settingValuePlaceholder': 'ex. 190 L/j',
       'dosing.modeContinuous': 'Continu',
       'dosing.modePonctual': 'Ponctuel',
+      'dosing.cat.salt': 'Sel',
+      'dosing.cat.phyto': 'Phytoplancton',
+      'dosing.cat.alk': 'Alcalinité (KH)',
+      'dosing.cat.calcium': 'Calcium',
+      'dosing.cat.magnesium': 'Magnésium',
+      'dosing.cat.trace': 'Oligo-éléments',
+      'dosing.cat.bacteria': 'Bactéries',
+      'dosing.cat.carbon': 'Réducteur de nutriments',
+      'dosing.cat.other': 'Autre',
       'dosing.quantityLabel': 'Quantité (kg)',
       'dosing.frequencyPlaceholder': 'ex. 1x/semaine',
       'dosing.phytoTitle': 'Rappel Phytoplancton',
+      'dosing.phytoRevealLink': '+ Rappel Phytoplancton',
       'dosing.phytoDosedBtn': 'Phyto dosé',
       'dosing.phytoNextInPlaceholder': "Dans combien d'heures ?",
       'dosing.phytoNextDue': 'Prochain dans {time}',
@@ -2202,6 +2219,7 @@
       'lighting.whiteLabel': 'Blanc (%)',
       'lighting.blueLabel': 'Bleu (%)',
       'lighting.intensityLabel': 'Intensité max (%)',
+      'lighting.peakNote': 'Ces valeurs sont le pic — la montée/descente reste progressive sur ta rampe.',
       'lighting.empty': 'Aucun programme configuré',
       'lighting.noFixture': "Ajoute d'abord une rampe dans Équipement (catégorie Éclairage).",
       'lighting.openEquipment': 'Ouvrir Équipement',
@@ -2469,12 +2487,16 @@
       'catalog.title.corals': 'Choose a coral',
       'catalog.title.inverts': 'Choose an invertebrate',
       'catalog.title.equipment': 'Add equipment',
+      'catalog.title.dosing_salt': 'Choose a salt mix',
+      'catalog.title.dosing_phyto': 'Choose a phytoplankton',
       'catalog.browse': 'Browse catalog',
       'catalog.addCustom': '+ Add custom',
       'catalog.customNamePlaceholder.fish': 'Fish name',
       'catalog.customNamePlaceholder.corals': 'Coral name',
       'catalog.customNamePlaceholder.inverts': 'Invertebrate name',
       'catalog.customNamePlaceholder.equipment': 'Model name',
+      'catalog.customNamePlaceholder.dosing_salt': 'Salt name',
+      'catalog.customNamePlaceholder.dosing_phyto': 'Product name',
       'catalog.customBrandPlaceholder': 'Brand (optional)',
       'catalog.empty': 'No results',
       'catalog.searchPlaceholder': 'Search...',
@@ -2510,9 +2532,19 @@
       'equipment.settingValuePlaceholder': 'e.g. 50 gal/h',
       'dosing.modeContinuous': 'Continuous',
       'dosing.modePonctual': 'One-time',
+      'dosing.cat.salt': 'Salt',
+      'dosing.cat.phyto': 'Phytoplankton',
+      'dosing.cat.alk': 'Alkalinity (KH)',
+      'dosing.cat.calcium': 'Calcium',
+      'dosing.cat.magnesium': 'Magnesium',
+      'dosing.cat.trace': 'Trace elements',
+      'dosing.cat.bacteria': 'Bacteria',
+      'dosing.cat.carbon': 'Nutrient reducer',
+      'dosing.cat.other': 'Other',
       'dosing.quantityLabel': 'Quantity (kg)',
       'dosing.frequencyPlaceholder': 'e.g. 1x/week',
       'dosing.phytoTitle': 'Phytoplankton Reminder',
+      'dosing.phytoRevealLink': '+ Phytoplankton Reminder',
       'dosing.phytoDosedBtn': 'Phyto dosed',
       'dosing.phytoNextInPlaceholder': 'In how many hours?',
       'dosing.phytoNextDue': 'Next in {time}',
@@ -2532,6 +2564,7 @@
       'lighting.whiteLabel': 'White (%)',
       'lighting.blueLabel': 'Blue (%)',
       'lighting.intensityLabel': 'Max intensity (%)',
+      'lighting.peakNote': "These values are the peak — ramp up/down stays gradual on your fixture.",
       'lighting.empty': 'No program set up yet',
       'lighting.noFixture': 'Add a fixture in Equipment (Light category) first.',
       'lighting.openEquipment': 'Open Equipment',
@@ -3021,6 +3054,39 @@
   let activeTankId = 'default';
   let editingTankId = null;
   let tankFormSelectedType = null;
+  let tankFormVolumeUnit = 'L';
+  const LITERS_PER_GALLON = 3.78541;
+  function literToGal(l){ return l / LITERS_PER_GALLON; }
+  function galToLiter(g){ return g * LITERS_PER_GALLON; }
+  function formatVolume(tank){
+    if(!tank || !tank.volume) return null;
+    const unit = tank.volumeUnit || 'L';
+    if(unit==='gal'){
+      const gal = literToGal(tank.volume);
+      return (Math.round(gal*10)/10) + ' gal';
+    }
+    return Math.round(tank.volume) + ' L';
+  }
+  function renderTankFormVolumeUnitChips(){
+    const container = document.getElementById('tankFormVolumeUnitChips');
+    container.innerHTML = '';
+    ['L','gal'].forEach(unit=>{
+      const b = document.createElement('button');
+      b.type='button';
+      b.className = 'hist-chip' + (tankFormVolumeUnit===unit ? ' active' : '');
+      b.textContent = unit==='L' ? 'L' : 'gal';
+      b.addEventListener('click', ()=>{
+        if(tankFormVolumeUnit===unit) return;
+        const currentVal = tankFormVolume.value ? parseFloat(tankFormVolume.value) : null;
+        if(currentVal!=null){
+          tankFormVolume.value = unit==='gal' ? (Math.round(literToGal(currentVal)*10)/10) : (Math.round(galToLiter(currentVal)*10)/10);
+        }
+        tankFormVolumeUnit = unit;
+        renderTankFormVolumeUnitChips();
+      });
+      container.appendChild(b);
+    });
+  }
   const TANK_TYPES = ['reefMixed','sps','lps','softies','nano','ulns','fishOnly'];
   const TANK_TYPE_ICONS = {
     reefMixed: `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="10" r="5.5"/><circle cx="13" cy="10" r="5.5"/></svg>`,
@@ -3233,7 +3299,35 @@
     {cat:'glue', brand:'Two Little Fishies', name:'Reef Glue'},
     {cat:'glue', brand:'Seachem', name:'CoralCrete'},
     {cat:'glue', brand:'Bulk Reef Supply (BRS)', name:'Super Glue Gel'},
-    {cat:'glue', brand:'Tunze', name:'Coral Gum'}
+    {cat:'glue', brand:'Tunze', name:'Coral Gum'},
+    // Eclairage - marques grand public
+    {cat:'light', brand:'FZone', name:'Solo Series Nano'},
+    {cat:'light', brand:'FZone', name:'AXON 72W'},
+    {cat:'light', brand:'SEAOURA', name:'SR-659'},
+    {cat:'light', brand:'hygger', name:'Clip-On 24/7'},
+    {cat:'light', brand:'AQQA', name:'24/7 DIY Mode'},
+    {cat:'light', brand:'Pawfly', name:'Bluetooth 42W'},
+    {cat:'light', brand:'Nicrew', name:'NavaReef 65'},
+    {cat:'light', brand:'Nicrew', name:'HyperReef Gen 2'},
+    // Chauffage - marques grand public
+    {cat:'heater', brand:'SEAOURA', name:'SR-317'},
+    {cat:'heater', brand:'Pawfly', name:'100W Ajustable'},
+    {cat:'heater', brand:'Marineland', name:'Precision'},
+    {cat:'heater', brand:'Zoo Med', name:'Aquarium Heater'},
+    // Brasseur de courant - marques grand public
+    {cat:'wavemaker', brand:'hygger', name:'Mini Wave Maker'},
+    {cat:'wavemaker', brand:'Pawfly', name:'Wave Maker 2000 GPH'},
+    {cat:'wavemaker', brand:'AQQA', name:'Mini Wave Maker'},
+    // Refroidisseur - marques grand public
+    {cat:'chiller', brand:'hygger', name:'Chiller Fan HG051'},
+    {cat:'chiller', brand:'SEAOURA', name:'Cooling Fan'},
+    // Ecumeur - marques grand public
+    {cat:'skimmer', brand:'Eshopps', name:'Nano'},
+    {cat:'skimmer', brand:'Simplicity', name:'DC'},
+    {cat:'skimmer', brand:'Macro Aqua', name:'M-50'},
+    {cat:'skimmer', brand:'Pawfly', name:'Surface Skimmer'},
+    // ATO - marque grand public
+    {cat:'ato', brand:'Reef Breeders', name:'Prism'}
   ];
   const BROWSE_TANK_ICONS = {
     equipment: `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 3.5a3.5 3.5 0 0 0-4.6 4.2L4 12.6V16h3.4l4.9-4.9a3.5 3.5 0 0 0 4.2-4.6l-2.4 2.4-1.9-.5-.5-1.9 2.4-2.4Z"/></svg>`,
@@ -3390,7 +3484,7 @@
     tankSwitcherName.textContent = active ? active.name : '';
     const metaParts = [
       active && active.type ? t('tank.type.'+active.type) : null,
-      active && active.volume ? active.volume+' L' : null
+      formatVolume(active)
     ].filter(Boolean);
     tankSwitcherMeta.textContent = metaParts.join(' · ');
     tankSwitcherMeta.style.display = metaParts.length ? 'block' : 'none';
@@ -3421,7 +3515,7 @@
       const metaParts = [
         tank.type ? t('tank.type.'+tank.type) : null,
         tank.start ? tankAgeLabel(tank.start) : null,
-        tank.volume ? tank.volume+' L' : null
+        formatVolume(tank)
       ].filter(Boolean);
       main.innerHTML = `
         <span class="tr-name">${tank.name}</span>
@@ -3458,6 +3552,23 @@
   // Cheptel par bac (poissons / coraux / invertébrés) — données en mémoire pour l'instant,
   // comme le reste du modèle tanks[], en attendant la vraie persistance Supabase.
   const LIVESTOCK_KINDS = ['fish','corals','inverts'];
+  const SALT_CATALOG = [
+    {brand:'Instant Ocean', name:'Reef Crystals'},
+    {brand:'Red Sea', name:'Coral Pro Salt'},
+    {brand:'Tropic Marin', name:'Pro Reef'},
+    {brand:'Fritz Aquatics', name:'RPM Reef Salt Mix Pro'},
+    {brand:'Brightwell Aquatics', name:'NeoMarine'},
+    {brand:'Aquaforest', name:'Reef Salt'},
+    {brand:'Kent Marine', name:'Reef Salt Blend'}
+  ];
+  const PHYTO_CATALOG = [
+    {brand:'Seachem', name:'Reef Phytoplankton'},
+    {brand:'Reef Nutrition', name:'Phyto-Feast'},
+    {brand:'Reef Hype', name:'Live Phytoplankton'},
+    {brand:'AlgaeBarn', name:'OceanMagik'}
+  ];
+  const DOSING_CATEGORIES = ['salt','phyto','alk','calcium','magnesium','trace','bacteria','carbon','other'];
+  const DOSING_CATALOG_CATS = ['salt','phyto'];
   const LIVESTOCK_ICONS = {
     fish: TANK_TYPE_ICONS.fishOnly,
     corals: TANK_TYPE_ICONS.sps,
@@ -3468,6 +3579,13 @@
   let livestockTankId = null;
   let livestockOpenForm = null;
 
+  function scrollFormIntoView(el){
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{
+        el.scrollIntoView({behavior:'smooth', block:'center'});
+      });
+    });
+  }
   function ensureLivestockData(tank){
     if(!tank.livestock) tank.livestock = {fish:[], corals:[], inverts:[]};
   }
@@ -3512,6 +3630,8 @@
         });
         const nameInput = document.createElement('input');
         nameInput.type='text'; nameInput.placeholder=t('livestock.namePlaceholder');
+        const qtyInput = document.createElement('input');
+        qtyInput.type='number'; qtyInput.min='1'; qtyInput.step='1'; qtyInput.value='1'; qtyInput.placeholder=t('livestock.quantityLabel');
         const btnRow = document.createElement('div');
         btnRow.className='btn-row';
         const cancelBtn = document.createElement('button');
@@ -3523,15 +3643,17 @@
           const kindVal = kindInput.value.trim();
           if(!kindVal) return;
           const nameVal = nameInput.value.trim();
-          tank.livestock[kind].push({id:'ls_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), kind:kindVal, name:nameVal});
+          const qtyVal = qtyInput.value ? Math.max(1, parseInt(qtyInput.value,10)) : 1;
+          tank.livestock[kind].push({id:'ls_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), kind:kindVal, name:nameVal, quantity:qtyVal});
           livestockOpenForm = null;
           renderLivestockSections();
           if(tank.id===activeTankId) renderTankSwitcher();
           syncTankToSupabase(tank);
         });
         btnRow.appendChild(cancelBtn); btnRow.appendChild(confirmBtn);
-        form.appendChild(browseBtn); form.appendChild(kindInput); form.appendChild(nameInput); form.appendChild(btnRow);
+        form.appendChild(browseBtn); form.appendChild(kindInput); form.appendChild(nameInput); form.appendChild(qtyInput); form.appendChild(btnRow);
         section.appendChild(form);
+        scrollFormIntoView(form);
       }
 
       if(!items.length){
@@ -3543,7 +3665,7 @@
         items.forEach(item=>{
           const row = document.createElement('div');
           row.className='livestock-item';
-          row.innerHTML = `<div class="livestock-item-info"><span class="livestock-item-kind">${item.kind}</span>${item.name?`<span class="livestock-item-name">${item.name}</span>`:''}</div>`;
+          row.innerHTML = `<div class="livestock-item-info"><span class="livestock-item-kind">${item.kind}${item.quantity>1?' ×'+item.quantity:''}</span>${item.name?`<span class="livestock-item-name">${item.name}</span>`:''}</div>`;
           const del = document.createElement('button');
           del.type='button'; del.className='livestock-item-del'; del.textContent='×';
           del.setAttribute('aria-label', t('common.delete'));
@@ -3590,7 +3712,12 @@
     if(kind==='corals') return CORAL_CATALOG.map(n=>({name:n}));
     if(kind==='inverts') return INVERT_CATALOG.map(n=>({name:n}));
     if(kind==='equipment') return EQUIPMENT_CATALOG;
+    if(kind==='dosing_salt') return SALT_CATALOG;
+    if(kind==='dosing_phyto') return PHYTO_CATALOG;
     return [];
+  }
+  function catalogKindHasBrand(kind){
+    return kind==='equipment' || kind==='dosing_salt' || kind==='dosing_phyto';
   }
   function renderCatalogCatChips(){
     catalogPickerCatRow.innerHTML = '';
@@ -3614,10 +3741,15 @@
     }
     if(query){
       items = items.filter(i=>{
-        const hay = kind==='equipment' ? (i.brand+' '+i.name).toLowerCase() : i.name.toLowerCase();
+        const hay = catalogKindHasBrand(kind) ? (i.brand+' '+i.name).toLowerCase() : i.name.toLowerCase();
         return hay.includes(query);
       });
     }
+    items = items.slice().sort((a,b)=>{
+      const ka = catalogKindHasBrand(kind) ? (a.brand+' '+a.name) : a.name;
+      const kb = catalogKindHasBrand(kind) ? (b.brand+' '+b.name) : b.name;
+      return ka.localeCompare(kb);
+    });
     catalogPickerList.innerHTML = '';
     if(!items.length){
       const empty = document.createElement('div');
@@ -3628,7 +3760,7 @@
       items.forEach(item=>{
         const row = document.createElement('button');
         row.type='button'; row.className='catalog-item-row';
-        row.innerHTML = kind==='equipment'
+        row.innerHTML = catalogKindHasBrand(kind)
           ? `<span class="catalog-item-name">${item.name}</span><span class="catalog-item-sub">${item.brand}</span>`
           : `<span class="catalog-item-name">${item.name}</span>`;
         row.addEventListener('click', ()=>{
@@ -3669,6 +3801,9 @@
         catSelect.addEventListener('change', ()=>{
           channelsWrap.style.display = catSelect.value==='light' ? 'block' : 'none';
         });
+      } else if(kind==='dosing_salt' || kind==='dosing_phyto'){
+        brandInput = document.createElement('input');
+        brandInput.type='text'; brandInput.placeholder=t('catalog.customBrandPlaceholder');
       }
       const btnRow = document.createElement('div');
       btnRow.className='btn-row';
@@ -3687,6 +3822,8 @@
             ? channelsInput.value.split(',').map(s=>s.trim()).filter(Boolean)
             : [];
           item = {cat: catVal, brand:(brandInput.value.trim()||''), name:nameVal, channels:channelsVal};
+        } else if(kind==='dosing_salt' || kind==='dosing_phyto'){
+          item = {brand:(brandInput.value.trim()||''), name:nameVal};
         } else {
           item = {name:nameVal};
         }
@@ -3701,6 +3838,7 @@
       if(channelsWrap) form.appendChild(channelsWrap);
       form.appendChild(btnRow);
       catalogPickerList.appendChild(form);
+      scrollFormIntoView(form);
     } else {
       const customBtn = document.createElement('button');
       customBtn.type='button'; customBtn.className='primary'; customBtn.style.width='100%'; customBtn.style.marginTop='10px';
@@ -3861,11 +3999,13 @@
   let dosingTankId = null;
   let dosingFormOpen = false;
   let dosingFormMode = 'continuous';
+  let dosingFormCategory = 'other';
   let phytoFormOpen = false;
+  let phytoCardRevealed = false;
 
   function ensureDosingData(tank){
     if(!tank.dosing) tank.dosing = [];
-    tank.dosing.forEach(item=>{ if(!item.mode) item.mode = 'continuous'; });
+    tank.dosing.forEach(item=>{ if(!item.mode) item.mode = 'continuous'; if(!item.category) item.category = 'other'; });
     if(tank.phytoReminder===undefined) tank.phytoReminder = null;
   }
   function formatDurationMs(ms){
@@ -3879,6 +4019,10 @@
     const countdownEl = document.getElementById('phytoCountdown');
     const btn = document.getElementById('phytoDosedBtn');
     const card = document.getElementById('phytoReminderCard');
+    const revealBtn = document.getElementById('phytoRevealBtn');
+    card.style.display = phytoCardRevealed ? 'block' : 'none';
+    revealBtn.style.display = phytoCardRevealed ? 'none' : 'block';
+    if(!phytoCardRevealed) return;
     // supprime un formulaire inline precedent s'il existe
     const oldForm = card.querySelector('.phyto-inline-form');
     if(oldForm) oldForm.remove();
@@ -3931,6 +4075,18 @@
       const form = document.createElement('div');
       form.className = 'livestock-inline-form';
 
+      const catRow = document.createElement('div');
+      catRow.className = 'catalog-cat-row';
+      DOSING_CATEGORIES.forEach(cat=>{
+        const b = document.createElement('button');
+        b.type='button';
+        b.className = 'hist-chip' + (dosingFormCategory===cat ? ' active' : '');
+        b.textContent = t('dosing.cat.'+cat);
+        b.addEventListener('click', ()=>{ dosingFormCategory=cat; renderDosingList(); });
+        catRow.appendChild(b);
+      });
+      form.appendChild(catRow);
+
       const modeRow = document.createElement('div');
       modeRow.className = 'type-chip-row';
       const modeContinuousBtn = document.createElement('button');
@@ -3949,6 +4105,18 @@
       const productInput = document.createElement('input');
       productInput.type='text'; productInput.placeholder=t('dosing.productPlaceholder');
       form.appendChild(productInput);
+
+      const hasCatalog = DOSING_CATALOG_CATS.includes(dosingFormCategory);
+      if(hasCatalog){
+        const browseBtn = document.createElement('button');
+        browseBtn.type='button'; browseBtn.className='secondary'; browseBtn.textContent=t('catalog.browse');
+        browseBtn.addEventListener('click', ()=>{
+          openCatalogPicker(dosingFormCategory==='salt' ? 'dosing_salt' : 'dosing_phyto', (item)=>{
+            productInput.value = item.brand ? item.brand+' '+item.name : item.name;
+          });
+        });
+        form.appendChild(browseBtn);
+      }
 
       let doseInput, timeInput, quantityInput, frequencyInput;
       if(dosingFormMode==='continuous'){
@@ -3979,11 +4147,11 @@
         if(dosingFormMode==='continuous'){
           const doseVal = doseInput.value ? parseFloat(doseInput.value) : null;
           const timeVal = timeInput.value || '';
-          newItem = {id:'do_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), mode:'continuous', product:productVal, dose:doseVal, time:timeVal};
+          newItem = {id:'do_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), category:dosingFormCategory, mode:'continuous', product:productVal, dose:doseVal, time:timeVal};
         } else {
           const quantityVal = quantityInput.value ? parseFloat(quantityInput.value) : null;
           const frequencyVal = frequencyInput.value.trim() || '';
-          newItem = {id:'do_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), mode:'ponctual', product:productVal, quantity:quantityVal, frequency:frequencyVal};
+          newItem = {id:'do_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), category:dosingFormCategory, mode:'ponctual', product:productVal, quantity:quantityVal, frequency:frequencyVal};
         }
         tank.dosing.push(newItem);
         dosingFormOpen = false;
@@ -3994,6 +4162,7 @@
       btnRow.appendChild(cancelBtn); btnRow.appendChild(confirmBtn);
       form.appendChild(btnRow);
       listEl.appendChild(form);
+      scrollFormIntoView(form);
     }
 
     if(!tank.dosing.length){
@@ -4008,7 +4177,8 @@
         const sub = item.mode==='ponctual'
           ? [item.quantity ? item.quantity+' kg' : null, item.frequency || null].filter(Boolean).join(' · ')
           : [item.dose ? item.dose+' ml/j' : null, item.time || null].filter(Boolean).join(' · ');
-        row.innerHTML = `<div class="livestock-item-info"><span class="livestock-item-kind">${item.product}</span>${sub?`<span class="livestock-item-name">${sub}</span>`:''}</div>`;
+        const catLabel = item.category ? t('dosing.cat.'+item.category) : null;
+        row.innerHTML = `<div class="livestock-item-info"><span class="livestock-item-kind">${item.product}${catLabel?' · '+catLabel:''}</span>${sub?`<span class="livestock-item-name">${sub}</span>`:''}</div>`;
         const del = document.createElement('button');
         del.type='button'; del.className='livestock-item-del'; del.textContent='×';
         del.setAttribute('aria-label', t('common.delete'));
@@ -4030,7 +4200,9 @@
     dosingTankId = tankId;
     dosingFormOpen = false;
     dosingFormMode = 'continuous';
+    dosingFormCategory = 'other';
     phytoFormOpen = false;
+    phytoCardRevealed = false;
     ensureDosingData(tank);
     document.getElementById('tankDosingTitle').textContent = t('dosing.title')+' — '+tank.name;
     renderDosingList();
@@ -4041,7 +4213,8 @@
     dosingTankId = null;
     phytoFormOpen = false;
   }
-  document.getElementById('dosingAddBtn').addEventListener('click', ()=>{ dosingFormOpen = !dosingFormOpen; dosingFormMode='continuous'; renderDosingList(); });
+  document.getElementById('dosingAddBtn').addEventListener('click', ()=>{ dosingFormOpen = !dosingFormOpen; dosingFormMode='continuous'; dosingFormCategory='other'; renderDosingList(); });
+  document.getElementById('phytoRevealBtn').addEventListener('click', ()=>{ phytoCardRevealed = true; renderPhytoReminder(); });
   document.getElementById('tankDosingClose').addEventListener('click', closeTankDosing);
   tankDosingOverlay.addEventListener('click', closeTankDosing);
 
@@ -4126,6 +4299,12 @@
           channelInputs[ch] = input;
         });
         form.appendChild(channelsGrid);
+        const peakNote = document.createElement('div');
+        peakNote.className = 'field-sublabel';
+        peakNote.style.opacity = '0.7';
+        peakNote.style.marginTop = '-4px';
+        peakNote.textContent = t('lighting.peakNote');
+        form.appendChild(peakNote);
       }
 
       const intensityInput = document.createElement('input');
@@ -4157,6 +4336,7 @@
       btnRow.appendChild(cancelBtn); btnRow.appendChild(confirmBtn);
       form.appendChild(btnRow);
       listEl.appendChild(form);
+      scrollFormIntoView(form);
     }
 
     if(!tank.lighting.length){
@@ -4253,6 +4433,7 @@
       btnRow.appendChild(cancelBtn); btnRow.appendChild(confirmBtn);
       form.appendChild(productInput); form.appendChild(freqInput); form.appendChild(btnRow);
       scheduleList.appendChild(form);
+      scrollFormIntoView(form);
     }
     if(!tank.feedingSchedule.length){
       const empty = document.createElement('div');
@@ -4337,6 +4518,7 @@
       btnRow.appendChild(cancelBtn); btnRow.appendChild(confirmBtn);
       form.appendChild(dateRow); form.appendChild(yearWrap); form.appendChild(typeRow); form.appendChild(detailInput); form.appendChild(btnRow);
       logList.appendChild(form);
+      scrollFormIntoView(form);
     }
     if(!tank.feedingLog.length){
       const empty = document.createElement('div');
@@ -4393,7 +4575,13 @@
     const tank = tankId ? tanks.find(t=>t.id===tankId) : null;
     document.getElementById('tankFormTitle').textContent = tank ? t('tank.formTitleEdit') : t('tank.formTitleNew');
     tankFormName.value = tank ? tank.name : '';
-    tankFormVolume.value = tank && tank.volume ? tank.volume : '';
+    tankFormVolumeUnit = tank && tank.volumeUnit ? tank.volumeUnit : 'L';
+    if(tank && tank.volume){
+      tankFormVolume.value = tankFormVolumeUnit==='gal' ? (Math.round(literToGal(tank.volume)*10)/10) : Math.round(tank.volume);
+    } else {
+      tankFormVolume.value = '';
+    }
+    renderTankFormVolumeUnitChips();
     if(tank && tank.start){
       const parts = tank.start.split('-');
       tankFormYear.value = parts[0] || '';
@@ -4415,7 +4603,9 @@
   document.getElementById('tankFormSave').addEventListener('click', ()=>{
     const name = tankFormName.value.trim();
     if(!name){ tankFormError.textContent = t('tank.nameRequired'); return; }
-    const volume = tankFormVolume.value ? parseFloat(tankFormVolume.value) : null;
+    const volumeRaw = tankFormVolume.value ? parseFloat(tankFormVolume.value) : null;
+    const volume = volumeRaw!=null ? (tankFormVolumeUnit==='gal' ? galToLiter(volumeRaw) : volumeRaw) : null;
+    const volumeUnit = tankFormVolumeUnit;
     const monthVal = tankFormMonth.value ? parseInt(tankFormMonth.value,10) : null;
     const yearVal = tankFormYear.value ? parseInt(tankFormYear.value,10) : null;
     const start = (monthVal && yearVal) ? String(yearVal).padStart(4,'0')+'-'+String(monthVal).padStart(2,'0') : '';
@@ -4423,11 +4613,11 @@
     let savedTank;
     if(editingTankId){
       const tank = tanks.find(t=>t.id===editingTankId);
-      if(tank){ tank.name=name; tank.volume=volume; tank.type=type; tank.start=start; }
+      if(tank){ tank.name=name; tank.volume=volume; tank.volumeUnit=volumeUnit; tank.type=type; tank.start=start; }
       savedTank = tank;
     } else {
       const id = 'tank_'+Date.now();
-      const newTank = {id, name, volume, type, start, livestock:{fish:[],corals:[],inverts:[]}, equipment:[], dosing:[], lighting:[], journeyOverride:null, feedingSchedule:[], feedingLog:[]};
+      const newTank = {id, name, volume, volumeUnit, type, start, livestock:{fish:[],corals:[],inverts:[]}, equipment:[], dosing:[], lighting:[], journeyOverride:null, feedingSchedule:[], feedingLog:[]};
       tanks.push(newTank);
       activeTankId = id;
       savedTank = newTank;
@@ -5965,12 +6155,6 @@
     await saveLang();
   });
   renderCycleToggle();
-  document.getElementById('cycleToggleBtn').addEventListener('click', async ()=>{
-    cyclingActive = !cyclingActive;
-    renderCycleToggle();
-    renderDashboard();
-    await saveCyclingActive();
-  });
   loadHistory().then(renderDashboard);
   // Supabase fait autorité mais arrive après : on part du cache localStorage pour un
   // affichage immédiat, puis on ne re-rend que si le serveur dit autre chose.
