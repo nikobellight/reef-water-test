@@ -153,6 +153,8 @@
   .bar-row+.bar-group-label{margin-top:14px;}
 
   .bar-row{display:flex;gap:8px;justify-content:space-between;padding:4px 0 8px;}
+  #barRowAutres{overflow-x:auto;justify-content:flex-start;}
+  #barRowAutres .bar-col{flex:0 0 auto;width:64px;}
   .bar-col{flex:1 1 0;min-width:0;max-width:70px;display:flex;flex-direction:column;align-items:center;background:none;border:none;color:var(--text);padding:0;}
   .bar-track{width:20px;height:150px;background:var(--bg-panel-raised);border-radius:999px;display:flex;align-items:flex-end;overflow:hidden;position:relative;}
   .bar-fill{width:100%;min-height:5px;transition:height .25s ease;}
@@ -1285,7 +1287,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v9.2</span>
+        <span class="ver-pill">v9.3</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -3012,12 +3014,12 @@
     const lx=xAt(values.length-1), ly=yAt(values[values.length-1]);
     ctx.beginPath(); ctx.arc(lx,ly,2.2,0,Math.PI*2); ctx.fillStyle='#2ED9C3'; ctx.fill();
   }
-  const SHORT_LABEL = {ph:'pH', nh3:'NH3', no2:'NO2', no3:'NO3', po4:'PO4', kh:'KH', ca:'Ca', mg:'Mg', temp:'Temp', sal:'SG'};
+  const SHORT_LABEL = {ph:'pH', nh3:'NH3', no2:'NO2', no3:'NO3', po4:'PO4', kh:'KH', ca:'Ca', mg:'Mg', temp:'Temp', sal:'SG', sio2:'SiO2', cu:'Cu', k:'K', sr:'Sr'};
   // Deux groupes affichés en blocs séparés plutôt qu'une seule ligne mélangée : le sens
   // de remplissage (haut→bas pour le nuancier, bas→haut pour le reste) est cohérent au
   // sein de chaque bloc, donc plus besoin de deviner en sautant d'une barre à l'autre.
   const DASH_GROUP_NUANCIER = ['ph','nh3','no2','no3','po4'];
-  const DASH_GROUP_AUTRES = ['temp','sal','kh','ca','mg'];
+  const DASH_GROUP_AUTRES = ['temp','sal','kh','ca','mg','sio2','cu','k','sr'];
   // Sélecteur de marque : un seul choix global qui pilote les 5 barres nuancier, la
   // calibration par défaut, la palette de nuances et les carrés de référence.
   function renderBrandSelector(){
