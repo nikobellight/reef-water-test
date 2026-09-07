@@ -1142,7 +1142,7 @@
   .phyto-countdown.overdue{ color:var(--bad); }
   .phyto-inline-form{ display:flex; gap:6px; margin-top:8px; }
   .phyto-inline-form input{ flex:1; min-width:0; }
-  .phyto-inline-form button{ flex:none; }
+  .phyto-inline-form button{ flex:none; width:auto; }
   .catalog-cat-row{ display:flex; gap:6px; overflow-x:auto; padding-bottom:8px; margin-bottom:6px; }
   .catalog-item-row{
     display:flex; flex-direction:column; align-items:flex-start; gap:2px; width:100%; text-align:left;
@@ -1236,10 +1236,9 @@
   /* Toggle de cycle : pleine largeur, discret par défaut (inactif), s'allume en
      ambre quand actif — distinct du cyan des marques pour ne pas les confondre. */
   .hero-status-row{
-    display:grid;
-    grid-template-columns:1fr auto 1fr;
+    display:flex;
+    justify-content:center;
     align-items:center;
-    gap:6px;
     margin-top:14px;
   }
   .hero-status-row .hero-status{margin-top:0;justify-self:center;}
@@ -1286,12 +1285,11 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v8.9</span>
+        <span class="ver-pill">v9.0</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
         <div class="hero-status" id="heroStatus"><span class="dot"></span><span class="txt" data-i18n="hero.underControl">Récif sous contrôle</span></div>
-        <span class="hero-status-row-spacer"></span>
       </div>
     </div>
   </header>
@@ -3301,14 +3299,14 @@
     {cat:'glue', brand:'Bulk Reef Supply (BRS)', name:'Super Glue Gel'},
     {cat:'glue', brand:'Tunze', name:'Coral Gum'},
     // Eclairage - marques grand public
-    {cat:'light', brand:'FZone', name:'Solo Series Nano'},
-    {cat:'light', brand:'FZone', name:'AXON 72W'},
-    {cat:'light', brand:'SEAOURA', name:'SR-659'},
-    {cat:'light', brand:'hygger', name:'Clip-On 24/7'},
-    {cat:'light', brand:'AQQA', name:'24/7 DIY Mode'},
-    {cat:'light', brand:'Pawfly', name:'Bluetooth 42W'},
-    {cat:'light', brand:'Nicrew', name:'NavaReef 65'},
-    {cat:'light', brand:'Nicrew', name:'HyperReef Gen 2'},
+    {cat:'light', brand:'FZone', name:'Solo Series Nano', channels:['White','Red','Green','Blue']},
+    {cat:'light', brand:'FZone', name:'AXON 72W', channels:['White','UV Violet','Royal Blue','Sky Blue','Deep Blue','Red','Blue','Violet']},
+    {cat:'light', brand:'SEAOURA', name:'SR-659', channels:['White','Blue']},
+    {cat:'light', brand:'hygger', name:'Clip-On 24/7', channels:['White','Blue']},
+    {cat:'light', brand:'AQQA', name:'24/7 DIY Mode', channels:['White','Blue']},
+    {cat:'light', brand:'Pawfly', name:'Bluetooth 42W', channels:['White','Blue']},
+    {cat:'light', brand:'Nicrew', name:'NavaReef 65', channels:['White','Red','Green','Blue']},
+    {cat:'light', brand:'Nicrew', name:'HyperReef Gen 2', channels:['White','Blue','Red','Green','UV']},
     // Chauffage - marques grand public
     {cat:'heater', brand:'SEAOURA', name:'SR-317'},
     {cat:'heater', brand:'Pawfly', name:'100W Ajustable'},
@@ -3327,7 +3325,114 @@
     {cat:'skimmer', brand:'Macro Aqua', name:'M-50'},
     {cat:'skimmer', brand:'Pawfly', name:'Surface Skimmer'},
     // ATO - marque grand public
-    {cat:'ato', brand:'Reef Breeders', name:'Prism'}
+    {cat:'ato', brand:'Reef Breeders', name:'Prism'},
+    // hygger - gamme complete Filtre
+    {cat:'filter', brand:'hygger', name:'HOB 315 GPH'},
+    {cat:'filter', brand:'hygger', name:'HOB 105 GPH'},
+    {cat:'filter', brand:'hygger', name:'Hang-on-back Canister'},
+    {cat:'filter', brand:'hygger', name:'Backpack Filter'},
+    {cat:'filter', brand:'hygger', name:'AquaFall'},
+    {cat:'filter', brand:'hygger', name:'4-en-1 HOB'},
+    {cat:'filter', brand:'hygger', name:'Dual-Flow'},
+    {cat:'filter', brand:'hygger', name:'Bilateral HOB'},
+    {cat:'filter', brand:'hygger', name:'Internal Canister 009'},
+    {cat:'filter', brand:'hygger', name:'Intelligent Canister (UV)'},
+    // Eclairage - gamme complete marques diverses
+    {cat:'light', brand:'Nicrew', name:'HyperReef 100W Gen2', channels:['White','Blue','Red','Green','UV']},
+    {cat:'light', brand:'Nicrew', name:'HyperReef 150W Gen2', channels:['White','Blue','Red','Green','UV']},
+    {cat:'light', brand:'Nicrew', name:'HyperReef 200W Gen2', channels:['White','Blue','Red','Green','UV']},
+    {cat:'light', brand:'Nicrew', name:'NavaReef 135W', channels:['White','Red','Green','Blue']},
+    {cat:'light', brand:'Zetlight', name:'ZP-3300 135W', channels:['White','Blue']},
+    {cat:'light', brand:'Zetlight', name:'ZP-3600 185W', channels:['White','Blue']},
+    {cat:'light', brand:'Zetlight', name:'Qmaven II Q6-120', channels:['White','Blue','Red','Green']},
+    {cat:'light', brand:'Kessil', name:'A80', channels:[]},
+    {cat:'light', brand:'Kessil', name:'AP9X', channels:[]},
+    {cat:'light', brand:'Kessil', name:'A500X', channels:[]},
+    {cat:'light', brand:'AI (Aqua Illumination)', name:'Hydra 26HD', channels:['UV','Violet','Royal Blue','Blue','Green','Red','White']},
+    {cat:'light', brand:'AI (Aqua Illumination)', name:'Hydra 64HD', channels:['UV','Violet','Royal Blue','Blue','Green','Red','White']},
+    {cat:'light', brand:'AI (Aqua Illumination)', name:'Prime Fuge', channels:['White','Blue']},
+    {cat:'light', brand:'AI (Aqua Illumination)', name:'Prime SOL', channels:['White','Blue']},
+    {cat:'light', brand:'Orphek', name:'Atlantik V4 Gen2', channels:[]},
+    {cat:'light', brand:'Orphek', name:'Atlantik Compact V4', channels:[]},
+    {cat:'light', brand:'CoralVue', name:'HYDROS XHO Light', channels:['White','Blue']},
+    // Chauffage - gamme hygger 001
+    {cat:'heater', brand:'hygger', name:'001 (100W)'},
+    {cat:'heater', brand:'hygger', name:'001 (200W)'},
+    {cat:'heater', brand:'hygger', name:'001 (300W)'},
+    {cat:'heater', brand:'hygger', name:'001 (800W)'},
+    // Brasseur de courant
+    {cat:'wavemaker', brand:'hygger', name:'HG130'},
+    {cat:'wavemaker', brand:'hygger', name:'HG951'},
+    {cat:'wavemaker', brand:'hygger', name:'Flow One 165'},
+    {cat:'wavemaker', brand:'AQQA', name:'Gyre 1059 GPH DC'},
+    {cat:'wavemaker', brand:'AQQA', name:'2100 GPH'},
+    {cat:'wavemaker', brand:'Pawfly', name:'550 GPH'},
+    {cat:'wavemaker', brand:'CoralVue', name:'HYDROS WaveEngine'},
+    // Doseur - Jebao/Jecod gamme complete
+    {cat:'doser', brand:'Jebao/Jecod', name:'DP-2'},
+    {cat:'doser', brand:'Jebao/Jecod', name:'DP-3'},
+    {cat:'doser', brand:'Jebao/Jecod', name:'DP-4'},
+    {cat:'doser', brand:'Jebao/Jecod', name:'DP-4S'},
+    {cat:'doser', brand:'Jebao/Jecod', name:'DP-6'},
+    {cat:'doser', brand:'Jebao/Jecod', name:'DP-8'},
+    {cat:'doser', brand:'Jebao/Jecod', name:'WiFi Doser 2.4'},
+    {cat:'doser', brand:'Jebao/Jecod', name:'WiFi Doser 3.1'},
+    {cat:'doser', brand:'Jebao/Jecod', name:'WiFi Doser 3.4'},
+    {cat:'doser', brand:'EcoTech Marine', name:'Versa VX-1'},
+    {cat:'doser', brand:'EcoTech Marine', name:'Versa VX-2'},
+    {cat:'doser', brand:'EcoTech Marine', name:'Versa VX-3'},
+    {cat:'doser', brand:'GHL', name:'Doser 2.2'},
+    {cat:'doser', brand:'GHL', name:'Doser 3 Maxi'},
+    {cat:'doser', brand:'CoralVue', name:'HYDROS Duet'},
+    {cat:'doser', brand:'Bulk Reef Supply (BRS)', name:'1.1mL 2-Part Doser'},
+    // ATO / AWC
+    {cat:'ato', brand:'Kamoer', name:'F1'},
+    {cat:'ato', brand:'AutoAqua', name:'Smart ATO Micro'},
+    {cat:'awc', brand:'Kamoer', name:'KWC'},
+    // Ecumeur - gamme complete
+    {cat:'skimmer', brand:'Eshopps', name:'C-120'},
+    {cat:'skimmer', brand:'Eshopps', name:'PSK-100H (Hang-On)'},
+    {cat:'skimmer', brand:'Simplicity', name:'120 DC'},
+    {cat:'skimmer', brand:'Royal Exclusiv', name:'Alpha Cone 200'},
+    {cat:'skimmer', brand:'Reef Octopus', name:'Classic 110SSS'},
+    {cat:'skimmer', brand:'Reef Octopus', name:'Elite 150'},
+    {cat:'skimmer', brand:'Reef Octopus', name:'Regal 150-S'},
+    {cat:'skimmer', brand:'Vertex', name:'Alpha 200'},
+    {cat:'skimmer', brand:'AquaMaxx', name:'FC-280'},
+    {cat:'skimmer', brand:'AquaMaxx', name:'DFC Duetto'},
+    // Pompe
+    {cat:'pump', brand:'Abyzz', name:'A100'},
+    {cat:'pump', brand:'Abyzz', name:'A400'},
+    {cat:'pump', brand:'Sicce', name:'Micra'},
+    // Refroidisseur
+    {cat:'chiller', brand:'Aqua Euro USA', name:'Max-Chill 1/13 HP'},
+    {cat:'chiller', brand:'Aqua Euro USA', name:'Max-Chill 1/10 HP'},
+    {cat:'chiller', brand:'Aqua Euro USA', name:'Max-Chill 1/4 HP'},
+    // Osmoseur
+    {cat:'rodi', brand:'Bulk Reef Supply (BRS)', name:'4-Stage Value'},
+    {cat:'rodi', brand:'Bulk Reef Supply (BRS)', name:'6-Stage Deluxe'},
+    // Reacteur
+    {cat:'reactor', brand:'Tunze', name:'Macro Algae Reactor 3181'},
+    {cat:'reactor', brand:'Aqua Medic', name:'Multi Reactor'},
+    // Controleur
+    {cat:'controller', brand:'Neptune Systems', name:'Apex A3'},
+    {cat:'controller', brand:'Neptune Systems', name:'Apex A3 Pro'},
+    {cat:'controller', brand:'GHL', name:'ProfiLux 4.1'},
+    {cat:'controller', brand:'CoralVue', name:'HYDROS Kraken'},
+    // Testeur auto multi-parametres
+    {cat:'multitest', brand:'CoralVue', name:'HYDROS Maven'},
+    // UV
+    {cat:'uv', brand:'Lifegard Aquatics', name:'Pro-MAX 55W'},
+    {cat:'uv', brand:'Lifegard Aquatics', name:'Pro-MAX 120W'},
+    {cat:'uv', brand:'Pentair', name:'40W'},
+    {cat:'uv', brand:'Pentair', name:'50W'},
+    {cat:'uv', brand:'Pentair', name:'80W'},
+    {cat:'uv', brand:'AquaUV', name:'40W'},
+    {cat:'uv', brand:'AquaUV', name:'80W'},
+    // ICP
+    {cat:'icp', brand:'ATI', name:'ICP-OES Basic Analysis'},
+    {cat:'icp', brand:'ATI', name:'ICP-MS Ultimate Analysis'},
+    {cat:'icp', brand:'Reef Labs', name:'ICP-OES'}
   ];
   const BROWSE_TANK_ICONS = {
     equipment: `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 3.5a3.5 3.5 0 0 0-4.6 4.2L4 12.6V16h3.4l4.9-4.9a3.5 3.5 0 0 0 4.2-4.6l-2.4 2.4-1.9-.5-.5-1.9 2.4-2.4Z"/></svg>`,
@@ -3703,6 +3808,7 @@
   // Picker de catalogue partagé (poissons / coraux / invertébrés / équipement)
   const catalogPickerOverlay=document.getElementById('catalogPickerOverlay'), catalogPickerSheet=document.getElementById('catalogPickerSheet');
   const catalogPickerSearch=document.getElementById('catalogPickerSearch'), catalogPickerCatRow=document.getElementById('catalogPickerCatRow'), catalogPickerList=document.getElementById('catalogPickerList');
+  catalogPickerSearch.addEventListener('focus', ()=> scrollFormIntoView(catalogPickerSearch));
   let catalogPickerConfig = null;
   let catalogPickerActiveCat = 'all';
   let catalogCustomFormOpen = false;
