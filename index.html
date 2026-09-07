@@ -1285,7 +1285,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v9.4</span>
+        <span class="ver-pill">v9.5</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -3129,24 +3129,26 @@
   async function loadTanksFromSupabase(){
     try{
       const res = await fetch(`${SUPABASE_URL}/rest/v1/tanks?select=id,data`, {headers: sbHeaders()});
-      if(!res.ok) return false;
+      if(!res.ok){ showSyncError(await sbErrorDetail(res)); return false; }
       const rows = await res.json();
       if(!Array.isArray(rows) || !rows.length) return false;
       tanks = rows.map(r => Object.assign({id:r.id}, r.data));
       if(!tanks.find(t=>t.id===activeTankId)) activeTankId = tanks[0].id;
       return true;
-    }catch(e){ console.error(e); return false; }
+    }catch(e){ console.error(e); showSyncError(e.message||t('common.networkUnavailable')); return false; }
   }
   async function syncTankToSupabase(tank){
-    if(!tank) return;
+    if(!tank) return false;
     const {id, ...data} = tank;
     try{
-      await fetch(`${SUPABASE_URL}/rest/v1/tanks`, {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/tanks`, {
         method:'POST',
         headers: sbHeaders({'Prefer':'resolution=merge-duplicates'}),
         body: JSON.stringify({id: tank.id, data})
       });
-    }catch(e){ console.error(e); }
+      if(!res.ok){ showSyncError(await sbErrorDetail(res)); return false; }
+      return true;
+    }catch(e){ console.error(e); showSyncError(e.message||t('common.networkUnavailable')); return false; }
   }
   let activeTankId = 'default';
   let editingTankId = null;
