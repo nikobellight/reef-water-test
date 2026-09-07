@@ -153,8 +153,6 @@
   .bar-row+.bar-group-label{margin-top:14px;}
 
   .bar-row{display:flex;gap:8px;justify-content:space-between;padding:4px 0 8px;}
-  #barRowAutres{overflow-x:auto;justify-content:flex-start;}
-  #barRowAutres .bar-col{flex:0 0 auto;width:64px;}
   .bar-col{flex:1 1 0;min-width:0;max-width:70px;display:flex;flex-direction:column;align-items:center;background:none;border:none;color:var(--text);padding:0;}
   .bar-track{width:20px;height:150px;background:var(--bg-panel-raised);border-radius:999px;display:flex;align-items:flex-end;overflow:hidden;position:relative;}
   .bar-fill{width:100%;min-height:5px;transition:height .25s ease;}
@@ -1287,7 +1285,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v9.3</span>
+        <span class="ver-pill">v9.4</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1375,6 +1373,8 @@
         <div class="bar-row" id="barRowNuancier"></div>
         <p class="bar-group-label" data-i18n="dash.titrationGroupLabel">Titration &amp; mesure directe</p>
         <div class="bar-row" id="barRowAutres"></div>
+        <p class="bar-group-label" data-i18n="dash.traceGroupLabel">Oligo-éléments</p>
+        <div class="bar-row" id="barRowTrace"></div>
       </div>
 
       <div class="empty-state" id="dashEmpty" style="display:none;">
@@ -1949,6 +1949,7 @@
       'dash.recentTitle': 'Dernières mesures',
       'dash.chartGroupLabel': 'Nuancier',
       'dash.titrationGroupLabel': 'Titration & mesure directe',
+      'dash.traceGroupLabel': 'Oligo-éléments',
       'dash.emptyLine1': 'Aucune mesure encore.',
       'dash.emptyLine2': 'Commence par un nouveau test.',
       'dash.emptyBtn': '➕ Nouveau test',
@@ -2319,6 +2320,7 @@
       'dash.recentTitle': 'Latest readings',
       'dash.chartGroupLabel': 'Color chart',
       'dash.titrationGroupLabel': 'Titration & direct reading',
+      'dash.traceGroupLabel': 'Trace Elements',
       'dash.emptyLine1': 'No readings yet.',
       'dash.emptyLine2': 'Start with a new test.',
       'dash.emptyBtn': '➕ New test',
@@ -3019,7 +3021,8 @@
   // de remplissage (haut→bas pour le nuancier, bas→haut pour le reste) est cohérent au
   // sein de chaque bloc, donc plus besoin de deviner en sautant d'une barre à l'autre.
   const DASH_GROUP_NUANCIER = ['ph','nh3','no2','no3','po4'];
-  const DASH_GROUP_AUTRES = ['temp','sal','kh','ca','mg','sio2','cu','k','sr'];
+  const DASH_GROUP_AUTRES = ['temp','sal','kh','ca','mg'];
+  const DASH_GROUP_TRACE = ['sio2','cu','k','sr'];
   // Sélecteur de marque : un seul choix global qui pilote les 5 barres nuancier, la
   // calibration par défaut, la palette de nuances et les carrés de référence.
   function renderBrandSelector(){
@@ -5185,6 +5188,7 @@
     }
     renderBarGroup(DASH_GROUP_NUANCIER, 'barRowNuancier');
     renderBarGroup(DASH_GROUP_AUTRES, 'barRowAutres');
+    renderBarGroup(DASH_GROUP_TRACE, 'barRowTrace');
     document.getElementById('dashEmpty').style.display = any ? 'none':'block';
   }
 
