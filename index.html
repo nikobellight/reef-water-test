@@ -1285,7 +1285,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v9.6</span>
+        <span class="ver-pill">v9.7</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -3816,10 +3816,10 @@
   let livestockTankId = null;
   let livestockOpenForm = null;
 
-  function scrollFormIntoView(el){
+  function scrollFormIntoView(el, block){
     requestAnimationFrame(()=>{
       requestAnimationFrame(()=>{
-        el.scrollIntoView({behavior:'smooth', block:'center'});
+        el.scrollIntoView({behavior:'smooth', block: block||'center'});
       });
     });
   }
@@ -3940,7 +3940,7 @@
   // Picker de catalogue partagé (poissons / coraux / invertébrés / équipement)
   const catalogPickerOverlay=document.getElementById('catalogPickerOverlay'), catalogPickerSheet=document.getElementById('catalogPickerSheet');
   const catalogPickerSearch=document.getElementById('catalogPickerSearch'), catalogPickerCatRow=document.getElementById('catalogPickerCatRow'), catalogPickerList=document.getElementById('catalogPickerList');
-  catalogPickerSearch.addEventListener('focus', ()=> scrollFormIntoView(catalogPickerSearch));
+  catalogPickerSearch.addEventListener('focus', ()=> scrollFormIntoView(catalogPickerSearch, 'start'));
   let catalogPickerConfig = null;
   let catalogPickerActiveCat = 'all';
   let catalogCustomFormOpen = false;
