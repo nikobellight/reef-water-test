@@ -1285,7 +1285,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v9.7</span>
+        <span class="ver-pill">v9.8</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -3726,7 +3726,7 @@
     tankSwitcherIcon.innerHTML = (active && active.type && TANK_TYPE_ICONS[active.type]) ? TANK_TYPE_ICONS[active.type] : TANK_ICON_DEFAULT;
     if(active){
       ensureLivestockData(active);
-      const total = active.livestock.fish.length + active.livestock.corals.length + active.livestock.inverts.length;
+      const total = sumQty(active.livestock.fish) + sumQty(active.livestock.corals) + sumQty(active.livestock.inverts);
       document.getElementById('browseTankLivestockCount').textContent = total;
       ensureEquipmentData(active);
       document.getElementById('browseTankEquipmentCount').textContent = active.equipment.length;
@@ -3823,6 +3823,7 @@
       });
     });
   }
+  function sumQty(items){ return items.reduce((s,i)=>s+(i.quantity||1),0); }
   function ensureLivestockData(tank){
     if(!tank.livestock) tank.livestock = {fish:[], corals:[], inverts:[]};
   }
@@ -3843,7 +3844,7 @@
       const label = document.createElement('div');
       label.className = 'livestock-section-label';
       label.style.color = LIVESTOCK_COLORS[kind];
-      label.innerHTML = LIVESTOCK_ICONS[kind] + `<span style="color:var(--text)">${t('livestock.'+kind)}</span><span class="livestock-count">${items.length}</span>`;
+      label.innerHTML = LIVESTOCK_ICONS[kind] + `<span style="color:var(--text)">${t('livestock.'+kind)}</span><span class="livestock-count">${sumQty(items)}</span>`;
       head.appendChild(label);
       const addBtn = document.createElement('button');
       addBtn.type='button'; addBtn.className='livestock-add-btn'; addBtn.textContent='+';
