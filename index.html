@@ -1285,7 +1285,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v9.1</span>
+        <span class="ver-pill">v9.2</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1525,6 +1525,30 @@
         </div>
         <button class="primary" id="btnSaveSal" data-i18n="common.save">Enregistrer</button>
         <p class="save-msg" id="salSaveMsg"></p>
+      </div>
+      <div class="card">
+        <p class="step-label active"><span class="dot"></span><span data-i18n="direct.sio2Step">Silicates (SiO2)</span></p>
+        <div class="field"><label class="field-label" data-i18n="direct.sio2Label">Silicates (ppm)</label><input type="number" id="sio2Input" step="0.01" placeholder="ex. 0.2" data-i18n-placeholder="direct.sio2Placeholder"></div>
+        <button class="primary" id="btnSaveSio2" data-i18n="common.save">Enregistrer</button>
+        <p class="save-msg" id="sio2SaveMsg"></p>
+      </div>
+      <div class="card">
+        <p class="step-label active"><span class="dot"></span><span data-i18n="direct.cuStep">Cuivre (Cu)</span></p>
+        <div class="field"><label class="field-label" data-i18n="direct.cuLabel">Cuivre (ppm)</label><input type="number" id="cuInput" step="0.001" placeholder="ex. 0" data-i18n-placeholder="direct.cuPlaceholder"></div>
+        <button class="primary" id="btnSaveCu" data-i18n="common.save">Enregistrer</button>
+        <p class="save-msg" id="cuSaveMsg"></p>
+      </div>
+      <div class="card">
+        <p class="step-label active"><span class="dot"></span><span data-i18n="direct.kStep">Potassium (K)</span></p>
+        <div class="field"><label class="field-label" data-i18n="direct.kLabel">Potassium (ppm)</label><input type="number" id="kInput" step="1" placeholder="ex. 400" data-i18n-placeholder="direct.kPlaceholder"></div>
+        <button class="primary" id="btnSaveK" data-i18n="common.save">Enregistrer</button>
+        <p class="save-msg" id="kSaveMsg"></p>
+      </div>
+      <div class="card">
+        <p class="step-label active"><span class="dot"></span><span data-i18n="direct.srStep">Strontium (Sr)</span></p>
+        <div class="field"><label class="field-label" data-i18n="direct.srLabel">Strontium (ppm)</label><input type="number" id="srInput" step="0.1" placeholder="ex. 9" data-i18n-placeholder="direct.srPlaceholder"></div>
+        <button class="primary" id="btnSaveSr" data-i18n="common.save">Enregistrer</button>
+        <p class="save-msg" id="srSaveMsg"></p>
       </div>
     </section>
 
@@ -1935,7 +1959,7 @@
       'picker.titration.title': 'Titration (Salifert)',
       'picker.titration.subtitle': 'KH/Alcalinité · Calcium · Magnésium',
       'picker.direct.title': 'Mesure directe',
-      'picker.direct.subtitle': 'Température · Densité',
+      'picker.direct.subtitle': 'Température · Densité · Silicates · Cuivre · Potassium · Strontium',
       'nuancier.paramStep': 'Paramètre testé',
       'nuancier.customLabel': 'Nom du paramètre',
       'nuancier.customLabelPlaceholder': 'ex. Cuivre',
@@ -2006,6 +2030,18 @@
       'direct.salStep': 'Densité',
       'direct.sgLabel': 'Densité (SG) — jamais moins de 1, jamais plus de 2',
       'direct.pptLabel': 'Salinité (ppt)',
+      'direct.sio2Step': 'Silicates (SiO2)',
+      'direct.sio2Label': 'Silicates (ppm)',
+      'direct.sio2Placeholder': 'ex. 0.2',
+      'direct.cuStep': 'Cuivre (Cu)',
+      'direct.cuLabel': 'Cuivre (ppm)',
+      'direct.cuPlaceholder': 'ex. 0',
+      'direct.kStep': 'Potassium (K)',
+      'direct.kLabel': 'Potassium (ppm)',
+      'direct.kPlaceholder': 'ex. 400',
+      'direct.srStep': 'Strontium (Sr)',
+      'direct.srLabel': 'Strontium (ppm)',
+      'direct.srPlaceholder': 'ex. 9',
       'direct.pptPlaceholder': 'ex. 35',
       'direct.convertedFrom': 'converti depuis {ppt} ppt',
       'history.stepLabel': 'Historique',
@@ -2293,7 +2329,7 @@
       'picker.titration.title': 'Titration (Salifert)',
       'picker.titration.subtitle': 'KH/Alkalinity · Calcium · Magnesium',
       'picker.direct.title': 'Direct reading',
-      'picker.direct.subtitle': 'Temperature · Salinity (SG)',
+      'picker.direct.subtitle': 'Temperature · Salinity (SG) · Silicates · Copper · Potassium · Strontium',
       'nuancier.paramStep': 'Parameter tested',
       'nuancier.customLabel': 'Parameter name',
       'nuancier.customLabelPlaceholder': 'e.g. Copper',
@@ -2364,6 +2400,18 @@
       'direct.salStep': 'Salinity',
       'direct.sgLabel': 'Density (SG) — never below 1, never above 2',
       'direct.pptLabel': 'Salinity (ppt)',
+      'direct.sio2Step': 'Silicates (SiO2)',
+      'direct.sio2Label': 'Silicates (ppm)',
+      'direct.sio2Placeholder': 'e.g. 0.2',
+      'direct.cuStep': 'Copper (Cu)',
+      'direct.cuLabel': 'Copper (ppm)',
+      'direct.cuPlaceholder': 'e.g. 0',
+      'direct.kStep': 'Potassium (K)',
+      'direct.kLabel': 'Potassium (ppm)',
+      'direct.kPlaceholder': 'e.g. 400',
+      'direct.srStep': 'Strontium (Sr)',
+      'direct.srLabel': 'Strontium (ppm)',
+      'direct.srPlaceholder': 'e.g. 9',
       'direct.pptPlaceholder': 'e.g. 35',
       'direct.convertedFrom': 'converted from {ppt} ppt',
       'history.stepLabel': 'History',
@@ -2713,6 +2761,10 @@
     mg:   {label:'Magnésium',              unit:'ppm', group:'titration', decimals:0, ideal:[1250,1350],  acceptable:[1200,1400], optimal:1300, color:'#5ACB4D', calc:r=>(1-r)*1500},
     temp: {label:'Température',            unit:'°C',  group:'direct',    decimals:1, ideal:[24,27],      acceptable:[23,28], optimal:25.5, color:'#6892F3'},
     sal:  {label:'Densité',                unit:'SG',  group:'direct',    decimals:3, ideal:[1.023,1.026],acceptable:[1.020,1.028], optimal:1.0245, color:'#4DD9E8'},
+    sio2: {label:'Silicates (SiO2)',       unit:'ppm', group:'direct',    decimals:2, ideal:[0,1],        acceptable:[0,2],     optimal:0,    color:'#C9A24D'},
+    cu:   {label:'Cuivre (Cu)',            unit:'ppm', group:'direct',    decimals:3, ideal:[0,0],        acceptable:[0,0.05],  optimal:0,    color:'#B4622E'},
+    k:    {label:'Potassium (K)',          unit:'ppm', group:'direct',    decimals:0, ideal:[380,420],    acceptable:[350,450], optimal:400,  color:'#4D8FC9'},
+    sr:   {label:'Strontium (Sr)',         unit:'ppm', group:'direct',    decimals:1, ideal:[8,10],       acceptable:[5,12],    optimal:9,    color:'#8F6FC9'},
     autre:{label:'Autre',                  unit:'',    group:'chart',     decimals:2, ideal:null,         acceptable:null}
   };
 
@@ -5596,6 +5648,22 @@
     msg.style.color = saved? 'var(--good)':'var(--bad)';
     msg.style.display='block'; setTimeout(()=>msg.style.display='none', saved?1800:4000);
   });
+  function wireDirectSave(paramKey, inputId, btnId, msgId){
+    document.getElementById(btnId).addEventListener('click', async ()=>{
+      const raw=document.getElementById(inputId).value.trim().replace(',','.'); const v=parseFloat(raw);
+      if(!raw||isNaN(v)) return;
+      const saved=await addHistoryEntry({param:paramKey,value:v,status:statusOf(paramKey,v),source:'direct'});
+      if(saved) document.getElementById(inputId).value='';
+      const msg=document.getElementById(msgId);
+      msg.textContent = saved? t('common.savedSuccess') : t('common.savedFailShort');
+      msg.style.color = saved? 'var(--good)':'var(--bad)';
+      msg.style.display='block'; setTimeout(()=>msg.style.display='none', saved?1800:4000);
+    });
+  }
+  wireDirectSave('sio2', 'sio2Input', 'btnSaveSio2', 'sio2SaveMsg');
+  wireDirectSave('cu', 'cuInput', 'btnSaveCu', 'cuSaveMsg');
+  wireDirectSave('k', 'kInput', 'btnSaveK', 'kSaveMsg');
+  wireDirectSave('sr', 'srInput', 'btnSaveSr', 'srSaveMsg');
 
   // ================= timer =================
   (function(){
