@@ -1123,7 +1123,7 @@
   .livestock-item-info{ display:flex; flex-direction:column; }
   .livestock-item-kind{ font-size:0.86rem; font-weight:500; color:var(--text); }
   .livestock-item-name{ font-size:0.74rem; color:var(--text-dim); margin-top:1px; }
-  .livestock-item-del{ background:none; border:none; color:var(--text-dim); font-size:1.1rem; padding:2px 6px; cursor:pointer; flex:none; }
+  .livestock-item-del{ background:rgba(255,90,95,0.12); border:1px solid rgba(255,90,95,0.35); color:var(--bad); font-size:1.1rem; line-height:1; width:28px; height:28px; border-radius:8px; padding:0; cursor:pointer; flex:none; display:flex; align-items:center; justify-content:center; }
   .livestock-inline-form{ display:flex; flex-direction:column; gap:8px; margin-bottom:10px; }
   .livestock-inline-form .btn-row{ margin-top:2px; }
   .equipment-item-row{ cursor:pointer; }
@@ -1131,7 +1131,7 @@
   .equipment-setting-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:4px 0; font-size:0.78rem; }
   .equipment-setting-row .equipment-setting-label{ color:var(--text-dim); }
   .equipment-setting-row .equipment-setting-value{ color:var(--text); font-family:'IBM Plex Mono',monospace; }
-  .equipment-setting-del{ background:none; border:none; color:var(--text-dim); font-size:0.95rem; padding:0 4px; cursor:pointer; flex:none; }
+  .equipment-setting-del{ background:rgba(255,90,95,0.12); border:1px solid rgba(255,90,95,0.35); color:var(--bad); font-size:0.95rem; width:24px; height:24px; border-radius:7px; padding:0; cursor:pointer; flex:none; display:flex; align-items:center; justify-content:center; }
   .equipment-settings-add{ display:flex; gap:6px; margin-top:6px; }
   .equipment-settings-add input{ flex:1; min-width:0; }
   .equipment-settings-add button{ flex:none; }
@@ -1285,7 +1285,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v10.1</span>
+        <span class="ver-pill">v10.2</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -2253,10 +2253,10 @@
       'dosing.frequencyPlaceholder': 'ex. 1x/semaine',
       'dosing.phytoTitle': 'Production Phytoplancton',
       'dosing.phytoRevealLink': '+ Production Phytoplancton',
-      'dosing.phytoDosedBtn': 'Phyto dosé',
-      'dosing.phytoNextInPlaceholder': "Dans combien de jours ?",
-      'dosing.phytoNextDue': 'Prochain dans {time}',
-      'dosing.phytoOverdue': 'En retard de {time}',
+      'dosing.phytoDosedBtn': 'Récolté',
+      'dosing.phytoNextInPlaceholder': "Prochaine récolte dans combien de jours ?",
+      'dosing.phytoNextDue': 'Prochaine récolte dans {time}',
+      'dosing.phytoOverdue': 'Récolte en retard de {time}',
       'dosing.phytoNone': 'Aucun dosage enregistré',
       'dosing.title': 'Dosage',
       'dosing.productLabel': 'Produit',
@@ -2624,10 +2624,10 @@
       'dosing.frequencyPlaceholder': 'e.g. 1x/week',
       'dosing.phytoTitle': 'Phytoplankton Production',
       'dosing.phytoRevealLink': '+ Phytoplankton Production',
-      'dosing.phytoDosedBtn': 'Phyto dosed',
-      'dosing.phytoNextInPlaceholder': 'In how many days?',
-      'dosing.phytoNextDue': 'Next in {time}',
-      'dosing.phytoOverdue': 'Overdue by {time}',
+      'dosing.phytoDosedBtn': 'Harvested',
+      'dosing.phytoNextInPlaceholder': 'Next harvest in how many days?',
+      'dosing.phytoNextDue': 'Next harvest in {time}',
+      'dosing.phytoOverdue': 'Harvest overdue by {time}',
       'dosing.phytoNone': 'No dose logged yet',
       'dosing.title': 'Dosing',
       'dosing.productLabel': 'Product',
@@ -3815,6 +3815,7 @@
   const tankLivestockOverlay=document.getElementById('tankLivestockOverlay'), tankLivestockSheet=document.getElementById('tankLivestockSheet');
   let livestockTankId = null;
   let livestockOpenForm = null;
+  let livestockEditingItem = null;
 
   function scrollFormIntoView(el, block){
     requestAnimationFrame(()=>{
@@ -3850,7 +3851,8 @@
       addBtn.type='button'; addBtn.className='livestock-add-btn'; addBtn.textContent='+';
       addBtn.setAttribute('aria-label', t('common.add'));
       addBtn.addEventListener('click', ()=>{
-        livestockOpenForm = (livestockOpenForm===kind) ? null : kind;
+        livestockEditingItem = null;
+        livestockOpenForm = (livestockOpenForm===kind && !livestockEditingItem) ? null : kind;
         renderLivestockSections();
       });
       head.appendChild(addBtn);
@@ -3861,6 +3863,7 @@
         form.className = 'livestock-inline-form';
         const kindInput = document.createElement('input');
         kindInput.type='text'; kindInput.placeholder=t('livestock.kindPlaceholder.'+kind);
+        if(livestockEditingItem) kindInput.value = livestockEditingItem.kind;
         const browseBtn = document.createElement('button');
         browseBtn.type='button'; browseBtn.className='secondary'; browseBtn.textContent=t('catalog.browse');
         browseBtn.addEventListener('click', ()=>{
@@ -3868,22 +3871,30 @@
         });
         const nameInput = document.createElement('input');
         nameInput.type='text'; nameInput.placeholder=t('livestock.namePlaceholder');
+        if(livestockEditingItem) nameInput.value = livestockEditingItem.name||'';
         const qtyInput = document.createElement('input');
-        qtyInput.type='number'; qtyInput.min='1'; qtyInput.step='1'; qtyInput.value='1'; qtyInput.placeholder=t('livestock.quantityLabel');
+        qtyInput.type='number'; qtyInput.min='1'; qtyInput.step='1'; qtyInput.value=livestockEditingItem ? livestockEditingItem.quantity||1 : '1'; qtyInput.placeholder=t('livestock.quantityLabel');
         const btnRow = document.createElement('div');
         btnRow.className='btn-row';
         const cancelBtn = document.createElement('button');
         cancelBtn.type='button'; cancelBtn.className='secondary'; cancelBtn.textContent=t('common.cancel');
-        cancelBtn.addEventListener('click', ()=>{ livestockOpenForm=null; renderLivestockSections(); });
+        cancelBtn.addEventListener('click', ()=>{ livestockOpenForm=null; livestockEditingItem=null; renderLivestockSections(); });
         const confirmBtn = document.createElement('button');
-        confirmBtn.type='button'; confirmBtn.className='primary'; confirmBtn.textContent=t('common.add');
+        confirmBtn.type='button'; confirmBtn.className='primary'; confirmBtn.textContent = livestockEditingItem ? t('common.save') : t('common.add');
         confirmBtn.addEventListener('click', ()=>{
           const kindVal = kindInput.value.trim();
           if(!kindVal) return;
           const nameVal = nameInput.value.trim();
           const qtyVal = qtyInput.value ? Math.max(1, parseInt(qtyInput.value,10)) : 1;
-          tank.livestock[kind].push({id:'ls_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), kind:kindVal, name:nameVal, quantity:qtyVal});
+          if(livestockEditingItem){
+            livestockEditingItem.kind = kindVal;
+            livestockEditingItem.name = nameVal;
+            livestockEditingItem.quantity = qtyVal;
+          } else {
+            tank.livestock[kind].push({id:'ls_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), kind:kindVal, name:nameVal, quantity:qtyVal});
+          }
           livestockOpenForm = null;
+          livestockEditingItem = null;
           renderLivestockSections();
           if(tank.id===activeTankId) renderTankSwitcher();
           syncTankToSupabase(tank);
@@ -3903,11 +3914,18 @@
         items.forEach(item=>{
           const row = document.createElement('div');
           row.className='livestock-item';
+          row.style.cursor = 'pointer';
           row.innerHTML = `<div class="livestock-item-info"><span class="livestock-item-kind">${item.kind}${item.quantity>1?' ×'+item.quantity:''}</span>${item.name?`<span class="livestock-item-name">${item.name}</span>`:''}</div>`;
+          row.addEventListener('click', ()=>{
+            livestockEditingItem = item;
+            livestockOpenForm = kind;
+            renderLivestockSections();
+          });
           const del = document.createElement('button');
           del.type='button'; del.className='livestock-item-del'; del.textContent='×';
           del.setAttribute('aria-label', t('common.delete'));
-          del.addEventListener('click', ()=>{
+          del.addEventListener('click', (e)=>{
+            e.stopPropagation();
             tank.livestock[kind] = tank.livestock[kind].filter(i=>i.id!==item.id);
             renderLivestockSections();
             if(tank.id===activeTankId) renderTankSwitcher();
@@ -3926,6 +3944,7 @@
     if(!tank) return;
     livestockTankId = tankId;
     livestockOpenForm = null;
+    livestockEditingItem = null;
     ensureLivestockData(tank);
     document.getElementById('tankLivestockTitle').textContent = t('livestock.title')+' — '+tank.name;
     renderLivestockSections();
@@ -4821,6 +4840,7 @@
   const MEDIA_TYPES = ['carbon','gfo','resin','biopellets','other'];
   let mediaTankId = null;
   let mediaFormOpen = false;
+  let mediaEditingItem = null;
   let mediaFormType = 'carbon';
 
   function ensureMediaData(tank){
@@ -4856,20 +4876,27 @@
 
       const freqInput = document.createElement('input');
       freqInput.type='number'; freqInput.min='1'; freqInput.step='1'; freqInput.placeholder=t('media.frequencyLabel');
+      if(mediaEditingItem) freqInput.value = mediaEditingItem.frequencyDays;
       form.appendChild(freqInput);
 
       const btnRow = document.createElement('div');
       btnRow.className='btn-row';
       const cancelBtn = document.createElement('button');
       cancelBtn.type='button'; cancelBtn.className='secondary'; cancelBtn.textContent=t('common.cancel');
-      cancelBtn.addEventListener('click', ()=>{ mediaFormOpen=false; renderMediaList(); });
+      cancelBtn.addEventListener('click', ()=>{ mediaFormOpen=false; mediaEditingItem=null; renderMediaList(); });
       const confirmBtn = document.createElement('button');
-      confirmBtn.type='button'; confirmBtn.className='primary'; confirmBtn.textContent=t('common.add');
+      confirmBtn.type='button'; confirmBtn.className='primary'; confirmBtn.textContent = mediaEditingItem ? t('common.save') : t('common.add');
       confirmBtn.addEventListener('click', ()=>{
         const freqVal = freqInput.value ? Math.max(1, parseInt(freqInput.value,10)) : null;
         if(!freqVal) return;
-        tank.filterMedia.push({id:'md_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), type:mediaFormType, lastRenewedAt:Date.now(), frequencyDays:freqVal});
+        if(mediaEditingItem){
+          mediaEditingItem.type = mediaFormType;
+          mediaEditingItem.frequencyDays = freqVal;
+        } else {
+          tank.filterMedia.push({id:'md_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), type:mediaFormType, lastRenewedAt:Date.now(), frequencyDays:freqVal});
+        }
         mediaFormOpen = false;
+        mediaEditingItem = null;
         renderMediaList();
         if(tank.id===activeTankId) renderTankSwitcher();
         syncTankToSupabase(tank);
@@ -4889,6 +4916,7 @@
       tank.filterMedia.forEach(item=>{
         const row = document.createElement('div');
         row.className='livestock-item';
+        row.style.cursor = 'pointer';
         let statusText, statusClass = '';
         if(!item.lastRenewedAt){
           statusText = t('media.neverRenewed');
@@ -4903,10 +4931,17 @@
           }
         }
         row.innerHTML = `<div class="livestock-item-info"><span class="livestock-item-kind">${t('media.type.'+item.type)}</span><span class="livestock-item-name phyto-countdown${statusClass}" style="margin-top:2px;">${statusText}</span></div>`;
+        row.addEventListener('click', ()=>{
+          mediaEditingItem = item;
+          mediaFormType = item.type;
+          mediaFormOpen = true;
+          renderMediaList();
+        });
         const renewBtn = document.createElement('button');
         renewBtn.type='button'; renewBtn.className='hist-chip'; renewBtn.textContent=t('media.renewedBtn');
         renewBtn.style.flex='none'; renewBtn.style.marginRight='6px';
-        renewBtn.addEventListener('click', ()=>{
+        renewBtn.addEventListener('click', (e)=>{
+          e.stopPropagation();
           item.lastRenewedAt = Date.now();
           renderMediaList();
           syncTankToSupabase(tank);
@@ -4914,7 +4949,8 @@
         const del = document.createElement('button');
         del.type='button'; del.className='livestock-item-del'; del.textContent='×';
         del.setAttribute('aria-label', t('common.delete'));
-        del.addEventListener('click', ()=>{
+        del.addEventListener('click', (e)=>{
+          e.stopPropagation();
           tank.filterMedia = tank.filterMedia.filter(i=>i.id!==item.id);
           renderMediaList();
           if(tank.id===activeTankId) renderTankSwitcher();
@@ -4932,6 +4968,7 @@
     mediaTankId = tankId;
     mediaFormOpen = false;
     mediaFormType = 'carbon';
+    mediaEditingItem = null;
     ensureMediaData(tank);
     document.getElementById('tankMediaTitle').textContent = t('media.title')+' — '+tank.name;
     renderMediaList();
@@ -4941,7 +4978,7 @@
     tankMediaOverlay.style.display='none'; tankMediaSheet.style.display='none';
     mediaTankId = null;
   }
-  document.getElementById('mediaAddBtn').addEventListener('click', ()=>{ mediaFormOpen = !mediaFormOpen; mediaFormType='carbon'; renderMediaList(); });
+  document.getElementById('mediaAddBtn').addEventListener('click', ()=>{ mediaEditingItem=null; mediaFormOpen = !mediaFormOpen; mediaFormType='carbon'; renderMediaList(); });
   document.getElementById('tankMediaClose').addEventListener('click', closeTankMedia);
   tankMediaOverlay.addEventListener('click', closeTankMedia);
 
