@@ -1285,7 +1285,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v10.7</span>
+        <span class="ver-pill">v10.8</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -2314,6 +2314,7 @@
       'feeding.logHint': 'Historique daté de ce que tu as réellement donné',
       'feeding.productPlaceholder': 'ex. Granulés, Nori...',
       'feeding.frequencyPlaceholder': 'ex. 2x/jour',
+      'feeding.frequencyCountLabel': 'Nombre de fois',
       'feeding.quantityLabel': 'Quantité (optionnel)',
       'feeding.scheduleEmpty': 'Aucun planning configuré',
       'feeding.logEmpty': 'Aucune entrée au journal',
@@ -2703,6 +2704,7 @@
       'feeding.logHint': 'Dated history of what you actually fed',
       'feeding.productPlaceholder': 'e.g. Pellets, Nori...',
       'feeding.frequencyPlaceholder': 'e.g. 2x/day',
+      'feeding.frequencyCountLabel': 'Number of times',
       'feeding.quantityLabel': 'Quantity (optional)',
       'feeding.scheduleEmpty': 'No schedule set up yet',
       'feeding.logEmpty': 'No log entries yet',
@@ -3861,13 +3863,19 @@
   function buildUnitChips(units, selected, onSelect){
     const row = document.createElement('div');
     row.style.cssText = 'display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;';
+    const buttons = [];
     units.forEach(u=>{
       const b = document.createElement('button');
       b.type='button';
       b.className = 'hist-chip' + (selected===u ? ' active' : '');
       b.style.cssText = 'padding:4px 10px;font-size:0.72rem;flex:none;';
       b.textContent = t('unit.'+u);
-      b.addEventListener('click', (e)=>{ e.stopPropagation(); onSelect(u); });
+      b.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        onSelect(u);
+        buttons.forEach(({el,unit})=>{ el.classList.toggle('active', unit===u); });
+      });
+      buttons.push({el:b, unit:u});
       row.appendChild(b);
     });
     return row;
@@ -4420,7 +4428,7 @@
         syncTankToSupabase(tank);
       });
       form.appendChild(daysInput); form.appendChild(confirmBtn);
-      form.appendChild(buildUnitChips(UNIT_TIME, phytoFormUnit, (u)=>{ phytoFormUnit=u; renderPhytoReminder(); }));
+      form.appendChild(buildUnitChips(UNIT_TIME, phytoFormUnit, (u)=>{ phytoFormUnit=u; }));
       card.appendChild(form);
     }
 
@@ -4495,11 +4503,11 @@
         doseInput.type='number'; doseInput.min='0'; doseInput.step='0.1'; doseInput.placeholder=t('dosing.doseLabel');
         if(dosingEditingItem && dosingEditingItem.dose!=null) doseInput.value = dosingEditingItem.dose;
         form.appendChild(doseInput);
-        form.appendChild(buildUnitChips(UNIT_QUANTITY, dosingFormDoseUnit, (u)=>{ dosingFormDoseUnit=u; renderDosingList(); }));
+        form.appendChild(buildUnitChips(UNIT_QUANTITY, dosingFormDoseUnit, (u)=>{ dosingFormDoseUnit=u; }));
         const perLabel = document.createElement('div');
         perLabel.className='field-sublabel'; perLabel.style.marginTop='6px'; perLabel.textContent=t('dosing.perLabel');
         form.appendChild(perLabel);
-        form.appendChild(buildUnitChips(UNIT_TIME, dosingFormFreqUnit, (u)=>{ dosingFormFreqUnit=u; renderDosingList(); }));
+        form.appendChild(buildUnitChips(UNIT_TIME, dosingFormFreqUnit, (u)=>{ dosingFormFreqUnit=u; }));
         timeInput = document.createElement('input');
         timeInput.type='text'; timeInput.placeholder='ex. 08:30'; timeInput.style.marginTop='6px';
         if(dosingEditingItem && dosingEditingItem.time) timeInput.value = dosingEditingItem.time;
@@ -4510,7 +4518,7 @@
         quantityInput.type='number'; quantityInput.min='0'; quantityInput.step='0.1'; quantityInput.placeholder=t('dosing.quantityLabel');
         if(dosingEditingItem && dosingEditingItem.quantity!=null) quantityInput.value = dosingEditingItem.quantity;
         form.appendChild(quantityInput);
-        form.appendChild(buildUnitChips(UNIT_QUANTITY, dosingFormQtyUnit, (u)=>{ dosingFormQtyUnit=u; renderDosingList(); }));
+        form.appendChild(buildUnitChips(UNIT_QUANTITY, dosingFormQtyUnit, (u)=>{ dosingFormQtyUnit=u; }));
         frequencyInput = document.createElement('input');
         frequencyInput.type='text'; frequencyInput.placeholder=t('dosing.frequencyPlaceholder'); frequencyInput.style.marginTop='6px';
         if(dosingEditingItem && dosingEditingItem.frequency) frequencyInput.value = dosingEditingItem.frequency;
@@ -4828,6 +4836,7 @@
   let feedingTankId = null;
   let feedingScheduleFormOpen = false;
   let feedingScheduleFormQtyUnit = 'g';
+  let feedingScheduleFormFreqUnit = 'jour';
   let feedingLogFormOpen = false;
   let feedingScheduleEditingItem = null;
   let feedingLogEditingItem = null;
@@ -4859,11 +4868,16 @@
       qtyInput.type='number'; qtyInput.min='0'; qtyInput.step='0.1'; qtyInput.placeholder=t('feeding.quantityLabel');
       if(feedingScheduleEditingItem && feedingScheduleEditingItem.quantity!=null) qtyInput.value = feedingScheduleEditingItem.quantity;
       form.appendChild(qtyInput);
-      form.appendChild(buildUnitChips(UNIT_QUANTITY, feedingScheduleFormQtyUnit, (u)=>{ feedingScheduleFormQtyUnit=u; renderFeedingSections(); }));
-      const freqInput = document.createElement('input');
-      freqInput.type='text'; freqInput.placeholder=t('feeding.frequencyPlaceholder'); freqInput.style.marginTop='6px';
-      if(feedingScheduleEditingItem) freqInput.value = feedingScheduleEditingItem.frequency||'';
-      form.appendChild(freqInput);
+      form.appendChild(buildUnitChips(UNIT_QUANTITY, feedingScheduleFormQtyUnit, (u)=>{ feedingScheduleFormQtyUnit=u; }));
+      if(feedingScheduleEditingItem && feedingScheduleEditingItem.frequencyUnit) feedingScheduleFormFreqUnit = feedingScheduleEditingItem.frequencyUnit;
+      const freqCountInput = document.createElement('input');
+      freqCountInput.type='number'; freqCountInput.min='1'; freqCountInput.step='1'; freqCountInput.placeholder=t('feeding.frequencyCountLabel'); freqCountInput.style.marginTop='6px';
+      if(feedingScheduleEditingItem && feedingScheduleEditingItem.frequencyCount!=null) freqCountInput.value = feedingScheduleEditingItem.frequencyCount;
+      form.appendChild(freqCountInput);
+      const perLabel2 = document.createElement('div');
+      perLabel2.className='field-sublabel'; perLabel2.style.marginTop='6px'; perLabel2.textContent=t('dosing.perLabel');
+      form.appendChild(perLabel2);
+      form.appendChild(buildUnitChips(UNIT_TIME, feedingScheduleFormFreqUnit, (u)=>{ feedingScheduleFormFreqUnit=u; }));
       const btnRow = document.createElement('div');
       btnRow.className='btn-row';
       const cancelBtn = document.createElement('button');
@@ -4874,15 +4888,17 @@
       confirmBtn.addEventListener('click', ()=>{
         const productVal = productInput.value.trim();
         if(!productVal) return;
-        const freqVal = freqInput.value.trim();
         const qtyVal = qtyInput.value ? parseFloat(qtyInput.value) : null;
+        const freqCountVal = freqCountInput.value ? parseFloat(freqCountInput.value) : null;
         if(feedingScheduleEditingItem){
           feedingScheduleEditingItem.product = productVal;
-          feedingScheduleEditingItem.frequency = freqVal;
           feedingScheduleEditingItem.quantity = qtyVal;
           feedingScheduleEditingItem.quantityUnit = feedingScheduleFormQtyUnit;
+          feedingScheduleEditingItem.frequencyCount = freqCountVal;
+          feedingScheduleEditingItem.frequencyUnit = feedingScheduleFormFreqUnit;
+          delete feedingScheduleEditingItem.frequency;
         } else {
-          tank.feedingSchedule.push({id:'fs_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), product:productVal, frequency:freqVal, quantity:qtyVal, quantityUnit:feedingScheduleFormQtyUnit});
+          tank.feedingSchedule.push({id:'fs_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), product:productVal, quantity:qtyVal, quantityUnit:feedingScheduleFormQtyUnit, frequencyCount:freqCountVal, frequencyUnit:feedingScheduleFormFreqUnit});
         }
         feedingScheduleFormOpen = false;
         feedingScheduleEditingItem = null;
@@ -4906,7 +4922,8 @@
         row.className='livestock-item';
         row.style.cursor = 'pointer';
         const qtyBit = item.quantity!=null ? item.quantity+' '+t('unit.'+(item.quantityUnit||'g')) : null;
-        const subBits = [qtyBit, item.frequency||null].filter(Boolean).join(' · ');
+        const freqBit = item.frequencyCount!=null ? item.frequencyCount+'x / '+t('unit.'+(item.frequencyUnit||'jour')) : (item.frequency||null);
+        const subBits = [qtyBit, freqBit].filter(Boolean).join(' · ');
         row.innerHTML = `<div class="livestock-item-info"><span class="livestock-item-kind">${item.product}</span>${subBits?`<span class="livestock-item-name">${subBits}</span>`:''}</div>`;
         row.addEventListener('click', ()=>{
           feedingScheduleEditingItem = item;
@@ -5054,7 +5071,7 @@
     tankFeedingOverlay.style.display='none'; tankFeedingSheet.style.display='none';
     feedingTankId = null;
   }
-  document.getElementById('feedingScheduleAddBtn').addEventListener('click', ()=>{ feedingScheduleEditingItem=null; feedingScheduleFormQtyUnit='g'; feedingScheduleFormOpen = !feedingScheduleFormOpen; renderFeedingSections(); });
+  document.getElementById('feedingScheduleAddBtn').addEventListener('click', ()=>{ feedingScheduleEditingItem=null; feedingScheduleFormQtyUnit='g'; feedingScheduleFormFreqUnit='jour'; feedingScheduleFormOpen = !feedingScheduleFormOpen; renderFeedingSections(); });
   document.getElementById('feedingLogAddBtn').addEventListener('click', ()=>{ feedingLogEditingItem=null; feedingLogFormOpen = !feedingLogFormOpen; renderFeedingSections(); });
   document.getElementById('tankFeedingClose').addEventListener('click', closeTankFeeding);
   tankFeedingOverlay.addEventListener('click', closeTankFeeding);
@@ -5106,7 +5123,7 @@
         freqInput.value = mediaEditingItem.frequencyValue!=null ? mediaEditingItem.frequencyValue : mediaEditingItem.frequencyDays;
       }
       form.appendChild(freqInput);
-      form.appendChild(buildUnitChips(UNIT_TIME, mediaFormFreqUnit, (u)=>{ mediaFormFreqUnit=u; renderMediaList(); }));
+      form.appendChild(buildUnitChips(UNIT_TIME, mediaFormFreqUnit, (u)=>{ mediaFormFreqUnit=u; }));
 
       const btnRow = document.createElement('div');
       btnRow.className='btn-row';
