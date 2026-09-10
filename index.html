@@ -1285,7 +1285,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v9.9</span>
+        <span class="ver-pill">v10.0</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1651,10 +1651,10 @@
   <div id="tankDosingOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:82;display:none;"></div>
   <div id="tankDosingSheet" style="position:fixed;left:0;right:0;bottom:0;background:var(--bg-panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 20px 26px;z-index:83;display:none;max-width:640px;margin:0 auto;max-height:86vh;overflow-y:auto;">
     <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 16px;" id="tankDosingTitle" data-i18n="dosing.title">Dosage</h3>
-    <button type="button" id="phytoRevealBtn" class="link-btn" style="background:none;border:none;color:var(--text-dim);font-size:0.78rem;padding:0;margin-bottom:10px;cursor:pointer;text-decoration:underline;" data-i18n="dosing.phytoRevealLink">+ Rappel Phytoplancton</button>
+    <button type="button" id="phytoRevealBtn" class="link-btn" style="background:none;border:none;color:var(--text-dim);font-size:0.78rem;padding:0;margin-bottom:10px;cursor:pointer;text-decoration:underline;" data-i18n="dosing.phytoRevealLink">+ Production Phytoplancton</button>
     <div class="phyto-reminder-card" id="phytoReminderCard" style="display:none;">
       <div class="phyto-reminder-row">
-        <span class="phyto-reminder-label" data-i18n="dosing.phytoTitle">Rappel Phytoplancton</span>
+        <span class="phyto-reminder-label" data-i18n="dosing.phytoTitle">Production Phytoplancton</span>
         <button type="button" class="hist-chip" id="phytoDosedBtn" data-i18n="dosing.phytoDosedBtn">Phyto dosé</button>
       </div>
       <div class="phyto-countdown" id="phytoCountdown"></div>
@@ -2251,10 +2251,10 @@
       'dosing.cat.other': 'Autre',
       'dosing.quantityLabel': 'Quantité (kg)',
       'dosing.frequencyPlaceholder': 'ex. 1x/semaine',
-      'dosing.phytoTitle': 'Rappel Phytoplancton',
-      'dosing.phytoRevealLink': '+ Rappel Phytoplancton',
+      'dosing.phytoTitle': 'Production Phytoplancton',
+      'dosing.phytoRevealLink': '+ Production Phytoplancton',
       'dosing.phytoDosedBtn': 'Phyto dosé',
-      'dosing.phytoNextInPlaceholder': "Dans combien d'heures ?",
+      'dosing.phytoNextInPlaceholder': "Dans combien de jours ?",
       'dosing.phytoNextDue': 'Prochain dans {time}',
       'dosing.phytoOverdue': 'En retard de {time}',
       'dosing.phytoNone': 'Aucun dosage enregistré',
@@ -2622,10 +2622,10 @@
       'dosing.cat.other': 'Other',
       'dosing.quantityLabel': 'Quantity (kg)',
       'dosing.frequencyPlaceholder': 'e.g. 1x/week',
-      'dosing.phytoTitle': 'Phytoplankton Reminder',
-      'dosing.phytoRevealLink': '+ Phytoplankton Reminder',
+      'dosing.phytoTitle': 'Phytoplankton Production',
+      'dosing.phytoRevealLink': '+ Phytoplankton Production',
       'dosing.phytoDosedBtn': 'Phyto dosed',
-      'dosing.phytoNextInPlaceholder': 'In how many hours?',
+      'dosing.phytoNextInPlaceholder': 'In how many days?',
       'dosing.phytoNextDue': 'Next in {time}',
       'dosing.phytoOverdue': 'Overdue by {time}',
       'dosing.phytoNone': 'No dose logged yet',
@@ -4270,13 +4270,15 @@
       countdownEl.textContent = t('dosing.phytoNone');
       countdownEl.className = 'phyto-countdown';
     } else {
-      const dueAt = tank.phytoReminder.lastDosedAt + tank.phytoReminder.nextInHours*3600000;
+      // retrocompat: anciennes entrees en heures (nextInHours) converties en jours
+      const nextInDays = tank.phytoReminder.nextInDays!=null ? tank.phytoReminder.nextInDays : (tank.phytoReminder.nextInHours||0)/24;
+      const dueAt = tank.phytoReminder.lastDosedAt + nextInDays*86400000;
       const diff = dueAt - Date.now();
       if(diff <= 0){
-        countdownEl.textContent = t('dosing.phytoOverdue', {time: formatDurationMs(diff)});
+        countdownEl.textContent = t('dosing.phytoOverdue', {time: formatDurationDays(diff/86400000)});
         countdownEl.className = 'phyto-countdown overdue';
       } else {
-        countdownEl.textContent = t('dosing.phytoNextDue', {time: formatDurationMs(diff)});
+        countdownEl.textContent = t('dosing.phytoNextDue', {time: formatDurationDays(diff/86400000)});
         countdownEl.className = 'phyto-countdown';
       }
     }
@@ -4284,19 +4286,19 @@
     if(phytoFormOpen){
       const form = document.createElement('div');
       form.className = 'phyto-inline-form';
-      const hoursInput = document.createElement('input');
-      hoursInput.type='number'; hoursInput.min='0'; hoursInput.step='0.5'; hoursInput.placeholder=t('dosing.phytoNextInPlaceholder');
+      const daysInput = document.createElement('input');
+      daysInput.type='number'; daysInput.min='0'; daysInput.step='1'; daysInput.placeholder=t('dosing.phytoNextInPlaceholder');
       const confirmBtn = document.createElement('button');
       confirmBtn.type='button'; confirmBtn.className='primary'; confirmBtn.textContent=t('common.add');
       confirmBtn.addEventListener('click', ()=>{
-        const hoursVal = hoursInput.value ? parseFloat(hoursInput.value) : null;
-        if(!hoursVal || hoursVal<=0) return;
-        tank.phytoReminder = {lastDosedAt: Date.now(), nextInHours: hoursVal};
+        const daysVal = daysInput.value ? parseFloat(daysInput.value) : null;
+        if(!daysVal || daysVal<=0) return;
+        tank.phytoReminder = {lastDosedAt: Date.now(), nextInDays: daysVal};
         phytoFormOpen = false;
         renderPhytoReminder();
         syncTankToSupabase(tank);
       });
-      form.appendChild(hoursInput); form.appendChild(confirmBtn);
+      form.appendChild(daysInput); form.appendChild(confirmBtn);
       card.appendChild(form);
     }
 
