@@ -1285,7 +1285,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v10.5</span>
+        <span class="ver-pill">v10.6</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -2252,7 +2252,16 @@
       'dosing.cat.bacteria': 'Bactéries',
       'dosing.cat.carbon': 'Réducteur de nutriments',
       'dosing.cat.other': 'Autre',
-      'dosing.quantityLabel': 'Quantité (kg)',
+      'dosing.quantityLabel': 'Quantité',
+      'unit.ml': 'ml',
+      'unit.g': 'g',
+      'unit.kg': 'kg',
+      'unit.lbs': 'lbs',
+      'unit.heure': 'heure',
+      'unit.jour': 'jour',
+      'unit.semaine': 'semaine',
+      'unit.mois': 'mois',
+      'unit.an': 'an',
       'dosing.frequencyPlaceholder': 'ex. 1x/semaine',
       'dosing.phytoTitle': 'Production Phytoplancton',
       'dosing.phytoRevealLink': '+ Production Phytoplancton',
@@ -2264,7 +2273,8 @@
       'dosing.title': 'Dosage',
       'dosing.productLabel': 'Produit',
       'dosing.productPlaceholder': 'ex. Alcalinité (KH)',
-      'dosing.doseLabel': 'Dose (ml/jour)',
+      'dosing.doseLabel': 'Dose',
+      'dosing.perLabel': 'Par',
       'dosing.timeLabel': 'Heure (optionnel)',
       'dosing.empty': 'Aucun dosage configuré',
       'lighting.title': 'Éclairage',
@@ -2626,7 +2636,16 @@
       'dosing.cat.bacteria': 'Bacteria',
       'dosing.cat.carbon': 'Nutrient reducer',
       'dosing.cat.other': 'Other',
-      'dosing.quantityLabel': 'Quantity (kg)',
+      'dosing.quantityLabel': 'Quantity',
+      'unit.ml': 'ml',
+      'unit.g': 'g',
+      'unit.kg': 'kg',
+      'unit.lbs': 'lbs',
+      'unit.heure': 'hour',
+      'unit.jour': 'day',
+      'unit.semaine': 'week',
+      'unit.mois': 'month',
+      'unit.an': 'year',
       'dosing.frequencyPlaceholder': 'e.g. 1x/week',
       'dosing.phytoTitle': 'Phytoplankton Production',
       'dosing.phytoRevealLink': '+ Phytoplankton Production',
@@ -2638,7 +2657,8 @@
       'dosing.title': 'Dosing',
       'dosing.productLabel': 'Product',
       'dosing.productPlaceholder': 'e.g. Alkalinity (KH)',
-      'dosing.doseLabel': 'Dose (ml/day)',
+      'dosing.doseLabel': 'Dose',
+      'dosing.perLabel': 'Per',
       'dosing.timeLabel': 'Time (optional)',
       'dosing.empty': 'No dosing set up yet',
       'lighting.title': 'Lighting',
@@ -3812,6 +3832,9 @@
     {brand:'Reef Hype', name:'Live Phytoplankton'},
     {brand:'AlgaeBarn', name:'OceanMagik'}
   ];
+  const UNIT_QUANTITY = ['ml','g','kg','lbs'];
+  const UNIT_TIME = ['heure','jour','semaine','mois','an'];
+  const UNIT_TIME_TO_DAYS = {heure:1/24, jour:1, semaine:7, mois:30, an:365};
   const DOSING_CATEGORIES = ['salt','alk','calcium','magnesium','trace','bacteria','carbon','other'];
   const DOSING_CATALOG_CATS = ['salt'];
   const LIVESTOCK_ICONS = {
@@ -3825,6 +3848,20 @@
   let livestockOpenForm = null;
   let livestockEditingItem = null;
 
+  function buildUnitChips(units, selected, onSelect){
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;';
+    units.forEach(u=>{
+      const b = document.createElement('button');
+      b.type='button';
+      b.className = 'hist-chip' + (selected===u ? ' active' : '');
+      b.style.cssText = 'padding:4px 10px;font-size:0.72rem;flex:none;';
+      b.textContent = t('unit.'+u);
+      b.addEventListener('click', (e)=>{ e.stopPropagation(); onSelect(u); });
+      row.appendChild(b);
+    });
+    return row;
+  }
   function scrollFormIntoView(el, block){
     requestAnimationFrame(()=>{
       requestAnimationFrame(()=>{
@@ -4305,7 +4342,11 @@
   let dosingEditingItem = null;
   let dosingFormMode = 'continuous';
   let dosingFormCategory = 'other';
+  let dosingFormDoseUnit = 'ml';
+  let dosingFormFreqUnit = 'jour';
+  let dosingFormQtyUnit = 'kg';
   let phytoFormOpen = false;
+  let phytoFormUnit = 'jour';
   let phytoCardRevealed = false;
 
   function ensureDosingData(tank){
@@ -4336,7 +4377,7 @@
       countdownEl.textContent = t('dosing.phytoNone');
       countdownEl.className = 'phyto-countdown';
     } else {
-      // retrocompat: anciennes entrees en heures (nextInHours) converties en jours
+      // retrocompat: anciennes entrees en heures (nextInHours) ou jours simples (nextInDays)
       const nextInDays = tank.phytoReminder.nextInDays!=null ? tank.phytoReminder.nextInDays : (tank.phytoReminder.nextInHours||0)/24;
       const dueAt = tank.phytoReminder.lastDosedAt + nextInDays*86400000;
       const diff = dueAt - Date.now();
@@ -4352,19 +4393,24 @@
     if(phytoFormOpen){
       const form = document.createElement('div');
       form.className = 'phyto-inline-form';
+      form.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;align-items:center;';
+      if(tank.phytoReminder && tank.phytoReminder.nextInUnit) phytoFormUnit = tank.phytoReminder.nextInUnit;
       const daysInput = document.createElement('input');
       daysInput.type='number'; daysInput.min='0'; daysInput.step='1'; daysInput.placeholder=t('dosing.phytoNextInPlaceholder');
+      daysInput.style.cssText = 'flex:1;min-width:0;';
       const confirmBtn = document.createElement('button');
-      confirmBtn.type='button'; confirmBtn.className='primary'; confirmBtn.textContent=t('common.add');
+      confirmBtn.type='button'; confirmBtn.className='primary'; confirmBtn.style.cssText='flex:none;width:auto;'; confirmBtn.textContent=t('common.add');
       confirmBtn.addEventListener('click', ()=>{
-        const daysVal = daysInput.value ? parseFloat(daysInput.value) : null;
-        if(!daysVal || daysVal<=0) return;
-        tank.phytoReminder = {lastDosedAt: Date.now(), nextInDays: daysVal};
+        const valRaw = daysInput.value ? parseFloat(daysInput.value) : null;
+        if(!valRaw || valRaw<=0) return;
+        const daysComputed = valRaw * UNIT_TIME_TO_DAYS[phytoFormUnit];
+        tank.phytoReminder = {lastDosedAt: Date.now(), nextInDays: daysComputed, nextInValue: valRaw, nextInUnit: phytoFormUnit};
         phytoFormOpen = false;
         renderPhytoReminder();
         syncTankToSupabase(tank);
       });
       form.appendChild(daysInput); form.appendChild(confirmBtn);
+      form.appendChild(buildUnitChips(UNIT_TIME, phytoFormUnit, (u)=>{ phytoFormUnit=u; renderPhytoReminder(); }));
       card.appendChild(form);
     }
 
@@ -4433,21 +4479,32 @@
 
       let doseInput, timeInput, quantityInput, frequencyInput;
       if(dosingFormMode==='continuous'){
+        if(dosingEditingItem && dosingEditingItem.doseUnit) dosingFormDoseUnit = dosingEditingItem.doseUnit;
+        if(dosingEditingItem && dosingEditingItem.freqUnit) dosingFormFreqUnit = dosingEditingItem.freqUnit;
         doseInput = document.createElement('input');
         doseInput.type='number'; doseInput.min='0'; doseInput.step='0.1'; doseInput.placeholder=t('dosing.doseLabel');
         if(dosingEditingItem && dosingEditingItem.dose!=null) doseInput.value = dosingEditingItem.dose;
+        form.appendChild(doseInput);
+        form.appendChild(buildUnitChips(UNIT_QUANTITY, dosingFormDoseUnit, (u)=>{ dosingFormDoseUnit=u; renderDosingList(); }));
+        const perLabel = document.createElement('div');
+        perLabel.className='field-sublabel'; perLabel.style.marginTop='6px'; perLabel.textContent=t('dosing.perLabel');
+        form.appendChild(perLabel);
+        form.appendChild(buildUnitChips(UNIT_TIME, dosingFormFreqUnit, (u)=>{ dosingFormFreqUnit=u; renderDosingList(); }));
         timeInput = document.createElement('input');
-        timeInput.type='text'; timeInput.placeholder='ex. 08:30';
+        timeInput.type='text'; timeInput.placeholder='ex. 08:30'; timeInput.style.marginTop='6px';
         if(dosingEditingItem && dosingEditingItem.time) timeInput.value = dosingEditingItem.time;
-        form.appendChild(doseInput); form.appendChild(timeInput);
+        form.appendChild(timeInput);
       } else {
+        if(dosingEditingItem && dosingEditingItem.quantityUnit) dosingFormQtyUnit = dosingEditingItem.quantityUnit;
         quantityInput = document.createElement('input');
         quantityInput.type='number'; quantityInput.min='0'; quantityInput.step='0.1'; quantityInput.placeholder=t('dosing.quantityLabel');
         if(dosingEditingItem && dosingEditingItem.quantity!=null) quantityInput.value = dosingEditingItem.quantity;
+        form.appendChild(quantityInput);
+        form.appendChild(buildUnitChips(UNIT_QUANTITY, dosingFormQtyUnit, (u)=>{ dosingFormQtyUnit=u; renderDosingList(); }));
         frequencyInput = document.createElement('input');
-        frequencyInput.type='text'; frequencyInput.placeholder=t('dosing.frequencyPlaceholder');
+        frequencyInput.type='text'; frequencyInput.placeholder=t('dosing.frequencyPlaceholder'); frequencyInput.style.marginTop='6px';
         if(dosingEditingItem && dosingEditingItem.frequency) frequencyInput.value = dosingEditingItem.frequency;
-        form.appendChild(quantityInput); form.appendChild(frequencyInput);
+        form.appendChild(frequencyInput);
       }
 
       const btnRow = document.createElement('div');
@@ -4466,23 +4523,26 @@
           dosingEditingItem.product = productVal;
           if(dosingFormMode==='continuous'){
             dosingEditingItem.dose = doseInput.value ? parseFloat(doseInput.value) : null;
+            dosingEditingItem.doseUnit = dosingFormDoseUnit;
+            dosingEditingItem.freqUnit = dosingFormFreqUnit;
             dosingEditingItem.time = timeInput.value || '';
-            delete dosingEditingItem.quantity; delete dosingEditingItem.frequency;
+            delete dosingEditingItem.quantity; delete dosingEditingItem.frequency; delete dosingEditingItem.quantityUnit;
           } else {
             dosingEditingItem.quantity = quantityInput.value ? parseFloat(quantityInput.value) : null;
+            dosingEditingItem.quantityUnit = dosingFormQtyUnit;
             dosingEditingItem.frequency = frequencyInput.value.trim() || '';
-            delete dosingEditingItem.dose; delete dosingEditingItem.time;
+            delete dosingEditingItem.dose; delete dosingEditingItem.time; delete dosingEditingItem.doseUnit; delete dosingEditingItem.freqUnit;
           }
         } else {
           let newItem;
           if(dosingFormMode==='continuous'){
             const doseVal = doseInput.value ? parseFloat(doseInput.value) : null;
             const timeVal = timeInput.value || '';
-            newItem = {id:'do_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), category:dosingFormCategory, mode:'continuous', product:productVal, dose:doseVal, time:timeVal};
+            newItem = {id:'do_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), category:dosingFormCategory, mode:'continuous', product:productVal, dose:doseVal, doseUnit:dosingFormDoseUnit, freqUnit:dosingFormFreqUnit, time:timeVal};
           } else {
             const quantityVal = quantityInput.value ? parseFloat(quantityInput.value) : null;
             const frequencyVal = frequencyInput.value.trim() || '';
-            newItem = {id:'do_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), category:dosingFormCategory, mode:'ponctual', product:productVal, quantity:quantityVal, frequency:frequencyVal};
+            newItem = {id:'do_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), category:dosingFormCategory, mode:'ponctual', product:productVal, quantity:quantityVal, quantityUnit:dosingFormQtyUnit, frequency:frequencyVal};
           }
           tank.dosing.push(newItem);
         }
@@ -4509,8 +4569,8 @@
         row.className='livestock-item';
         row.style.cursor = 'pointer';
         const sub = item.mode==='ponctual'
-          ? [item.quantity ? item.quantity+' kg' : null, item.frequency || null].filter(Boolean).join(' · ')
-          : [item.dose ? item.dose+' ml/j' : null, item.time || null].filter(Boolean).join(' · ');
+          ? [item.quantity ? item.quantity+' '+t('unit.'+(item.quantityUnit||'kg')) : null, item.frequency || null].filter(Boolean).join(' · ')
+          : [item.dose ? item.dose+' '+t('unit.'+(item.doseUnit||'ml'))+'/'+t('unit.'+(item.freqUnit||'jour')) : null, item.time || null].filter(Boolean).join(' · ');
         const catLabel = item.category ? t('dosing.cat.'+item.category) : null;
         row.innerHTML = `<div class="livestock-item-info"><span class="livestock-item-kind">${item.product}${catLabel?' · '+catLabel:''}</span>${sub?`<span class="livestock-item-name">${sub}</span>`:''}</div>`;
         row.addEventListener('click', ()=>{
@@ -4556,7 +4616,7 @@
     dosingTankId = null;
     phytoFormOpen = false;
   }
-  document.getElementById('dosingAddBtn').addEventListener('click', ()=>{ dosingEditingItem=null; dosingFormOpen = !dosingFormOpen; dosingFormMode='continuous'; dosingFormCategory='other'; renderDosingList(); });
+  document.getElementById('dosingAddBtn').addEventListener('click', ()=>{ dosingEditingItem=null; dosingFormOpen = !dosingFormOpen; dosingFormMode='continuous'; dosingFormCategory='other'; dosingFormDoseUnit='ml'; dosingFormFreqUnit='jour'; dosingFormQtyUnit='kg'; renderDosingList(); });
   document.getElementById('phytoRevealBtn').addEventListener('click', ()=>{ phytoCardRevealed = true; renderPhytoReminder(); });
   document.getElementById('tankDosingClose').addEventListener('click', closeTankDosing);
   tankDosingOverlay.addEventListener('click', closeTankDosing);
@@ -4982,6 +5042,7 @@
   let mediaFormOpen = false;
   let mediaEditingItem = null;
   let mediaFormType = 'carbon';
+  let mediaFormFreqUnit = 'jour';
 
   function ensureMediaData(tank){
     if(!tank.filterMedia) tank.filterMedia = [];
@@ -5016,8 +5077,12 @@
 
       const freqInput = document.createElement('input');
       freqInput.type='number'; freqInput.min='1'; freqInput.step='1'; freqInput.placeholder=t('media.frequencyLabel');
-      if(mediaEditingItem) freqInput.value = mediaEditingItem.frequencyDays;
+      if(mediaEditingItem){
+        mediaFormFreqUnit = mediaEditingItem.frequencyUnit || 'jour';
+        freqInput.value = mediaEditingItem.frequencyValue!=null ? mediaEditingItem.frequencyValue : mediaEditingItem.frequencyDays;
+      }
       form.appendChild(freqInput);
+      form.appendChild(buildUnitChips(UNIT_TIME, mediaFormFreqUnit, (u)=>{ mediaFormFreqUnit=u; renderMediaList(); }));
 
       const btnRow = document.createElement('div');
       btnRow.className='btn-row';
@@ -5027,13 +5092,16 @@
       const confirmBtn = document.createElement('button');
       confirmBtn.type='button'; confirmBtn.className='primary'; confirmBtn.textContent = mediaEditingItem ? t('common.save') : t('common.add');
       confirmBtn.addEventListener('click', ()=>{
-        const freqVal = freqInput.value ? Math.max(1, parseInt(freqInput.value,10)) : null;
+        const freqVal = freqInput.value ? Math.max(1, parseFloat(freqInput.value)) : null;
         if(!freqVal) return;
+        const freqDays = freqVal * UNIT_TIME_TO_DAYS[mediaFormFreqUnit];
         if(mediaEditingItem){
           mediaEditingItem.type = mediaFormType;
-          mediaEditingItem.frequencyDays = freqVal;
+          mediaEditingItem.frequencyDays = freqDays;
+          mediaEditingItem.frequencyValue = freqVal;
+          mediaEditingItem.frequencyUnit = mediaFormFreqUnit;
         } else {
-          tank.filterMedia.push({id:'md_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), type:mediaFormType, lastRenewedAt:Date.now(), frequencyDays:freqVal});
+          tank.filterMedia.push({id:'md_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), type:mediaFormType, lastRenewedAt:Date.now(), frequencyDays:freqDays, frequencyValue:freqVal, frequencyUnit:mediaFormFreqUnit});
         }
         mediaFormOpen = false;
         mediaEditingItem = null;
@@ -5118,7 +5186,7 @@
     tankMediaOverlay.style.display='none'; tankMediaSheet.style.display='none';
     mediaTankId = null;
   }
-  document.getElementById('mediaAddBtn').addEventListener('click', ()=>{ mediaEditingItem=null; mediaFormOpen = !mediaFormOpen; mediaFormType='carbon'; renderMediaList(); });
+  document.getElementById('mediaAddBtn').addEventListener('click', ()=>{ mediaEditingItem=null; mediaFormOpen = !mediaFormOpen; mediaFormType='carbon'; mediaFormFreqUnit='jour'; renderMediaList(); });
   document.getElementById('tankMediaClose').addEventListener('click', closeTankMedia);
   tankMediaOverlay.addEventListener('click', closeTankMedia);
 
