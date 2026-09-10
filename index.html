@@ -1285,7 +1285,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v10.0</span>
+        <span class="ver-pill">v10.1</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1714,8 +1714,8 @@
     <button class="secondary" id="tankFeedingClose" style="width:100%;margin-top:10px;" data-i18n="common.cancel">Annuler</button>
   </div>
 
-  <div id="catalogPickerOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:80;display:none;"></div>
-  <div id="catalogPickerSheet" style="position:fixed;left:0;right:0;bottom:0;background:var(--bg-panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 20px 26px;z-index:81;display:none;max-width:640px;margin:0 auto;max-height:86vh;overflow-y:auto;">
+  <div id="catalogPickerOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:90;display:none;"></div>
+  <div id="catalogPickerSheet" style="position:fixed;left:0;right:0;bottom:0;background:var(--bg-panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 20px 26px;z-index:91;display:none;max-width:640px;margin:0 auto;max-height:86vh;overflow-y:auto;">
     <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 14px;" id="catalogPickerTitle">Catalogue</h3>
     <input type="text" id="catalogPickerSearch" placeholder="" data-i18n-placeholder="catalog.searchPlaceholder" style="margin-bottom:10px;">
     <div class="catalog-cat-row" id="catalogPickerCatRow" style="display:none;"></div>
@@ -3804,8 +3804,8 @@
     {brand:'Reef Hype', name:'Live Phytoplankton'},
     {brand:'AlgaeBarn', name:'OceanMagik'}
   ];
-  const DOSING_CATEGORIES = ['salt','phyto','alk','calcium','magnesium','trace','bacteria','carbon','other'];
-  const DOSING_CATALOG_CATS = ['salt','phyto'];
+  const DOSING_CATEGORIES = ['salt','alk','calcium','magnesium','trace','bacteria','carbon','other'];
+  const DOSING_CATALOG_CATS = ['salt'];
   const LIVESTOCK_ICONS = {
     fish: TANK_TYPE_ICONS.fishOnly,
     corals: TANK_TYPE_ICONS.sps,
@@ -4318,15 +4318,20 @@
 
       const catRow = document.createElement('div');
       catRow.className = 'catalog-cat-row';
+      let activeCatBtn = null;
       DOSING_CATEGORIES.forEach(cat=>{
         const b = document.createElement('button');
         b.type='button';
         b.className = 'hist-chip' + (dosingFormCategory===cat ? ' active' : '');
         b.textContent = t('dosing.cat.'+cat);
         b.addEventListener('click', ()=>{ dosingFormCategory=cat; renderDosingList(); });
+        if(dosingFormCategory===cat) activeCatBtn = b;
         catRow.appendChild(b);
       });
       form.appendChild(catRow);
+      if(activeCatBtn){
+        requestAnimationFrame(()=> activeCatBtn.scrollIntoView({inline:'center', block:'nearest'}));
+      }
 
       const modeRow = document.createElement('div');
       modeRow.className = 'type-chip-row';
@@ -4352,7 +4357,7 @@
         const browseBtn = document.createElement('button');
         browseBtn.type='button'; browseBtn.className='secondary'; browseBtn.textContent=t('catalog.browse');
         browseBtn.addEventListener('click', ()=>{
-          openCatalogPicker(dosingFormCategory==='salt' ? 'dosing_salt' : 'dosing_phyto', (item)=>{
+          openCatalogPicker('dosing_salt', (item)=>{
             productInput.value = item.brand ? item.brand+' '+item.name : item.name;
           });
         });
