@@ -1285,11 +1285,14 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v11.0</span>
+        <span class="ver-pill">v11.1</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
         <div class="hero-status" id="heroStatus"><span class="dot"></span><span class="txt" data-i18n="hero.underControl">Récif sous contrôle</span></div>
+      </div>
+      <div class="hero-status-row">
+        <div class="hero-status" id="reminderStatus" style="display:none;"><span class="dot"></span><span class="txt"></span></div>
       </div>
     </div>
   </header>
@@ -2105,6 +2108,7 @@
       'hero.cycleComplete': '✅ Cycle terminé',
       'hero.trackingInProgress': 'Suivi en cours',
       'hero.toWatch': '{names} à surveiller',
+      'hero.reminderSoon': '{names} — rappel proche',
       'cycle.l1Idle': 'Nouveau',
       'cycle.l2Idle': 'Cycle',
       'cycle.l1Active': 'Cycle',
@@ -2495,6 +2499,7 @@
       'hero.cycleComplete': '✅ Cycle complete',
       'hero.trackingInProgress': 'Tracking in progress',
       'hero.toWatch': '{names} need attention',
+      'hero.reminderSoon': '{names} — reminder due soon',
       'cycle.l1Idle': 'New',
       'cycle.l2Idle': 'Cycle',
       'cycle.l1Active': 'Cycle',
@@ -4422,6 +4427,7 @@
         tank.phytoReminder = {lastDosedAt: Date.now(), nextInDays: daysComputed, nextInValue: valRaw, nextInUnit: phytoFormUnit};
         phytoFormOpen = false;
         renderPhytoReminder();
+        if(tank.id===activeTankId) renderReminderStatus();
         syncTankToSupabase(tank);
       });
       form.appendChild(daysInput); form.appendChild(confirmBtn);
@@ -5144,7 +5150,7 @@
         mediaFormOpen = false;
         mediaEditingItem = null;
         renderMediaList();
-        if(tank.id===activeTankId) renderTankSwitcher();
+        if(tank.id===activeTankId){ renderTankSwitcher(); renderReminderStatus(); }
         syncTankToSupabase(tank);
       });
       btnRow.appendChild(cancelBtn); btnRow.appendChild(confirmBtn);
@@ -5190,6 +5196,7 @@
           e.stopPropagation();
           item.lastRenewedAt = Date.now();
           renderMediaList();
+          if(tank.id===activeTankId) renderReminderStatus();
           syncTankToSupabase(tank);
         });
         const del = document.createElement('button');
@@ -5199,7 +5206,7 @@
           e.stopPropagation();
           tank.filterMedia = tank.filterMedia.filter(i=>i.id!==item.id);
           renderMediaList();
-          if(tank.id===activeTankId) renderTankSwitcher();
+          if(tank.id===activeTankId){ renderTankSwitcher(); renderReminderStatus(); }
           syncTankToSupabase(tank);
         });
         row.appendChild(renewBtn);
@@ -5383,6 +5390,38 @@
     set(bad.length ? 'bad' : 'warn', t('hero.toWatch', {names: names.join(', ')}));
   }
 
+  // Rappels programmes (Recolte Phyto, renouvellement Medias filtrants) sur le bac actif :
+  // regroupe tout ce qui est en retard ou du dans <=1 jour, meme principe visuel que le
+  // badge "a surveiller" des parametres d'eau, mais sans avoir a ouvrir Dosage/Medias.
+  function renderReminderStatus(){
+    const el = document.getElementById('reminderStatus');
+    if(!el) return;
+    const txt = el.querySelector('.txt');
+    const tank = tanks.find(t=>t.id===activeTankId);
+    if(!tank){ el.style.display='none'; return; }
+    const overdue = [], soon = [];
+    if(tank.phytoReminder){
+      const nextInDays = tank.phytoReminder.nextInDays!=null ? tank.phytoReminder.nextInDays : (tank.phytoReminder.nextInHours||0)/24;
+      const diffDays = (tank.phytoReminder.lastDosedAt + nextInDays*86400000 - Date.now()) / 86400000;
+      if(diffDays <= 0) overdue.push(t('dosing.phytoTitle'));
+      else if(diffDays <= 1) soon.push(t('dosing.phytoTitle'));
+    }
+    if(tank.filterMedia && tank.filterMedia.length){
+      tank.filterMedia.forEach(item=>{
+        if(!item.lastRenewedAt) return;
+        const diffDays = (item.lastRenewedAt + item.frequencyDays*86400000 - Date.now()) / 86400000;
+        const label = t('media.type.'+item.type);
+        if(diffDays <= 0) overdue.push(label);
+        else if(diffDays <= 1) soon.push(label);
+      });
+    }
+    if(!overdue.length && !soon.length){ el.style.display='none'; return; }
+    el.style.display='flex';
+    el.className = 'hero-status' + (overdue.length ? ' bad' : ' warn');
+    const names = [...overdue, ...soon];
+    txt.textContent = t('hero.reminderSoon', {names: names.join(', ')});
+  }
+
   // Score de santé : moyenne pondérée des statuts de tous les paramètres qui ont au
   // moins une mesure enregistrée (idéal=100, attention=60, hors norme=20). "Autre" est
   // ignoré (pas de plage idéale définie), tout comme les paramètres jamais testés — pas
@@ -5411,6 +5450,7 @@
 
   function renderDashboard(){
     updateHeroStatus();
+    renderReminderStatus();
     renderHealthScore();
     const allSorted = historyData.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
     const mostRecent = allSorted[0];
