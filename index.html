@@ -289,10 +289,6 @@
   .nav-btn.active{color:var(--aqua);}
   .nav-btn.fab .ic{background:var(--amber);color:#241505;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.05rem;margin-bottom:1px;}
 
-  .timer-fab{position:fixed;right:16px;bottom:90px;width:52px;height:52px;border-radius:50%;background:var(--actinic);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.3rem;box-shadow:0 4px 14px rgba(0,0,0,0.4);z-index:29;border:none;font-family:'IBM Plex Mono',monospace;}
-  .timer-fab.running{background:var(--coral);font-size:0.85rem;font-weight:600;}
-  .timer-presets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
-  .timer-presets button{flex:1;min-width:60px;padding:12px 6px;font-size:0.85rem;}
      VISUAL REDESIGN v5 — aesthetic only, no logic/data changes
      ============================================================ */
   :root{
@@ -515,8 +511,7 @@
   .card,
   .picker-btn,
   #sheet,
-  #badgePickerSheet,
-  #timerSheet{
+  #badgePickerSheet{
     border:1px solid rgba(104,155,205,.18);
     background:
       linear-gradient(145deg,rgba(15,36,59,.95),rgba(6,20,35,.96));
@@ -1037,15 +1032,6 @@
   }
   .nav-btn.fab .ic svg{width:20px;height:20px;stroke-width:2;}
 
-  .timer-fab{
-    right:18px;bottom:96px;
-    width:54px;height:54px;
-    border:1px solid rgba(130,178,225,.23);
-    background:linear-gradient(145deg,#2d76e6,#4d9bff);
-    box-shadow:0 9px 30px rgba(0,0,0,.46),0 0 24px rgba(69,140,255,.17);
-  }
-  .timer-fab.running{background:linear-gradient(145deg,#ff806c,#ff5f79);}
-
   .empty-state{
     margin-top:4px;
     padding:34px 18px;
@@ -1054,8 +1040,8 @@
     background:rgba(7,21,36,.38);
   }
 
-  #sheetOverlay,#badgePickerOverlay,#timerOverlay,#tankPickerOverlay,#tankFormOverlay{backdrop-filter:blur(5px);background:rgba(0,4,10,.64)!important;}
-  #sheet,#badgePickerSheet,#timerSheet,#tankPickerSheet,#tankFormSheet{
+  #sheetOverlay,#badgePickerOverlay,#tankPickerOverlay,#tankFormOverlay{backdrop-filter:blur(5px);background:rgba(0,4,10,.64)!important;}
+  #sheet,#badgePickerSheet,#tankPickerSheet,#tankFormSheet{
     border-radius:24px 24px 0 0!important;
     border-top-color:rgba(111,163,214,.26)!important;
     box-shadow:0 -18px 60px rgba(0,0,0,.46);
@@ -1292,7 +1278,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v11.3</span>
+        <span class="ver-pill">v11.4</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1604,7 +1590,6 @@
 
   </main>
 
-  <button class="timer-fab" id="timerFab">⏱</button>
 
   <nav class="bottom-nav">
     <button class="nav-btn active" data-view="dashboard"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 13.5c3.2-1.1 5.7-5 8.5-8 2.8 3 5.3 6.9 8.5 8"/><path d="M5 12.8V18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2v-5.2"/><path d="M8 18c2.2-1 5.8-1 8 0"/></svg></span><span data-i18n="nav.dashboard">Accueil</span></button>
@@ -1773,26 +1758,6 @@
     </div>
   </div>
 
-  <div id="timerOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:70;display:none;"></div>
-  <div id="timerSheet" style="position:fixed;left:0;right:0;bottom:0;background:var(--bg-panel);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 20px 26px;z-index:71;display:none;max-width:640px;margin:0 auto;">
-    <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 14px;" data-i18n="timer.title">Minuteur</h3>
-    <div id="timerIdleView">
-      <div class="timer-presets">
-        <button class="secondary" data-min="1">1 min</button>
-        <button class="secondary" data-min="3">3 min</button>
-        <button class="secondary" data-min="5">5 min</button>
-        <button class="secondary" data-min="7">7 min</button>
-      </div>
-      <div class="reading-row" style="margin-bottom:14px;">
-        <input type="number" id="timerCustomMin" placeholder="Autre (minutes)" min="1" data-i18n-placeholder="timer.customPlaceholder">
-        <button class="secondary" id="timerCustomStart" style="width:auto;white-space:nowrap;" data-i18n="timer.start">Démarrer</button>
-      </div>
-    </div>
-    <div id="timerRunningView" style="display:none;text-align:center;">
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:3rem;font-weight:600;color:var(--aqua);margin-bottom:16px;" id="timerDisplay">00:00</div>
-      <button class="secondary" id="timerStop" style="width:100%;" data-i18n="timer.stop">Arrêter</button>
-    </div>
-  </div>
 
   <div id="targetFullscreen">
     <div class="fs-header">
@@ -2126,11 +2091,6 @@
       'cycle.titleIdle': "Touche pour activer le suivi de cycle azoté (pic d'ammoniaque → pic de nitrites → cycle terminé)",
       'cycle.titleActive': 'Touche pour arrêter le suivi de cycle',
       'badge.pickerTitle': 'Choisir un paramètre',
-      'timer.title': 'Minuteur',
-      'timer.customPlaceholder': 'Autre (minutes)',
-      'timer.start': 'Démarrer',
-      'timer.stop': 'Arrêter',
-      'timer.finished': '⏱ Minuteur terminé !',
       'aim.defaultLabel': 'Vise sur la photo',
       'aim.redo': 'Recommencer',
       'aim.validate': '✅ Valider ce point',
@@ -2520,11 +2480,6 @@
       'cycle.titleIdle': 'Tap to start tracking a nitrogen cycle (ammonia spike → nitrite spike → cycle done)',
       'cycle.titleActive': 'Tap to stop cycle tracking',
       'badge.pickerTitle': 'Choose a parameter',
-      'timer.title': 'Timer',
-      'timer.customPlaceholder': 'Other (minutes)',
-      'timer.start': 'Start',
-      'timer.stop': 'Stop',
-      'timer.finished': '⏱ Timer finished!',
       'aim.defaultLabel': 'Target on the photo',
       'aim.redo': 'Redo',
       'aim.validate': '✅ Confirm this point',
@@ -6076,82 +6031,6 @@
   wireDirectSave('k', 'kInput', 'btnSaveK', 'kSaveMsg');
   wireDirectSave('sr', 'srInput', 'btnSaveSr', 'srSaveMsg');
 
-  // ================= timer =================
-  (function(){
-    const fab=document.getElementById('timerFab'), overlay=document.getElementById('timerOverlay'), sheetEl=document.getElementById('timerSheet');
-    const idleView=document.getElementById('timerIdleView'), runView=document.getElementById('timerRunningView');
-    const display=document.getElementById('timerDisplay');
-    let endTime=null, intervalId=null, audioCtx=null, wakeLock=null;
-
-    // Écran maintenu allumé pendant le minuteur, pour que le compte à rebours reste
-    // visible et que le bip se déclenche bien à l'heure (certains navigateurs mettent
-    // en pause les timers JS quand l'écran s'éteint). Échoue silencieusement si l'API
-    // n'est pas supportée — pas de fonctionnalité perdue, juste pas ce confort en plus.
-    async function acquireWakeLock(){
-      try{
-        if('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
-      }catch(e){ wakeLock=null; }
-    }
-    function releaseWakeLock(){
-      if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock=null; }
-    }
-    document.addEventListener('visibilitychange', ()=>{
-      // Le navigateur relâche la wake lock tout seul quand l'app passe en arrière-plan ;
-      // on la redemande au retour si le minuteur tourne toujours.
-      if(document.visibilityState==='visible' && endTime!==null) acquireWakeLock();
-    });
-
-    function openTimerSheet(){ overlay.style.display='block'; sheetEl.style.display='block'; }
-    function closeTimerSheet(){ overlay.style.display='none'; sheetEl.style.display='none'; }
-    fab.addEventListener('click', openTimerSheet);
-    overlay.addEventListener('click', closeTimerSheet);
-
-    function beep(){
-      try{
-        audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
-        for(let i=0;i<3;i++){
-          const t = audioCtx.currentTime + i*0.35;
-          const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-          osc.frequency.value = 880; osc.type='sine';
-          gain.gain.setValueAtTime(0.2, t); gain.gain.exponentialRampToValueAtTime(0.001, t+0.25);
-          osc.connect(gain); gain.connect(audioCtx.destination);
-          osc.start(t); osc.stop(t+0.28);
-        }
-      }catch(e){ console.error('beep failed', e); }
-      if(navigator.vibrate) navigator.vibrate([200,100,200,100,200]);
-    }
-
-    function startTimer(minutes){
-      endTime = Date.now() + minutes*60000;
-      idleView.style.display='none'; runView.style.display='block';
-      fab.classList.add('running');
-      acquireWakeLock();
-      tick();
-      intervalId = setInterval(tick, 250);
-    }
-    function tick(){
-      const remain = Math.max(0, endTime-Date.now());
-      const mm = Math.floor(remain/60000), ss = Math.floor((remain%60000)/1000);
-      const txt = `${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
-      display.textContent = txt; fab.textContent = (mm>0||ss>0) ? txt : '⏱';
-      if(remain<=0){ stopTimer(true); }
-    }
-    function stopTimer(finished){
-      clearInterval(intervalId); intervalId=null; endTime=null;
-      releaseWakeLock();
-      fab.classList.remove('running'); fab.textContent='⏱';
-      idleView.style.display='block'; runView.style.display='none';
-      if(finished){ beep(); closeTimerSheet(); alert(t('timer.finished')); }
-    }
-    document.querySelectorAll('.timer-presets button').forEach(b=>{
-      b.addEventListener('click', ()=>{ startTimer(parseFloat(b.dataset.min)); });
-    });
-    document.getElementById('timerCustomStart').addEventListener('click', ()=>{
-      const v=parseFloat(document.getElementById('timerCustomMin').value);
-      if(v>0) startTimer(v);
-    });
-    document.getElementById('timerStop').addEventListener('click', ()=>stopTimer(false));
-  })();
 
   // ================= NUANCIER v2.9 =================
   let dataCanvas=document.createElement('canvas');
