@@ -947,6 +947,13 @@
   .mini-dot{width:7px;height:7px;border-radius:50%;flex:none;box-shadow:0 0 5px currentColor;}
   .mini-name{font-size:.68rem;font-weight:600;color:#c9ddf0;flex:1;}
   .mini-val{font-size:.68rem;font-weight:700;color:#e8f3ff;font-family:'IBM Plex Mono',monospace;}
+  .mini-status-row{margin-top:6px;display:flex;flex-direction:column;gap:2px;}
+  .mini-status-line{display:flex;align-items:center;gap:5px;font-size:.65rem;font-weight:600;}
+  .mini-status-icon{font-size:.7rem;line-height:1;}
+  .mini-status-good{color:var(--good);}
+  .mini-status-warn{color:var(--amber);}
+  .mini-status-bad{color:var(--bad);}
+  .mini-status-neutral{color:var(--text-dim);}
   .mini-canvas{width:100%;height:54px;display:block;}
 
   @media (max-width:380px){
@@ -1285,7 +1292,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v11.1</span>
+        <span class="ver-pill">v11.2</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -2057,6 +2064,9 @@
       'history.title': 'Historique récifal',
       'history.subtitle': 'Filtre un paramètre et visualise l’évolution de ton bac dans le temps.',
       'history.emptyFilter': 'Aucune mesure pour ce filtre.',
+      'history.inRange': 'Dans la norme',
+      'history.stable': 'Stable',
+      'history.variable': 'Variable',
       'history.chipAll': 'Tous',
       'common.delete': 'Supprimer',
       'report.stepLabel': 'Rapport',
@@ -2448,6 +2458,9 @@
       'history.title': 'Reef history',
       'history.subtitle': 'Filter a parameter and see how your tank has changed over time.',
       'history.emptyFilter': 'No readings for this filter.',
+      'history.inRange': 'In range',
+      'history.stable': 'Stable',
+      'history.variable': 'Variable',
       'history.chipAll': 'All',
       'common.delete': 'Delete',
       'report.stepLabel': 'Report',
@@ -5644,8 +5657,30 @@
           <span class="mini-name">${SHORT_LABEL[k]||k}</span>
           <span class="mini-val">${Number(last.value).toFixed(p.decimals!==undefined?p.decimals:2)}</span>
         </div>
-        <canvas class="mini-canvas"></canvas>`;
+        <canvas class="mini-canvas"></canvas>
+        <div class="mini-status-row"></div>`;
       grid.appendChild(cell);
+      const statusRow = cell.querySelector('.mini-status-row');
+      if(p.ideal){
+        const lastStatus = last.status || statusOf(k, Number(last.value));
+        const meta = statusMeta(lastStatus);
+        const statusLine = document.createElement('div');
+        statusLine.className = 'mini-status-line mini-status-'+meta.cls;
+        statusLine.innerHTML = `<span class="mini-status-icon">${meta.cls==='good'?'✓':meta.cls==='warn'?'⚠':'✕'}</span><span>${meta.cls==='good'?t('history.inRange'):meta.label}</span>`;
+        statusRow.appendChild(statusLine);
+        // Stabilite : ecart des dernieres valeurs rapporte a la largeur de la plage
+        // idéale du paramètre (pas une valeur absolue, chaque param a sa propre echelle).
+        const recentVals = series.slice(-Math.min(5,series.length)).map(e=>Number(e.value));
+        if(recentVals.length>=2){
+          const spread = Math.max(...recentVals) - Math.min(...recentVals);
+          const bandWidth = p.ideal[1]-p.ideal[0];
+          const isStable = bandWidth>0 ? (spread/bandWidth) < 0.15 : true;
+          const stabLine = document.createElement('div');
+          stabLine.className = 'mini-status-line ' + (isStable?'mini-status-good':'mini-status-neutral');
+          stabLine.innerHTML = `<span class="mini-status-icon">${isStable?'●':'~'}</span><span>${isStable?t('history.stable'):t('history.variable')}</span>`;
+          statusRow.appendChild(stabLine);
+        }
+      }
       const canvas = cell.querySelector('canvas');
       const dpr=window.devicePixelRatio||1, w=canvas.clientWidth||140, h=54;
       canvas.width=w*dpr; canvas.height=h*dpr;
