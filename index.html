@@ -1285,7 +1285,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v10.2</span>
+        <span class="ver-pill">v10.3</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -2011,6 +2011,7 @@
       'nuancier.prev.first': 'Première mesure pour ce paramètre',
       'nuancier.disclaimer': "Résultat basé sur une comparaison colorimétrique automatique entre pastilles et échantillon pris sur la même photo. Vérifie toujours ta lecture à l'œil nu sur la carte physique — la précision peut varier selon les conditions de la photo. Tu peux corriger la valeur ci-dessus avant de valider.",
       'common.cancel': 'Annuler',
+      'common.edit': 'Modifier',
       'common.save': 'Enregistrer',
       'common.add': 'Ajouter',
       'common.invalidNumber': 'Entre une valeur numérique.',
@@ -2382,6 +2383,7 @@
       'nuancier.prev.first': 'First reading for this parameter',
       'nuancier.disclaimer': "Result based on an automatic color comparison between swatches and sample taken in the same photo. Always double-check your reading by eye against the physical card — accuracy can vary with photo conditions. You can adjust the value above before saving.",
       'common.cancel': 'Cancel',
+      'common.edit': 'Edit',
       'common.save': 'Save',
       'common.add': 'Add',
       'common.invalidNumber': 'Enter a numeric value.',
@@ -4128,6 +4130,7 @@
   const tankEquipmentOverlay=document.getElementById('tankEquipmentOverlay'), tankEquipmentSheet=document.getElementById('tankEquipmentSheet');
   let equipmentTankId = null;
   let equipmentExpandedId = null;
+  let equipmentEditingItem = null;
 
   function ensureEquipmentData(tank){
     if(!tank.equipment) tank.equipment = [];
@@ -4154,6 +4157,17 @@
         if(item.channels && item.channels.length) metaBits.push(item.channels.join(' / '));
         if(item.settings && item.settings.length) metaBits.push(item.settings.map(s=>s.label+' '+s.value).join(' / '));
         row.innerHTML = `<div class="livestock-item-info"><span class="livestock-item-kind">${item.name}</span><span class="livestock-item-name">${metaBits.filter(Boolean).join(' · ')}</span></div>`;
+        const editBtn = document.createElement('button');
+        editBtn.type='button'; editBtn.className='hist-chip'; editBtn.textContent='✎';
+        editBtn.style.flex='none'; editBtn.style.marginRight='6px';
+        editBtn.setAttribute('aria-label', t('common.edit'));
+        editBtn.addEventListener('click', (e)=>{
+          e.stopPropagation();
+          equipmentEditingItem = (equipmentEditingItem===item) ? null : item;
+          if(equipmentExpandedId===item.id) equipmentExpandedId = null;
+          renderEquipmentList();
+        });
+        row.appendChild(editBtn);
         const del = document.createElement('button');
         del.type='button'; del.className='livestock-item-del'; del.textContent='×';
         del.setAttribute('aria-label', t('common.delete'));
@@ -4161,12 +4175,51 @@
           e.stopPropagation();
           tank.equipment = tank.equipment.filter(i=>i.id!==item.id);
           if(equipmentExpandedId===item.id) equipmentExpandedId = null;
+          if(equipmentEditingItem===item) equipmentEditingItem = null;
           renderEquipmentList();
           if(tank.id===activeTankId) renderTankSwitcher();
           syncTankToSupabase(tank);
         });
         row.appendChild(del);
         listEl.appendChild(row);
+        if(equipmentEditingItem===item){
+          const editForm = document.createElement('div');
+          editForm.className = 'equipment-settings-panel';
+          const brandInput = document.createElement('input');
+          brandInput.type='text'; brandInput.placeholder=t('catalog.customBrandPlaceholder'); brandInput.value=item.brand||'';
+          editForm.appendChild(brandInput);
+          const nameInput = document.createElement('input');
+          nameInput.type='text'; nameInput.placeholder=t('catalog.customNamePlaceholder.equipment'); nameInput.value=item.name||'';
+          nameInput.style.marginTop='6px';
+          editForm.appendChild(nameInput);
+          let channelsInput = null;
+          if(item.cat==='light'){
+            channelsInput = document.createElement('input');
+            channelsInput.type='text'; channelsInput.placeholder=t('equipment.channelsPlaceholder'); channelsInput.value=(item.channels||[]).join(', ');
+            channelsInput.style.marginTop='6px';
+            editForm.appendChild(channelsInput);
+          }
+          const editBtnRow = document.createElement('div');
+          editBtnRow.className='btn-row'; editBtnRow.style.marginTop='8px';
+          const editCancelBtn = document.createElement('button');
+          editCancelBtn.type='button'; editCancelBtn.className='secondary'; editCancelBtn.textContent=t('common.cancel');
+          editCancelBtn.addEventListener('click', ()=>{ equipmentEditingItem=null; renderEquipmentList(); });
+          const editSaveBtn = document.createElement('button');
+          editSaveBtn.type='button'; editSaveBtn.className='primary'; editSaveBtn.textContent=t('common.save');
+          editSaveBtn.addEventListener('click', ()=>{
+            item.brand = brandInput.value.trim();
+            item.name = nameInput.value.trim();
+            if(channelsInput) item.channels = channelsInput.value.split(',').map(s=>s.trim()).filter(Boolean);
+            equipmentEditingItem = null;
+            renderEquipmentList();
+            if(tank.id===activeTankId) renderTankSwitcher();
+            syncTankToSupabase(tank);
+          });
+          editBtnRow.appendChild(editCancelBtn); editBtnRow.appendChild(editSaveBtn);
+          editForm.appendChild(editBtnRow);
+          listEl.appendChild(editForm);
+          scrollFormIntoView(editForm);
+        }
         if(canHaveSettings){
           row.addEventListener('click', ()=>{
             equipmentExpandedId = (equipmentExpandedId===item.id) ? null : item.id;
@@ -4229,6 +4282,7 @@
     if(!tank) return;
     equipmentTankId = tankId;
     equipmentExpandedId = null;
+    equipmentEditingItem = null;
     ensureEquipmentData(tank);
     document.getElementById('tankEquipmentTitle').textContent = t('equipment.title')+' — '+tank.name;
     renderEquipmentList();
@@ -4256,6 +4310,7 @@
   const tankDosingOverlay=document.getElementById('tankDosingOverlay'), tankDosingSheet=document.getElementById('tankDosingSheet');
   let dosingTankId = null;
   let dosingFormOpen = false;
+  let dosingEditingItem = null;
   let dosingFormMode = 'continuous';
   let dosingFormCategory = 'other';
   let phytoFormOpen = false;
@@ -4369,6 +4424,7 @@
 
       const productInput = document.createElement('input');
       productInput.type='text'; productInput.placeholder=t('dosing.productPlaceholder');
+      if(dosingEditingItem) productInput.value = dosingEditingItem.product;
       form.appendChild(productInput);
 
       const hasCatalog = DOSING_CATALOG_CATS.includes(dosingFormCategory);
@@ -4387,14 +4443,18 @@
       if(dosingFormMode==='continuous'){
         doseInput = document.createElement('input');
         doseInput.type='number'; doseInput.min='0'; doseInput.step='0.1'; doseInput.placeholder=t('dosing.doseLabel');
+        if(dosingEditingItem && dosingEditingItem.dose!=null) doseInput.value = dosingEditingItem.dose;
         timeInput = document.createElement('input');
         timeInput.type='text'; timeInput.placeholder='ex. 08:30';
+        if(dosingEditingItem && dosingEditingItem.time) timeInput.value = dosingEditingItem.time;
         form.appendChild(doseInput); form.appendChild(timeInput);
       } else {
         quantityInput = document.createElement('input');
         quantityInput.type='number'; quantityInput.min='0'; quantityInput.step='0.1'; quantityInput.placeholder=t('dosing.quantityLabel');
+        if(dosingEditingItem && dosingEditingItem.quantity!=null) quantityInput.value = dosingEditingItem.quantity;
         frequencyInput = document.createElement('input');
         frequencyInput.type='text'; frequencyInput.placeholder=t('dosing.frequencyPlaceholder');
+        if(dosingEditingItem && dosingEditingItem.frequency) frequencyInput.value = dosingEditingItem.frequency;
         form.appendChild(quantityInput); form.appendChild(frequencyInput);
       }
 
@@ -4402,24 +4462,40 @@
       btnRow.className='btn-row';
       const cancelBtn = document.createElement('button');
       cancelBtn.type='button'; cancelBtn.className='secondary'; cancelBtn.textContent=t('common.cancel');
-      cancelBtn.addEventListener('click', ()=>{ dosingFormOpen=false; renderDosingList(); });
+      cancelBtn.addEventListener('click', ()=>{ dosingFormOpen=false; dosingEditingItem=null; renderDosingList(); });
       const confirmBtn = document.createElement('button');
-      confirmBtn.type='button'; confirmBtn.className='primary'; confirmBtn.textContent=t('common.add');
+      confirmBtn.type='button'; confirmBtn.className='primary'; confirmBtn.textContent = dosingEditingItem ? t('common.save') : t('common.add');
       confirmBtn.addEventListener('click', ()=>{
         const productVal = productInput.value.trim();
         if(!productVal) return;
-        let newItem;
-        if(dosingFormMode==='continuous'){
-          const doseVal = doseInput.value ? parseFloat(doseInput.value) : null;
-          const timeVal = timeInput.value || '';
-          newItem = {id:'do_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), category:dosingFormCategory, mode:'continuous', product:productVal, dose:doseVal, time:timeVal};
+        if(dosingEditingItem){
+          dosingEditingItem.category = dosingFormCategory;
+          dosingEditingItem.mode = dosingFormMode;
+          dosingEditingItem.product = productVal;
+          if(dosingFormMode==='continuous'){
+            dosingEditingItem.dose = doseInput.value ? parseFloat(doseInput.value) : null;
+            dosingEditingItem.time = timeInput.value || '';
+            delete dosingEditingItem.quantity; delete dosingEditingItem.frequency;
+          } else {
+            dosingEditingItem.quantity = quantityInput.value ? parseFloat(quantityInput.value) : null;
+            dosingEditingItem.frequency = frequencyInput.value.trim() || '';
+            delete dosingEditingItem.dose; delete dosingEditingItem.time;
+          }
         } else {
-          const quantityVal = quantityInput.value ? parseFloat(quantityInput.value) : null;
-          const frequencyVal = frequencyInput.value.trim() || '';
-          newItem = {id:'do_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), category:dosingFormCategory, mode:'ponctual', product:productVal, quantity:quantityVal, frequency:frequencyVal};
+          let newItem;
+          if(dosingFormMode==='continuous'){
+            const doseVal = doseInput.value ? parseFloat(doseInput.value) : null;
+            const timeVal = timeInput.value || '';
+            newItem = {id:'do_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), category:dosingFormCategory, mode:'continuous', product:productVal, dose:doseVal, time:timeVal};
+          } else {
+            const quantityVal = quantityInput.value ? parseFloat(quantityInput.value) : null;
+            const frequencyVal = frequencyInput.value.trim() || '';
+            newItem = {id:'do_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), category:dosingFormCategory, mode:'ponctual', product:productVal, quantity:quantityVal, frequency:frequencyVal};
+          }
+          tank.dosing.push(newItem);
         }
-        tank.dosing.push(newItem);
         dosingFormOpen = false;
+        dosingEditingItem = null;
         renderDosingList();
         if(tank.id===activeTankId) renderTankSwitcher();
           syncTankToSupabase(tank);
@@ -4439,15 +4515,24 @@
       tank.dosing.forEach(item=>{
         const row = document.createElement('div');
         row.className='livestock-item';
+        row.style.cursor = 'pointer';
         const sub = item.mode==='ponctual'
           ? [item.quantity ? item.quantity+' kg' : null, item.frequency || null].filter(Boolean).join(' · ')
           : [item.dose ? item.dose+' ml/j' : null, item.time || null].filter(Boolean).join(' · ');
         const catLabel = item.category ? t('dosing.cat.'+item.category) : null;
         row.innerHTML = `<div class="livestock-item-info"><span class="livestock-item-kind">${item.product}${catLabel?' · '+catLabel:''}</span>${sub?`<span class="livestock-item-name">${sub}</span>`:''}</div>`;
+        row.addEventListener('click', ()=>{
+          dosingEditingItem = item;
+          dosingFormCategory = item.category || 'other';
+          dosingFormMode = item.mode || 'continuous';
+          dosingFormOpen = true;
+          renderDosingList();
+        });
         const del = document.createElement('button');
         del.type='button'; del.className='livestock-item-del'; del.textContent='×';
         del.setAttribute('aria-label', t('common.delete'));
-        del.addEventListener('click', ()=>{
+        del.addEventListener('click', (e)=>{
+          e.stopPropagation();
           tank.dosing = tank.dosing.filter(i=>i.id!==item.id);
           renderDosingList();
           if(tank.id===activeTankId) renderTankSwitcher();
@@ -4466,6 +4551,7 @@
     dosingFormOpen = false;
     dosingFormMode = 'continuous';
     dosingFormCategory = 'other';
+    dosingEditingItem = null;
     phytoFormOpen = false;
     phytoCardRevealed = false;
     ensureDosingData(tank);
@@ -4478,7 +4564,7 @@
     dosingTankId = null;
     phytoFormOpen = false;
   }
-  document.getElementById('dosingAddBtn').addEventListener('click', ()=>{ dosingFormOpen = !dosingFormOpen; dosingFormMode='continuous'; dosingFormCategory='other'; renderDosingList(); });
+  document.getElementById('dosingAddBtn').addEventListener('click', ()=>{ dosingEditingItem=null; dosingFormOpen = !dosingFormOpen; dosingFormMode='continuous'; dosingFormCategory='other'; renderDosingList(); });
   document.getElementById('phytoRevealBtn').addEventListener('click', ()=>{ phytoCardRevealed = true; renderPhytoReminder(); });
   document.getElementById('tankDosingClose').addEventListener('click', closeTankDosing);
   tankDosingOverlay.addEventListener('click', closeTankDosing);
