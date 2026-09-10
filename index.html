@@ -1285,7 +1285,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v10.3</span>
+        <span class="ver-pill">v10.4</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1700,6 +1700,7 @@
       </div>
       <button type="button" class="livestock-add-btn" id="feedingScheduleAddBtn">+</button>
     </div>
+    <p class="field-sublabel" style="margin:-6px 0 10px;opacity:0.7;" data-i18n="feeding.scheduleHint">Ce que tu donnes habituellement, à quelle fréquence</p>
     <div id="feedingScheduleList"></div>
 
     <div class="livestock-section-head" style="margin-top:20px;">
@@ -1709,6 +1710,7 @@
       </div>
       <button type="button" class="livestock-add-btn" id="feedingLogAddBtn">+</button>
     </div>
+    <p class="field-sublabel" style="margin:-6px 0 10px;opacity:0.7;" data-i18n="feeding.logHint">Historique daté de ce que tu as réellement donné</p>
     <div id="feedingLogList"></div>
 
     <button class="secondary" id="tankFeedingClose" style="width:100%;margin-top:10px;" data-i18n="common.cancel">Annuler</button>
@@ -2293,7 +2295,9 @@
       'media.empty': 'Aucun média filtrant',
       'feeding.title': 'Nourriture',
       'feeding.scheduleLabel': 'Planning',
+      'feeding.scheduleHint': 'Ce que tu donnes habituellement, à quelle fréquence',
       'feeding.logLabel': 'Journal',
+      'feeding.logHint': 'Historique daté de ce que tu as réellement donné',
       'feeding.productPlaceholder': 'ex. Granulés, Nori...',
       'feeding.frequencyPlaceholder': 'ex. 2x/jour',
       'feeding.scheduleEmpty': 'Aucun planning configuré',
@@ -2665,7 +2669,9 @@
       'media.empty': 'No filter media',
       'feeding.title': 'Feeding',
       'feeding.scheduleLabel': 'Schedule',
+      'feeding.scheduleHint': 'What you usually give, and how often',
       'feeding.logLabel': 'Log',
+      'feeding.logHint': 'Dated history of what you actually fed',
       'feeding.productPlaceholder': 'e.g. Pellets, Nori...',
       'feeding.frequencyPlaceholder': 'e.g. 2x/day',
       'feeding.scheduleEmpty': 'No schedule set up yet',
@@ -4573,6 +4579,7 @@
   const tankLightingOverlay=document.getElementById('tankLightingOverlay'), tankLightingSheet=document.getElementById('tankLightingSheet');
   let lightingTankId = null;
   let lightingFormOpen = false;
+  let lightingEditingItem = null;
 
   function ensureLightingData(tank){
     if(!tank.lighting) tank.lighting = [];
@@ -4605,7 +4612,9 @@
       form.appendChild(msg); form.appendChild(goBtn);
       listEl.appendChild(form);
     } else if(lightingFormOpen && fixtures.length){
-      if(!lightingSelectedFixtureId || !fixtures.find(f=>f.id===lightingSelectedFixtureId)){
+      if(lightingEditingItem && fixtures.find(f=>f.id===lightingEditingItem.equipmentId)){
+        lightingSelectedFixtureId = lightingEditingItem.equipmentId;
+      } else if(!lightingSelectedFixtureId || !fixtures.find(f=>f.id===lightingSelectedFixtureId)){
         lightingSelectedFixtureId = fixtures[0].id;
       }
       const form = document.createElement('div');
@@ -4628,10 +4637,12 @@
       const onWrap = document.createElement('div');
       const onLabel = document.createElement('label'); onLabel.className='field-sublabel'; onLabel.textContent=t('lighting.onLabel');
       const onInput = document.createElement('input'); onInput.type='text'; onInput.placeholder='ex. 08:00';
+      if(lightingEditingItem) onInput.value = lightingEditingItem.on||'';
       onWrap.appendChild(onLabel); onWrap.appendChild(onInput);
       const offWrap = document.createElement('div');
       const offLabel = document.createElement('label'); offLabel.className='field-sublabel'; offLabel.textContent=t('lighting.offLabel');
       const offInput = document.createElement('input'); offInput.type='text'; offInput.placeholder='ex. 20:00';
+      if(lightingEditingItem) offInput.value = lightingEditingItem.off||'';
       offWrap.appendChild(offLabel); offWrap.appendChild(offInput);
       onRow.appendChild(onWrap); onRow.appendChild(offWrap);
       form.appendChild(onRow);
@@ -4645,6 +4656,7 @@
           const wrap = document.createElement('div');
           const label = document.createElement('label'); label.className='field-sublabel'; label.textContent=ch;
           const input = document.createElement('input'); input.type='number'; input.min='0'; input.max='100'; input.placeholder='0-100';
+          if(lightingEditingItem && lightingEditingItem.channelValues && lightingEditingItem.channelValues[ch]!=null) input.value = lightingEditingItem.channelValues[ch];
           wrap.appendChild(label); wrap.appendChild(input);
           channelsGrid.appendChild(wrap);
           channelInputs[ch] = input;
@@ -4660,15 +4672,16 @@
 
       const intensityInput = document.createElement('input');
       intensityInput.type='number'; intensityInput.min='0'; intensityInput.max='100'; intensityInput.placeholder=t('lighting.intensityLabel');
+      if(lightingEditingItem && lightingEditingItem.intensity!=null) intensityInput.value = lightingEditingItem.intensity;
       form.appendChild(intensityInput);
 
       const btnRow = document.createElement('div');
       btnRow.className='btn-row';
       const cancelBtn = document.createElement('button');
       cancelBtn.type='button'; cancelBtn.className='secondary'; cancelBtn.textContent=t('common.cancel');
-      cancelBtn.addEventListener('click', ()=>{ lightingFormOpen=false; renderLightingList(); });
+      cancelBtn.addEventListener('click', ()=>{ lightingFormOpen=false; lightingEditingItem=null; renderLightingList(); });
       const confirmBtn = document.createElement('button');
-      confirmBtn.type='button'; confirmBtn.className='primary'; confirmBtn.textContent=t('common.add');
+      confirmBtn.type='button'; confirmBtn.className='primary'; confirmBtn.textContent = lightingEditingItem ? t('common.save') : t('common.add');
       confirmBtn.addEventListener('click', ()=>{
         const onVal = onInput.value.trim();
         const offVal = offInput.value.trim();
@@ -4678,8 +4691,18 @@
           if(v) channelValues[ch] = parseInt(v,10);
         });
         const intensityVal = intensityInput.value ? parseInt(intensityInput.value,10) : null;
-        tank.lighting.push({id:'li_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), equipmentId:selectedFixture.id, equipmentName:selectedFixture.name, on:onVal, off:offVal, channelValues, intensity:intensityVal});
+        if(lightingEditingItem){
+          lightingEditingItem.equipmentId = selectedFixture.id;
+          lightingEditingItem.equipmentName = selectedFixture.name;
+          lightingEditingItem.on = onVal;
+          lightingEditingItem.off = offVal;
+          lightingEditingItem.channelValues = channelValues;
+          lightingEditingItem.intensity = intensityVal;
+        } else {
+          tank.lighting.push({id:'li_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), equipmentId:selectedFixture.id, equipmentName:selectedFixture.name, on:onVal, off:offVal, channelValues, intensity:intensityVal});
+        }
         lightingFormOpen = false;
+        lightingEditingItem = null;
         renderLightingList();
         if(tank.id===activeTankId) renderTankSwitcher();
           syncTankToSupabase(tank);
@@ -4699,13 +4722,20 @@
       tank.lighting.forEach(item=>{
         const row = document.createElement('div');
         row.className='livestock-item';
+        row.style.cursor = 'pointer';
         const channelBits = item.channelValues ? Object.keys(item.channelValues).map(ch=>ch+' '+item.channelValues[ch]+'%') : [];
         const sub = [(item.on||item.off) ? (item.on||'--')+'–'+(item.off||'--') : null, channelBits.length?channelBits.join(' / '):null, item.intensity!=null ? item.intensity+'%' : null].filter(Boolean).join(' · ');
         row.innerHTML = `<div class="livestock-item-info"><span class="livestock-item-kind">${item.equipmentName||item.name||''}</span>${sub?`<span class="livestock-item-name">${sub}</span>`:''}</div>`;
+        row.addEventListener('click', ()=>{
+          lightingEditingItem = item;
+          lightingFormOpen = true;
+          renderLightingList();
+        });
         const del = document.createElement('button');
         del.type='button'; del.className='livestock-item-del'; del.textContent='×';
         del.setAttribute('aria-label', t('common.delete'));
-        del.addEventListener('click', ()=>{
+        del.addEventListener('click', (e)=>{
+          e.stopPropagation();
           tank.lighting = tank.lighting.filter(i=>i.id!==item.id);
           renderLightingList();
           if(tank.id===activeTankId) renderTankSwitcher();
@@ -4722,6 +4752,7 @@
     lightingTankId = tankId;
     lightingFormOpen = false;
     lightingSelectedFixtureId = null;
+    lightingEditingItem = null;
     ensureLightingData(tank);
     document.getElementById('tankLightingTitle').textContent = t('lighting.title')+' — '+tank.name;
     renderLightingList();
@@ -4731,7 +4762,7 @@
     tankLightingOverlay.style.display='none'; tankLightingSheet.style.display='none';
     lightingTankId = null;
   }
-  document.getElementById('lightingAddBtn').addEventListener('click', ()=>{ lightingFormOpen = !lightingFormOpen; renderLightingList(); });
+  document.getElementById('lightingAddBtn').addEventListener('click', ()=>{ lightingEditingItem=null; lightingFormOpen = !lightingFormOpen; renderLightingList(); });
   document.getElementById('tankLightingClose').addEventListener('click', closeTankLighting);
   tankLightingOverlay.addEventListener('click', closeTankLighting);
 
@@ -4741,6 +4772,8 @@
   let feedingTankId = null;
   let feedingScheduleFormOpen = false;
   let feedingLogFormOpen = false;
+  let feedingScheduleEditingItem = null;
+  let feedingLogEditingItem = null;
   let feedingLogSelectedType = 'food';
 
   function ensureFeedingData(tank){
@@ -4762,21 +4795,29 @@
       form.className = 'livestock-inline-form';
       const productInput = document.createElement('input');
       productInput.type='text'; productInput.placeholder=t('feeding.productPlaceholder');
+      if(feedingScheduleEditingItem) productInput.value = feedingScheduleEditingItem.product;
       const freqInput = document.createElement('input');
       freqInput.type='text'; freqInput.placeholder=t('feeding.frequencyPlaceholder');
+      if(feedingScheduleEditingItem) freqInput.value = feedingScheduleEditingItem.frequency||'';
       const btnRow = document.createElement('div');
       btnRow.className='btn-row';
       const cancelBtn = document.createElement('button');
       cancelBtn.type='button'; cancelBtn.className='secondary'; cancelBtn.textContent=t('common.cancel');
-      cancelBtn.addEventListener('click', ()=>{ feedingScheduleFormOpen=false; renderFeedingSections(); });
+      cancelBtn.addEventListener('click', ()=>{ feedingScheduleFormOpen=false; feedingScheduleEditingItem=null; renderFeedingSections(); });
       const confirmBtn = document.createElement('button');
-      confirmBtn.type='button'; confirmBtn.className='primary'; confirmBtn.textContent=t('common.add');
+      confirmBtn.type='button'; confirmBtn.className='primary'; confirmBtn.textContent = feedingScheduleEditingItem ? t('common.save') : t('common.add');
       confirmBtn.addEventListener('click', ()=>{
         const productVal = productInput.value.trim();
         if(!productVal) return;
         const freqVal = freqInput.value.trim();
-        tank.feedingSchedule.push({id:'fs_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), product:productVal, frequency:freqVal});
+        if(feedingScheduleEditingItem){
+          feedingScheduleEditingItem.product = productVal;
+          feedingScheduleEditingItem.frequency = freqVal;
+        } else {
+          tank.feedingSchedule.push({id:'fs_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), product:productVal, frequency:freqVal});
+        }
         feedingScheduleFormOpen = false;
+        feedingScheduleEditingItem = null;
         renderFeedingSections();
         if(tank.id===activeTankId) renderTankSwitcher();
           syncTankToSupabase(tank);
@@ -4795,11 +4836,18 @@
       tank.feedingSchedule.forEach(item=>{
         const row = document.createElement('div');
         row.className='livestock-item';
+        row.style.cursor = 'pointer';
         row.innerHTML = `<div class="livestock-item-info"><span class="livestock-item-kind">${item.product}</span>${item.frequency?`<span class="livestock-item-name">${item.frequency}</span>`:''}</div>`;
+        row.addEventListener('click', ()=>{
+          feedingScheduleEditingItem = item;
+          feedingScheduleFormOpen = true;
+          renderFeedingSections();
+        });
         const del = document.createElement('button');
         del.type='button'; del.className='livestock-item-del'; del.textContent='×';
         del.setAttribute('aria-label', t('common.delete'));
-        del.addEventListener('click', ()=>{
+        del.addEventListener('click', (e)=>{
+          e.stopPropagation();
           tank.feedingSchedule = tank.feedingSchedule.filter(i=>i.id!==item.id);
           renderFeedingSections();
           if(tank.id===activeTankId) renderTankSwitcher();
@@ -4822,16 +4870,16 @@
       dateRow.className = 'field-row-2';
       const dayWrap = document.createElement('div');
       const dayLabel = document.createElement('label'); dayLabel.className='field-sublabel'; dayLabel.textContent=t('feeding.dayLabel');
-      const dayInput = document.createElement('input'); dayInput.type='number'; dayInput.min='1'; dayInput.max='31'; dayInput.value=now.getDate();
+      const dayInput = document.createElement('input'); dayInput.type='number'; dayInput.min='1'; dayInput.max='31'; dayInput.value=feedingLogEditingItem ? feedingLogEditingItem.day : now.getDate();
       dayWrap.appendChild(dayLabel); dayWrap.appendChild(dayInput);
       const monthWrap = document.createElement('div');
       const monthLabel = document.createElement('label'); monthLabel.className='field-sublabel'; monthLabel.textContent=t('feeding.monthLabel');
-      const monthInput = document.createElement('input'); monthInput.type='number'; monthInput.min='1'; monthInput.max='12'; monthInput.value=now.getMonth()+1;
+      const monthInput = document.createElement('input'); monthInput.type='number'; monthInput.min='1'; monthInput.max='12'; monthInput.value=feedingLogEditingItem ? feedingLogEditingItem.month : now.getMonth()+1;
       monthWrap.appendChild(monthLabel); monthWrap.appendChild(monthInput);
       dateRow.appendChild(dayWrap); dateRow.appendChild(monthWrap);
       const yearWrap = document.createElement('div');
       const yearLabel = document.createElement('label'); yearLabel.className='field-sublabel'; yearLabel.textContent=t('feeding.yearLabel');
-      const yearInput = document.createElement('input'); yearInput.type='number'; yearInput.min='1990'; yearInput.max='2100'; yearInput.value=now.getFullYear();
+      const yearInput = document.createElement('input'); yearInput.type='number'; yearInput.min='1990'; yearInput.max='2100'; yearInput.value=feedingLogEditingItem ? feedingLogEditingItem.year : now.getFullYear();
       yearWrap.appendChild(yearLabel); yearWrap.appendChild(yearInput);
 
       const typeRow = document.createElement('div');
@@ -4847,21 +4895,31 @@
 
       const detailInput = document.createElement('input');
       detailInput.type='text'; detailInput.placeholder=t('feeding.detailPlaceholder');
+      if(feedingLogEditingItem) detailInput.value = feedingLogEditingItem.detail||'';
 
       const btnRow = document.createElement('div');
       btnRow.className='btn-row';
       const cancelBtn = document.createElement('button');
       cancelBtn.type='button'; cancelBtn.className='secondary'; cancelBtn.textContent=t('common.cancel');
-      cancelBtn.addEventListener('click', ()=>{ feedingLogFormOpen=false; renderFeedingSections(); });
+      cancelBtn.addEventListener('click', ()=>{ feedingLogFormOpen=false; feedingLogEditingItem=null; renderFeedingSections(); });
       const confirmBtn = document.createElement('button');
-      confirmBtn.type='button'; confirmBtn.className='primary'; confirmBtn.textContent=t('common.add');
+      confirmBtn.type='button'; confirmBtn.className='primary'; confirmBtn.textContent = feedingLogEditingItem ? t('common.save') : t('common.add');
       confirmBtn.addEventListener('click', ()=>{
         const dayVal = parseInt(dayInput.value,10) || now.getDate();
         const monthVal = parseInt(monthInput.value,10) || (now.getMonth()+1);
         const yearVal = parseInt(yearInput.value,10) || now.getFullYear();
         const detailVal = detailInput.value.trim();
-        tank.feedingLog.push({id:'fl_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), day:dayVal, month:monthVal, year:yearVal, type:feedingLogSelectedType, detail:detailVal});
+        if(feedingLogEditingItem){
+          feedingLogEditingItem.day = dayVal;
+          feedingLogEditingItem.month = monthVal;
+          feedingLogEditingItem.year = yearVal;
+          feedingLogEditingItem.type = feedingLogSelectedType;
+          feedingLogEditingItem.detail = detailVal;
+        } else {
+          tank.feedingLog.push({id:'fl_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), day:dayVal, month:monthVal, year:yearVal, type:feedingLogSelectedType, detail:detailVal});
+        }
         feedingLogFormOpen = false;
+        feedingLogEditingItem = null;
         renderFeedingSections();
         if(tank.id===activeTankId) renderTankSwitcher();
           syncTankToSupabase(tank);
@@ -4883,13 +4941,21 @@
       sorted.forEach(item=>{
         const row = document.createElement('div');
         row.className='livestock-item';
+        row.style.cursor = 'pointer';
         const dateStr = String(item.day).padStart(2,'0')+'/'+String(item.month).padStart(2,'0')+'/'+item.year;
         const sub = [t('feeding.type.'+item.type), item.detail||null].filter(Boolean).join(' · ');
         row.innerHTML = `<div class="livestock-item-info"><span class="livestock-item-kind">${dateStr}</span><span class="livestock-item-name">${sub}</span></div>`;
+        row.addEventListener('click', ()=>{
+          feedingLogEditingItem = item;
+          feedingLogSelectedType = item.type;
+          feedingLogFormOpen = true;
+          renderFeedingSections();
+        });
         const del = document.createElement('button');
         del.type='button'; del.className='livestock-item-del'; del.textContent='×';
         del.setAttribute('aria-label', t('common.delete'));
-        del.addEventListener('click', ()=>{
+        del.addEventListener('click', (e)=>{
+          e.stopPropagation();
           tank.feedingLog = tank.feedingLog.filter(i=>i.id!==item.id);
           renderFeedingSections();
           if(tank.id===activeTankId) renderTankSwitcher();
@@ -4906,6 +4972,8 @@
     feedingTankId = tankId;
     feedingScheduleFormOpen = false;
     feedingLogFormOpen = false;
+    feedingScheduleEditingItem = null;
+    feedingLogEditingItem = null;
     feedingLogSelectedType = 'food';
     ensureFeedingData(tank);
     document.getElementById('tankFeedingTitle').textContent = t('feeding.title')+' — '+tank.name;
@@ -4916,8 +4984,8 @@
     tankFeedingOverlay.style.display='none'; tankFeedingSheet.style.display='none';
     feedingTankId = null;
   }
-  document.getElementById('feedingScheduleAddBtn').addEventListener('click', ()=>{ feedingScheduleFormOpen = !feedingScheduleFormOpen; renderFeedingSections(); });
-  document.getElementById('feedingLogAddBtn').addEventListener('click', ()=>{ feedingLogFormOpen = !feedingLogFormOpen; renderFeedingSections(); });
+  document.getElementById('feedingScheduleAddBtn').addEventListener('click', ()=>{ feedingScheduleEditingItem=null; feedingScheduleFormOpen = !feedingScheduleFormOpen; renderFeedingSections(); });
+  document.getElementById('feedingLogAddBtn').addEventListener('click', ()=>{ feedingLogEditingItem=null; feedingLogFormOpen = !feedingLogFormOpen; renderFeedingSections(); });
   document.getElementById('tankFeedingClose').addEventListener('click', closeTankFeeding);
   tankFeedingOverlay.addEventListener('click', closeTankFeeding);
 
