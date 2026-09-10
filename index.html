@@ -1292,7 +1292,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v11.2</span>
+        <span class="ver-pill">v11.3</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -5682,11 +5682,13 @@
         }
       }
       const canvas = cell.querySelector('canvas');
-      const dpr=window.devicePixelRatio||1, w=canvas.clientWidth||140, h=54;
+      const dpr=window.devicePixelRatio||1, w=canvas.clientWidth||140, h=64;
+      canvas.style.height=h+'px';
       canvas.width=w*dpr; canvas.height=h*dpr;
       const ctx=canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
       const values = series.map(e=>Number(e.value));
       let vMin=Math.min(...values), vMax=Math.max(...values);
+      if(p.ideal){ vMin=Math.min(vMin,p.ideal[0]); vMax=Math.max(vMax,p.ideal[1]); }
       if(vMin===vMax){ vMin-=1; vMax+=1; }
       const padX=4, padY=6;
       const times = series.map(e=>new Date(e.date).getTime());
@@ -5694,12 +5696,22 @@
       const spanT=Math.max(1, maxT-minT);
       const xAt=i=> series.length>1 ? padX+(w-padX*2)*((times[i]-minT)/spanT) : w/2;
       const yAt=v=> padY+(h-padY*2)*(1-(v-vMin)/(vMax-vMin));
-      // Bande idéale en fond, sur la même échelle propre au paramètre — repère utile
-      // sans normaliser contre les autres.
+      // Bande idéale bien visible en fond, avec les bornes chiffrées affichées à droite —
+      // on voit directement où se situe la plage saine, pas juste une teinte à deviner.
       if(p.ideal){
-        const yTop=yAt(Math.min(p.ideal[1],vMax)), yBot=yAt(Math.max(p.ideal[0],vMin));
-        ctx.fillStyle='rgba(255,255,255,0.05)';
-        ctx.fillRect(padX, Math.max(padY,yTop), w-padX*2, Math.min(h-padY,yBot)-Math.max(padY,yTop));
+        const yTop=yAt(p.ideal[1]), yBot=yAt(p.ideal[0]);
+        ctx.fillStyle='rgba(62,217,160,0.16)';
+        ctx.fillRect(padX, yTop, w-padX*2, yBot-yTop);
+        ctx.strokeStyle='rgba(62,217,160,0.5)'; ctx.lineWidth=1;
+        ctx.setLineDash([2,2]);
+        ctx.beginPath(); ctx.moveTo(padX,yTop); ctx.lineTo(w-padX,yTop); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(padX,yBot); ctx.lineTo(w-padX,yBot); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.font='9px monospace'; ctx.fillStyle='rgba(62,217,160,0.85)'; ctx.textAlign='right';
+        const dec = p.decimals!==undefined?p.decimals:1;
+        ctx.fillText(p.ideal[1].toFixed(dec), w-padX-2, Math.max(9,yTop-2));
+        ctx.fillText(p.ideal[0].toFixed(dec), w-padX-2, Math.min(h-2,yBot+9));
+        ctx.textAlign='left';
       }
       ctx.beginPath();
       values.forEach((v,i)=>{ const x=xAt(i), y=yAt(v); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
