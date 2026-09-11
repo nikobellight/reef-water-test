@@ -1278,7 +1278,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v11.5</span>
+        <span class="ver-pill">v11.6</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -6445,6 +6445,12 @@
   chartParamSelect.addEventListener('change', ()=>{
     refParam=chartParamSelect.value;
     chartCustomLabelField.style.display = refParam==='autre' ? 'block' : 'none';
+    // Un changement de parametre invalide la photo en cours : les couleurs a
+    // etalonner different d'un test a l'autre, donc on force une nouvelle prise
+    // plutot que de laisser l'ancienne photo pretendre s'appliquer au nouveau test.
+    hasPhoto=false;
+    workspace.style.display='none';
+    captureSection.style.display='block';
     resetRefState();
   });
   document.getElementById('btnManualEntry').addEventListener('click', ()=>{
@@ -6468,6 +6474,7 @@
     viewCanvas.width=w; viewCanvas.height=h; viewCtx.drawImage(dataCanvas,0,0);
     hasPhoto=true;
     captureSection.style.display='none'; workspace.style.display='block';
+    scrollFormIntoView(workspace, 'start');
     renderTargetButtons();
     renderPhotoThumbs();
   }
