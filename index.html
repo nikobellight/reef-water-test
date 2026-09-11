@@ -1278,7 +1278,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v11.4</span>
+        <span class="ver-pill">v11.5</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -1500,7 +1500,11 @@
     <section class="view" id="view-direct">
       <div class="card">
         <p class="step-label active"><span class="dot"></span><span data-i18n="direct.tempStep">Température</span></p>
-        <div class="field"><label class="field-label" data-i18n="direct.tempLabel">Température (°C)</label><input type="number" id="tempInput" step="0.1" placeholder="ex. 25.5" data-i18n-placeholder="direct.tempPlaceholder"></div>
+        <div class="mode-toggle" id="tempUnitToggle">
+          <button data-unit="C" class="active" type="button">°C</button>
+          <button data-unit="F" type="button">°F</button>
+        </div>
+        <div class="field"><label class="field-label" data-i18n="direct.tempLabel">Température</label><input type="number" id="tempInput" step="0.1" placeholder="ex. 25.5" data-i18n-placeholder="direct.tempPlaceholder"></div>
         <button class="primary" id="btnSaveTemp" data-i18n="common.save">Enregistrer</button>
         <p class="save-msg" id="tempSaveMsg"></p>
       </div>
@@ -2006,7 +2010,7 @@
       'titration.readingError': 'Entre une lecture entre 0.00 et 1.00 ml.',
       'common.savedFailShort': '⚠️ Échec Supabase',
       'direct.tempStep': 'Température',
-      'direct.tempLabel': 'Température (°C)',
+      'direct.tempLabel': 'Température',
       'direct.tempPlaceholder': 'ex. 25.5',
       'direct.salStep': 'Densité',
       'direct.sgLabel': 'Densité (SG) — jamais moins de 1, jamais plus de 2',
@@ -2395,7 +2399,7 @@
       'titration.readingError': 'Enter a reading between 0.00 and 1.00 ml.',
       'common.savedFailShort': '⚠️ Supabase failed',
       'direct.tempStep': 'Temperature',
-      'direct.tempLabel': 'Temperature (°C)',
+      'direct.tempLabel': 'Temperature',
       'direct.tempPlaceholder': 'e.g. 25.5',
       'direct.salStep': 'Salinity',
       'direct.sgLabel': 'Density (SG) — never below 1, never above 2',
@@ -2701,6 +2705,22 @@
     const l = localStorage.getItem('appLang');
     if(l==='fr' || l==='en') currentLang = l;
   }catch(e){}
+  let tempUnit = 'C';
+  try{
+    const tu = localStorage.getItem('tempUnit');
+    if(tu==='C' || tu==='F') tempUnit = tu;
+  }catch(e){}
+  function celsiusToF(c){ return c*9/5+32; }
+  function fToCelsius(f){ return (f-32)*5/9; }
+  // Convertit une valeur temp (toujours stockee en Celsius) pour affichage dans
+  // l'unite choisie par l'utilisateur — n'affecte que le texte montre, jamais le
+  // stockage ni les calculs de position des barres (qui restent en Celsius).
+  function displayTemp(celsiusVal, decimals){
+    const d = decimals!==undefined?decimals:1;
+    if(tempUnit==='F') return celsiusToF(celsiusVal).toFixed(d);
+    return celsiusVal.toFixed(d);
+  }
+  function tempUnitLabel(){ return tempUnit==='F' ? '°F' : '°C'; }
   // Résolveur sûr : dictionnaire courant -> repli FR -> repli sur la clé brute.
   // Ne lève jamais d'exception, ne renvoie jamais "undefined" à l'écran, même
   // pour une clé pas encore migrée (Phases 2-4). Interpolation simple {var} en
@@ -5496,15 +5516,15 @@
         // la barre, puis le résultat en dessous. Pour Titration/mesure directe, la barre
         // se remplit dans l'autre sens (bas→haut) donc on inverse en miroir : résultat
         // au-dessus, minimum en dessous — pour rester logique dans les deux cas.
-        const resultText = val!==null ? val.toFixed(p.decimals) : '—';
-        const startVal = parseFloat(dMin.toFixed(2));
+        const resultText = val!==null ? (k==='temp' ? displayTemp(val,p.decimals) : val.toFixed(p.decimals)) : '—';
+        const startVal = k==='temp' ? displayTemp(dMin,2) : parseFloat(dMin.toFixed(2));
         const minHtml = unavailable
           ? `<div class="bar-min bar-unavailable">n/d</div>`
           : `<div class="bar-min">${startVal}</div>`;
         const resultBlockHtml = `
           <div class="bl">${SHORT_LABEL[k]||k}</div>
           <div class="bv2 ${meta.cls}">${resultText}</div>
-          <div class="bu2">${p.unit||''}</div>`;
+          <div class="bu2">${k==='temp' ? tempUnitLabel() : (p.unit||'')}</div>`;
         col.innerHTML = cardGrad
           ? `${minHtml}${trackHtml}${resultBlockHtml}`
           : `${resultBlockHtml}${trackHtml}${minHtml}`;
@@ -5581,7 +5601,7 @@
           </span>
         </span>
         <span class="hr-right">
-          <span class="hr-value">${Number(e.value).toFixed(p.decimals!==undefined?p.decimals:2)} ${p.unit||''}</span>
+          <span class="hr-value">${e.param==='temp' ? displayTemp(Number(e.value),p.decimals)+' '+tempUnitLabel() : Number(e.value).toFixed(p.decimals!==undefined?p.decimals:2)+' '+(p.unit||'')}</span>
           <button class="del" aria-label="${t('common.delete')}">×</button>
         </span>`;
       row.querySelector('.del').addEventListener('click', ()=>deleteHistoryEntry(e.id));
@@ -5610,7 +5630,7 @@
         <div class="mini-head">
           <span class="mini-dot" style="background:${p.color||'#6E93BE'}"></span>
           <span class="mini-name">${SHORT_LABEL[k]||k}</span>
-          <span class="mini-val">${Number(last.value).toFixed(p.decimals!==undefined?p.decimals:2)}</span>
+          <span class="mini-val">${k==='temp' ? displayTemp(Number(last.value),p.decimals)+tempUnitLabel() : Number(last.value).toFixed(p.decimals!==undefined?p.decimals:2)}</span>
         </div>
         <canvas class="mini-canvas"></canvas>
         <div class="mini-status-row"></div>`;
@@ -5664,8 +5684,8 @@
         ctx.setLineDash([]);
         ctx.font='9px monospace'; ctx.fillStyle='rgba(62,217,160,0.85)'; ctx.textAlign='right';
         const dec = p.decimals!==undefined?p.decimals:1;
-        ctx.fillText(p.ideal[1].toFixed(dec), w-padX-2, Math.max(9,yTop-2));
-        ctx.fillText(p.ideal[0].toFixed(dec), w-padX-2, Math.min(h-2,yBot+9));
+        ctx.fillText(k==='temp' ? displayTemp(p.ideal[1],dec) : p.ideal[1].toFixed(dec), w-padX-2, Math.max(9,yTop-2));
+        ctx.fillText(k==='temp' ? displayTemp(p.ideal[0],dec) : p.ideal[0].toFixed(dec), w-padX-2, Math.min(h-2,yBot+9));
         ctx.textAlign='left';
       }
       ctx.beginPath();
@@ -5806,7 +5826,7 @@
       lines.push(''); lines.push(`■ ${label}`);
       entries.forEach(e=>{
         const meta=statusMeta(e.status);
-        lines.push(`  ${new Date(e.date).toLocaleDateString(currentLocale())} — ${e.value}${unit?' '+unit:''} (${meta.label.toLowerCase()})${e.note?' — '+e.note:''}`);
+        lines.push(`  ${new Date(e.date).toLocaleDateString(currentLocale())} — ${key==='temp' ? displayTemp(Number(e.value))+' '+tempUnitLabel() : e.value+(unit?' '+unit:'')} (${meta.label.toLowerCase()})${e.note?' — '+e.note:''}`);
       });
     });
     return lines.join('\n');
@@ -5834,7 +5854,7 @@
           </span>
         </span>
         <span class="hr-right">
-          <span class="hr-value">${Number(e.value).toFixed(decimals)} ${unit}</span>
+          <span class="hr-value">${e.param==='temp' ? displayTemp(Number(e.value),decimals)+' '+tempUnitLabel() : Number(e.value).toFixed(decimals)+' '+unit}</span>
         </span>
       </div>`;
   }
@@ -5971,9 +5991,27 @@
   })();
 
   // ================= direct entry =================
+  document.querySelectorAll('#tempUnitToggle button').forEach(b=>{
+    if(b.dataset.unit===tempUnit) b.classList.add('active'); else b.classList.remove('active');
+    b.addEventListener('click', ()=>{
+      const newUnit = b.dataset.unit;
+      if(newUnit===tempUnit) return;
+      const input = document.getElementById('tempInput');
+      const raw = input.value.trim().replace(',','.');
+      if(raw && !isNaN(parseFloat(raw))){
+        const v = parseFloat(raw);
+        input.value = (newUnit==='F' ? celsiusToF(v) : fToCelsius(v)).toFixed(1);
+      }
+      document.querySelectorAll('#tempUnitToggle button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      tempUnit = newUnit;
+      try{ localStorage.setItem('tempUnit', tempUnit); }catch(e){}
+    });
+  });
   document.getElementById('btnSaveTemp').addEventListener('click', async ()=>{
-    const raw=document.getElementById('tempInput').value.trim().replace(',','.'); const v=parseFloat(raw);
-    if(!raw||isNaN(v)) return;
+    const raw=document.getElementById('tempInput').value.trim().replace(',','.'); const vRaw=parseFloat(raw);
+    if(!raw||isNaN(vRaw)) return;
+    const v = tempUnit==='F' ? fToCelsius(vRaw) : vRaw;
     const saved=await addHistoryEntry({param:'temp',value:v,status:statusOf('temp',v),source:'direct'});
     if(saved) document.getElementById('tempInput').value='';
     const msg=document.getElementById('tempSaveMsg');
