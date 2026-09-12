@@ -1278,7 +1278,7 @@
       <div class="app-kicker">REEF CONTROL</div>
       <h1 data-i18n="app.title">MON RÉCIF</h1>
       <div class="app-meta">
-        <span class="ver-pill">v11.6</span>
+        <span class="ver-pill">v11.7</span>
         <button type="button" class="mini-pill" id="langToggle" aria-label="Passer en anglais"></button>
       </div>
       <div class="hero-status-row">
@@ -5446,11 +5446,12 @@
     document.getElementById('highlightRow').innerHTML = highlightBadges.map((k,i)=>{
       const p=PARAMS[k], latest=latestFor(k);
       const val = latest ? Number(latest.value) : null;
-      const valTxt = val!==null ? val.toFixed(p.decimals) : '—';
+      const valTxt = val!==null ? (k==='temp' ? displayTemp(val,p.decimals) : val.toFixed(p.decimals)) : '—';
+      const unitTxt = k==='temp' ? tempUnitLabel() : (p.unit||'');
       const meta = statusMeta(latest ? latest.status : null);
       return `<button type="button" class="highlight-badge" data-slot="${i}" style="border-color:${p.color||'var(--line)'}">
         <div class="hv ${meta.cls}">${valTxt}</div>
-        <div class="hl">${p.unit?p.unit+' · ':''}${SHORT_LABEL[k]||p.label}</div>
+        <div class="hl">${unitTxt?unitTxt+' · ':''}${SHORT_LABEL[k]||p.label}</div>
       </button>`;
     }).join('');
     document.querySelectorAll('#highlightRow .highlight-badge').forEach(btn=>{
